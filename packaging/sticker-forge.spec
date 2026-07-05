@@ -11,7 +11,7 @@ a = Analysis(
     pathex=[str(repo_dir / "src")],
     binaries=[],
     datas=[
-        (str(repo_dir / "prompts" / "line-static-3x3.md"), "prompts"),
+        (str(repo_dir / "prompts"), "prompts"),
         (str(repo_dir / "app"), "app"),
     ],
     hiddenimports=[],

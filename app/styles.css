@@ -33,6 +33,25 @@ body {
   border-bottom: 4px solid var(--accent);
 }
 
+.top-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  min-width: min(520px, 100%);
+}
+
+.language-field {
+  min-width: 150px;
+  color: #cbd5e1;
+}
+
+.language-field select {
+  background: #1f2937;
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
 h1,
 h2,
 p {
@@ -264,6 +283,7 @@ textarea {
 
 @media (max-width: 620px) {
   .topbar,
+  .top-actions,
   .section-head,
   .toolbar,
   .actions {

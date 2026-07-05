@@ -21,6 +21,7 @@ python -m pytest
 
 ```powershell
 python -m sticker_forge prompt
+python -m sticker_forge --lang en prompt
 python -m sticker_forge prompt --character "原創柴犬" --output outputs\prompt.md
 python -m sticker_forge split examples\grid.png -o outputs\cells
 python -m sticker_forge cleanup examples\cell.png -o outputs\cell-clean.png --key-color 00ff00
@@ -28,6 +29,7 @@ python -m sticker_forge export examples\grid.png -o outputs\line-stickers.zip --
 python -m sticker_forge stickers examples\grid.png -o outputs\transparent-stickers.zip --chroma-key
 python -m sticker_forge validate outputs\line-stickers.zip
 python -m sticker_forge app --print-path
+python -m sticker_forge --lang en app --print-path
 start .\app\index.html
 .\packaging\build-windows.ps1
 ```
@@ -45,6 +47,7 @@ node --check reference/upstream-line-sticker-studio/worker/src/index.js
 最小測試應包含：
 
 - prompt template CLI 輸出與渲染。
+- CLI / HTML 工作台中英文語系。
 - 3x3 grid inset 切圖。
 - 選 8 張貼圖。
 - green / magenta chroma-key 去背。
@@ -68,6 +71,18 @@ node --check reference/upstream-line-sticker-studio/worker/src/index.js
 - 版本：`v0.1.0`
 - 產物：`sticker-forge-v0.1.0-windows-x64.zip`
 - checksum：`sticker-forge-v0.1.0-windows-x64.zip.sha256`
+
+目前 build script 的實際行為：
+
+- 安裝 `.[dev,packaging]`。
+- 跑 `python -m pytest`。
+- 使用 `packaging/sticker-forge.spec`。
+- PyInstaller workpath 使用 `%TEMP%\sticker-forge-pyinstaller-build`。
+- PyInstaller distpath 使用 `%TEMP%\sticker-forge-pyinstaller-dist`。
+- 產物在 `%TEMP%\sticker-forge-pyinstaller-dist\sticker-forge\sticker-forge.exe`。
+- 跑 `sticker-forge.exe --help` smoke test。
+
+這和最早的 repo-local `build/`、`dist/` 草稿不同；目前版本刻意避開 OneDrive 對 repo 內 build cache 的鎖檔問題。
 
 後續仍要決定使用者資料 / 暫存檔位置。
 

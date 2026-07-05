@@ -9,6 +9,7 @@ start .\app\index.html
 功能：
 
 - 產生 LINE 靜態貼圖 3x3 prompt。
+- 支援繁體中文 / English 介面切換，並依語系產出 prompt 與 ZIP 內 README。
 - 匯入使用者自行生成的 3x3 grid。
 - 依 upstream 規則做 3% inset 切圖，輸出 370 x 320。
 - 支援 green / magenta chroma-key 去背。

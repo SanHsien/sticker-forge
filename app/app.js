@@ -35,12 +35,120 @@ const defaultActions = [
   "抱著枕頭打呵欠",
 ];
 
+const localeData = {
+  "zh-Hant": {
+    subtitle: "LINE 靜態貼圖本機製作台",
+    languageLabel: "語言",
+    statusReady: "等待素材",
+    copy: "複製",
+    character: "角色",
+    theme: "主題",
+    tone: "語氣",
+    promptLanguage: "語言",
+    style: "風格",
+    withText: "有字版",
+    background: "背景色",
+    importGrid: "匯入 3x3",
+    split: "切圖",
+    cleanup: "去背",
+    selectFirstEight: "選前 8 張",
+    exportPng: "匯出 9 張 PNG",
+    exportZip: "匯出 ZIP",
+    submissionTitle: "LINE Creators Market 上架",
+    submission1: "到 creator.line.me 登入 LINE 帳號。",
+    submission2: "新增 Sticker，填寫貼圖介紹、圖片編輯、販售資訊。",
+    submission3: "在圖片編輯頁上傳整包 ZIP，或逐張上傳 main.png、tab.png、01.png 到 08.png。",
+    submission4: "三個區段完成後點「申請販售」。通過後再手動點「上架」。",
+    copied: "Prompt 已複製",
+    imported: (name) => `已匯入 ${name}`,
+    needGrid: "請先匯入 3x3 圖",
+    splitDone: "已切成 9 張 LINE 尺寸貼圖",
+    selectedCount: (count) => `目前選 ${count} 張`,
+    firstEight: "已選前 8 張",
+    noTilesCleanup: "沒有可去背的貼圖",
+    cleanupDone: (hex) => `已去除 ${hex} 背景`,
+    needEight: (count) => `LINE 最小套組需選 8 張，目前 ${count} 張`,
+    zipDone: "ZIP 已匯出",
+    noTilesExport: "沒有可匯出的貼圖",
+    pngDone: "9 張 PNG 已匯出",
+    spareCell: "空白備用格，保持同一角色與風格，不加文字。",
+    spareCellNoText: "空白備用格，保持同一角色與風格。",
+    defaultFields: {
+      character: "原創可愛角色",
+      theme: "日常聊天貼圖",
+      tone: "可愛、清楚、友善",
+      style: "粗黑線、扁平上色、適合聊天視窗縮圖閱讀",
+      language: "繁體中文",
+    },
+    texts: defaultTexts,
+    actions: defaultActions,
+  },
+  en: {
+    subtitle: "Local LINE static sticker workspace",
+    languageLabel: "Language",
+    statusReady: "Waiting for artwork",
+    copy: "Copy",
+    character: "Character",
+    theme: "Theme",
+    tone: "Tone",
+    promptLanguage: "Prompt language",
+    style: "Style",
+    withText: "Text version",
+    background: "Background",
+    importGrid: "Import 3x3",
+    split: "Split",
+    cleanup: "Clean up",
+    selectFirstEight: "Select first 8",
+    exportPng: "Export 9 PNG",
+    exportZip: "Export ZIP",
+    submissionTitle: "LINE Creators Market submission",
+    submission1: "Sign in to creator.line.me with a LINE account.",
+    submission2: "Create a Sticker item and fill in description, image, and sales information.",
+    submission3: "Upload the ZIP on the image editing page, or upload main.png, tab.png, and 01.png to 08.png one by one.",
+    submission4: "After all three sections are complete, request review. After approval, publish manually.",
+    copied: "Prompt copied",
+    imported: (name) => `Imported ${name}`,
+    needGrid: "Import a 3x3 image first",
+    splitDone: "Split into 9 LINE-size stickers",
+    selectedCount: (count) => `${count} selected`,
+    firstEight: "Selected first 8",
+    noTilesCleanup: "No stickers to clean up",
+    cleanupDone: (hex) => `Removed ${hex} background`,
+    needEight: (count) => `LINE minimum set needs 8 stickers; ${count} selected`,
+    zipDone: "ZIP exported",
+    noTilesExport: "No stickers to export",
+    pngDone: "9 PNG stickers exported",
+    spareCell: "Blank spare cell, same character and style, no text.",
+    spareCellNoText: "Blank spare cell, same character and style.",
+    defaultFields: {
+      character: "an original cute character",
+      theme: "everyday chat stickers",
+      tone: "cute, clear, friendly",
+      style: "bold black outlines, flat colors, readable at chat thumbnail size",
+      language: "English",
+    },
+    texts: ["Good morning", "Thanks", "Got it", "You can do it", "Nice work", "Great", "Wait a sec", "Good night"],
+    actions: [
+      "happily waving",
+      "making a heart with both hands",
+      "nodding in confirmation",
+      "cheering with a clenched fist",
+      "smiling while wiping sweat",
+      "jumping in celebration",
+      "raising one hand to pause",
+      "yawning while hugging a pillow",
+    ],
+  },
+};
+
 const state = {
+  locale: localeData[localStorage.getItem("stickerForgeLocale")] ? localStorage.getItem("stickerForgeLocale") : "zh-Hant",
   sourceImage: null,
   tiles: [],
 };
 
 const $ = (id) => document.getElementById(id);
+const currentLocale = () => localeData[state.locale] || localeData["zh-Hant"];
 
 function setStatus(text, danger = false) {
   const status = $("status");
@@ -48,14 +156,51 @@ function setStatus(text, danger = false) {
   status.style.color = danger ? "#fecaca" : "#e5e7eb";
 }
 
+function setFieldIfDefault(id, nextValue, previousValues) {
+  const input = $(id);
+  if (!input.value || previousValues.includes(input.value)) input.value = nextValue;
+}
+
+function applyLocale(previousLocale = state.locale) {
+  const data = currentLocale();
+  const previous = localeData[previousLocale] || localeData["zh-Hant"];
+  document.documentElement.lang = state.locale;
+  document.querySelectorAll("[data-i18n]").forEach((node) => {
+    const key = node.dataset.i18n;
+    if (typeof data[key] === "string") node.textContent = data[key];
+  });
+  setFieldIfDefault("character", data.defaultFields.character, Object.values(localeData).map((item) => item.defaultFields.character));
+  setFieldIfDefault("theme", data.defaultFields.theme, Object.values(localeData).map((item) => item.defaultFields.theme));
+  setFieldIfDefault("tone", data.defaultFields.tone, Object.values(localeData).map((item) => item.defaultFields.tone));
+  setFieldIfDefault("style", data.defaultFields.style, Object.values(localeData).map((item) => item.defaultFields.style));
+  setFieldIfDefault("language", data.defaultFields.language, Object.values(localeData).map((item) => item.defaultFields.language));
+  document.querySelectorAll(".slot-text").forEach((input, index) => {
+    if (!input.value || previous.texts.includes(input.value)) input.value = data.texts[index];
+  });
+  document.querySelectorAll(".slot-action").forEach((input, index) => {
+    if (!input.value || previous.actions.includes(input.value)) input.value = data.actions[index];
+  });
+  $("ui-language").value = state.locale;
+  setStatus(data.statusReady);
+  renderPrompt();
+}
+
+function setLocale(locale) {
+  const previousLocale = state.locale;
+  state.locale = localeData[locale] ? locale : "zh-Hant";
+  localStorage.setItem("stickerForgeLocale", state.locale);
+  applyLocale(previousLocale);
+}
+
 function setupSlots() {
   const slots = $("slots");
   const tpl = $("slot-template");
+  const data = currentLocale();
   for (let i = 0; i < PACK_SIZE; i++) {
     const row = tpl.content.firstElementChild.cloneNode(true);
     row.querySelector(".slot-num").textContent = String(i + 1).padStart(2, "0");
-    row.querySelector(".slot-text").value = defaultTexts[i];
-    row.querySelector(".slot-action").value = defaultActions[i];
+    row.querySelector(".slot-text").value = data.texts[i];
+    row.querySelector(".slot-action").value = data.actions[i];
     slots.appendChild(row);
   }
 }
@@ -70,37 +215,60 @@ function slotValues(selector) {
 
 function renderPrompt() {
   const key = selectedKey();
+  const data = currentLocale();
   const texts = slotValues(".slot-text");
   const actions = slotValues(".slot-action");
   const withText = $("with-text").checked;
-  const common = [
-    "請生成一張 3x3 grid 的 LINE 靜態貼圖素材圖。",
-    "",
-    `角色：${$("character").value}`,
-    `主題：${$("theme").value}`,
-    `語氣：${$("tone").value}`,
-    `風格：${$("style").value}`,
-    `語言：${$("language").value}`,
-    "版面：3 欄 x 3 列，共 9 格，每格是獨立貼圖構圖。",
-    `背景：純色 ${key.label} (${key.hex})，方便後續 chroma-key 去背。`,
-    `角色、衣服、道具、陰影與反光都不要使用 ${key.avoid}；必要時改用 ${key.substitutions}。`,
-    "每格角色保持一致，只放一個主要角色，不要複雜場景。",
-    "不要使用既有 IP、商標、品牌角色、名人、政治人物或真人肖像。",
-    "不要生成色情、仇恨、暴力、詐騙、個資、QR code 或可能侵權的內容。",
-    "",
-    "九宮格內容：",
-  ];
+  const common = state.locale === "en"
+    ? [
+      "Generate one 3x3 grid image for LINE static sticker source art.",
+      "",
+      `Character: ${$("character").value}`,
+      `Theme: ${$("theme").value}`,
+      `Tone: ${$("tone").value}`,
+      `Style: ${$("style").value}`,
+      `Language: ${$("language").value}`,
+      "Layout: 3 columns x 3 rows, 9 cells total, each cell is an independent sticker composition.",
+      `Background: solid ${key.label} (${key.hex}) for later chroma-key cleanup.`,
+      `Do not use ${key.avoid} in the character, clothing, props, shadows, or highlights; use ${key.substitutions} if needed.`,
+      "Keep the character consistent in every cell. Use one main character per cell; avoid complex backgrounds.",
+      "Do not use existing IP, trademarks, brand characters, celebrities, political figures, or real-person likenesses.",
+      "Do not generate sexual, hateful, violent, scam, personal-data, QR code, or infringing content.",
+      "",
+      "Grid content:",
+    ]
+    : [
+      "請生成一張 3x3 grid 的 LINE 靜態貼圖素材圖。",
+      "",
+      `角色：${$("character").value}`,
+      `主題：${$("theme").value}`,
+      `語氣：${$("tone").value}`,
+      `風格：${$("style").value}`,
+      `語言：${$("language").value}`,
+      "版面：3 欄 x 3 列，共 9 格，每格是獨立貼圖構圖。",
+      `背景：純色 ${key.label} (${key.hex})，方便後續 chroma-key 去背。`,
+      `角色、衣服、道具、陰影與反光都不要使用 ${key.avoid}；必要時改用 ${key.substitutions}。`,
+      "每格角色保持一致，只放一個主要角色，不要複雜場景。",
+      "不要使用既有 IP、商標、品牌角色、名人、政治人物或真人肖像。",
+      "不要生成色情、仇恨、暴力、詐騙、個資、QR code 或可能侵權的內容。",
+      "",
+      "九宮格內容：",
+    ];
   const rows = actions.map((action, i) => {
+    if (state.locale === "en") {
+      if (withText) return `${i + 1}. Text: "${texts[i]}", action: ${action}`;
+      return `${i + 1}. Action: ${action}, do not add text`;
+    }
     if (withText) return `${i + 1}. 文字：「${texts[i]}」，動作：${action}`;
     return `${i + 1}. 動作：${action}，不要加入文字`;
   });
-  rows.push("9. 空白備用格，保持同一角色與風格，不加文字。");
+  rows.push(`9. ${withText ? data.spareCell : data.spareCellNoText}`);
   $("prompt-output").value = [...common, ...rows].join("\n");
 }
 
 async function copyPrompt() {
   await navigator.clipboard.writeText($("prompt-output").value);
-  setStatus("Prompt 已複製");
+  setStatus(currentLocale().copied);
 }
 
 function loadGrid(file) {
@@ -109,7 +277,7 @@ function loadGrid(file) {
     state.sourceImage = img;
     drawSourcePreview(img);
     splitGrid();
-    setStatus(`已匯入 ${file.name}`);
+    setStatus(currentLocale().imported(file.name));
   };
   img.src = URL.createObjectURL(file);
 }
@@ -126,7 +294,7 @@ function drawSourcePreview(img) {
 
 function splitGrid() {
   if (!state.sourceImage) {
-    setStatus("請先匯入 3x3 圖", true);
+    setStatus(currentLocale().needGrid, true);
     return;
   }
   const key = selectedKey();
@@ -158,7 +326,7 @@ function splitGrid() {
     }
   }
   renderTiles();
-  setStatus("已切成 9 張 LINE 尺寸貼圖");
+  setStatus(currentLocale().splitDone);
 }
 
 function renderTiles() {
@@ -178,7 +346,7 @@ function renderTiles() {
     checkbox.addEventListener("change", () => {
       tile.included = checkbox.checked;
       item.classList.toggle("excluded", !tile.included);
-      setStatus(`目前選 ${includedTiles().length} 張`);
+      setStatus(currentLocale().selectedCount(includedTiles().length));
     });
     label.append(checkbox, ` ${String(i + 1).padStart(2, "0")}`);
     const button = document.createElement("button");
@@ -200,18 +368,18 @@ function selectFirstEight() {
     tile.included = index < PACK_SIZE;
   });
   renderTiles();
-  setStatus("已選前 8 張");
+  setStatus(currentLocale().firstEight);
 }
 
 function cleanupAll() {
   if (!state.tiles.length) {
-    setStatus("沒有可去背的貼圖", true);
+    setStatus(currentLocale().noTilesCleanup, true);
     return;
   }
   const keyName = $("chroma-key").value;
   state.tiles.forEach((tile) => chromaKeyCanvas(tile.canvas, keyName));
   renderTiles();
-  setStatus(`已去除 ${selectedKey().hex} 背景`);
+  setStatus(currentLocale().cleanupDone(selectedKey().hex));
 }
 
 function chromaKeyCanvas(canvas, keyName) {
@@ -255,7 +423,7 @@ function canvasToBlob(canvas) {
 async function exportZip() {
   const selected = includedTiles();
   if (selected.length !== PACK_SIZE) {
-    setStatus(`LINE 最小套組需選 8 張，目前 ${selected.length} 張`, true);
+    setStatus(currentLocale().needEight(selected.length), true);
     return;
   }
   const files = [];
@@ -270,12 +438,12 @@ async function exportZip() {
   files.push({ name: "README.txt", data: readmeText() });
   const blob = await createZipBlob(files);
   downloadBlob(blob, `line-stickers-${Date.now()}.zip`);
-  setStatus("ZIP 已匯出");
+  setStatus(currentLocale().zipDone);
 }
 
 async function exportStickersOnly() {
   if (!state.tiles.length) {
-    setStatus("沒有可匯出的貼圖", true);
+    setStatus(currentLocale().noTilesExport, true);
     return;
   }
   const files = [];
@@ -287,7 +455,7 @@ async function exportStickersOnly() {
   }
   const blob = await createZipBlob(files);
   downloadBlob(blob, `transparent-stickers-${Date.now()}.zip`);
-  setStatus("9 張 PNG 已匯出");
+  setStatus(currentLocale().pngDone);
 }
 
 const crcTable = (() => {
@@ -387,6 +555,23 @@ async function createZipBlob(files) {
 }
 
 function readmeText() {
+  if (state.locale === "en") {
+    return `sticker-forge LINE static sticker ZIP
+
+ZIP contents
+- main.png: 240 x 240
+- tab.png: 96 x 74
+- 01.png to 08.png: 370 x 320
+
+LINE Creators Market manual submission
+1. Sign in at https://creator.line.me/ with a LINE account.
+2. Create a Sticker item and fill in description, image, and sales information.
+3. Upload the full ZIP on the image editing page, or upload main.png, tab.png, and 01.png to 08.png one by one.
+4. After all three sections are complete, request review. After approval, publish manually.
+
+Before review, check the latest LINE Creators Market rules, licensing, trademark, and likeness rights yourself.
+`;
+  }
   return `sticker-forge LINE 靜態貼圖 ZIP
 
 ZIP 內容
@@ -421,6 +606,7 @@ function downloadBlob(blob, filename) {
 
 function bindEvents() {
   document.querySelectorAll("input, select").forEach((node) => node.addEventListener("input", renderPrompt));
+  $("ui-language").addEventListener("change", (event) => setLocale(event.target.value));
   $("copy-prompt").addEventListener("click", copyPrompt);
   $("grid-file").addEventListener("change", (event) => {
     const file = event.target.files?.[0];
@@ -433,6 +619,7 @@ function bindEvents() {
   $("export-zip").addEventListener("click", exportZip);
 }
 
+$("ui-language").value = state.locale;
 setupSlots();
 bindEvents();
-renderPrompt();
+applyLocale();

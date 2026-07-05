@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 
 from PIL import Image
@@ -8,9 +9,50 @@ from PIL import Image
 from .app_launcher import app_path, open_local_app
 from .cleanup import parse_hex_color, remove_chroma_background
 from .exporter import export_line_zip, export_stickers_zip, validate_line_zip
-from .prompts import render_line_static_prompt
+from .prompts import DEFAULT_FIELDS, normalize_locale, render_line_static_prompt
 from .spec import resolve_chroma_key
 from .splitter import split_grid_file, split_grid_to_stickers
+
+MESSAGES = {
+    "zh-Hant": {
+        "description": "本機 LINE 靜態貼圖包工具。",
+        "lang_help": "介面語言。預設：zh-Hant",
+        "prompt_help": "輸出 3x3 LINE 靜態貼圖 prompt",
+        "split_help": "將 3x3 grid 切成 PNG cells",
+        "cleanup_help": "用 chroma-key 移除單色背景",
+        "export_help": "從 3x3 grid 匯出 LINE 靜態貼圖 ZIP",
+        "stickers_help": "匯出 9 張 PNG-only 貼圖 ZIP",
+        "validate_help": "檢查 LINE 靜態貼圖 ZIP",
+        "app_help": "開啟本機 HTML 貼圖工作台",
+        "text_help": "重複輸入剛好 8 次",
+        "action_help": "重複輸入剛好 8 次",
+        "output_prompt_help": "將 UTF-8 prompt 寫入檔案",
+        "select_help": "要匯出的 8 格，使用 1-based row-major 清單。預設：1,2,3,4,5,6,7,8",
+        "chroma_export_help": "匯出前移除背景",
+        "print_path_help": "只印出 HTML 路徑，不開啟",
+        "ok": "OK",
+        "unknown_command": "未知指令",
+    },
+    "en": {
+        "description": "Local LINE static sticker pack toolkit.",
+        "lang_help": "Interface language. Default: zh-Hant",
+        "prompt_help": "print the 3x3 LINE static sticker prompt",
+        "split_help": "split a 3x3 grid into PNG cells",
+        "cleanup_help": "remove a solid background with chroma-key",
+        "export_help": "export a LINE static sticker ZIP from a 3x3 grid",
+        "stickers_help": "export all 9 stickers as a PNG-only ZIP",
+        "validate_help": "validate a LINE static sticker ZIP",
+        "app_help": "open the local HTML sticker workspace",
+        "text_help": "repeat exactly 8 times",
+        "action_help": "repeat exactly 8 times",
+        "output_prompt_help": "write UTF-8 prompt text to a file",
+        "select_help": "8 cells to export, 1-based row-major list. Default: 1,2,3,4,5,6,7,8",
+        "chroma_export_help": "remove background before export",
+        "print_path_help": "print the HTML path without opening it",
+        "ok": "OK",
+        "unknown_command": "unknown command",
+    },
+}
 
 
 def _parse_selection(value: str) -> list[int]:
@@ -29,32 +71,51 @@ def _parse_selection(value: str) -> list[int]:
     return selected
 
 
-def build_parser() -> argparse.ArgumentParser:
+def _locale_from_argv(argv: list[str] | None) -> str:
+    values = sys.argv[1:] if argv is None else argv
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("--lang", choices=["zh-Hant", "en"], default="zh-Hant")
+    args, _ = parser.parse_known_args(values)
+    return normalize_locale(args.lang)
+
+
+def _language_parent(locale: str) -> argparse.ArgumentParser:
+    parent = argparse.ArgumentParser(add_help=False)
+    parent.add_argument("--lang", choices=["zh-Hant", "en"], default=locale, help=MESSAGES[locale]["lang_help"])
+    return parent
+
+
+def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
+    locale = normalize_locale(locale)
+    text = MESSAGES[locale]
+    language_parent = _language_parent(locale)
+    defaults = DEFAULT_FIELDS[locale]
     parser = argparse.ArgumentParser(
         prog="sticker-forge",
-        description="Local LINE static sticker pack toolkit.",
+        description=text["description"],
+        parents=[language_parent],
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    prompt = subparsers.add_parser("prompt", help="print the 3x3 LINE static sticker prompt")
+    prompt = subparsers.add_parser("prompt", parents=[language_parent], help=text["prompt_help"])
     prompt.add_argument("--no-text", action="store_true")
-    prompt.add_argument("--character", default="原創可愛角色")
-    prompt.add_argument("--theme", default="日常聊天貼圖")
-    prompt.add_argument("--tone", default="可愛、清楚、友善")
-    prompt.add_argument("--style", default="粗黑線、扁平上色、適合聊天視窗縮圖閱讀")
-    prompt.add_argument("--language", default="繁體中文")
-    prompt.add_argument("--text", action="append", dest="texts", help="repeat exactly 8 times")
-    prompt.add_argument("--action", action="append", dest="actions", help="repeat exactly 8 times")
+    prompt.add_argument("--character", default=defaults["character"])
+    prompt.add_argument("--theme", default=defaults["theme"])
+    prompt.add_argument("--tone", default=defaults["tone"])
+    prompt.add_argument("--style", default=defaults["style"])
+    prompt.add_argument("--language", default=defaults["language"])
+    prompt.add_argument("--text", action="append", dest="texts", help=text["text_help"])
+    prompt.add_argument("--action", action="append", dest="actions", help=text["action_help"])
     prompt.add_argument("--chroma-key", choices=["green", "magenta"], default="green")
-    prompt.add_argument("-o", "--output", type=Path, help="write UTF-8 prompt text to a file")
+    prompt.add_argument("-o", "--output", type=Path, help=text["output_prompt_help"])
 
-    split = subparsers.add_parser("split", help="split a 3x3 grid into PNG cells")
+    split = subparsers.add_parser("split", parents=[language_parent], help=text["split_help"])
     split.add_argument("input", type=Path)
     split.add_argument("-o", "--output-dir", type=Path, required=True)
     split.add_argument("--prefix", default="sticker")
     split.add_argument("--inset-ratio", type=float, default=0)
 
-    cleanup = subparsers.add_parser("cleanup", help="remove a solid background with chroma-key")
+    cleanup = subparsers.add_parser("cleanup", parents=[language_parent], help=text["cleanup_help"])
     cleanup.add_argument("input", type=Path)
     cleanup.add_argument("-o", "--output", type=Path, required=True)
     cleanup.add_argument("--key-color", type=parse_hex_color)
@@ -62,46 +123,50 @@ def build_parser() -> argparse.ArgumentParser:
     cleanup.add_argument("--tolerance", type=int, default=32)
     cleanup.add_argument("--tune", choices=["safe", "balanced", "aggressive"], default="balanced")
 
-    export = subparsers.add_parser("export", help="export a LINE-style sticker ZIP from a 3x3 grid")
+    export = subparsers.add_parser("export", parents=[language_parent], help=text["export_help"])
     export.add_argument("input", type=Path)
     export.add_argument("-o", "--output", type=Path, required=True)
     export.add_argument(
         "--select",
         type=_parse_selection,
         default=_parse_selection("1,2,3,4,5,6,7,8"),
-        help="8 cells to export, 1-based row-major list. Default: 1,2,3,4,5,6,7,8",
+        help=text["select_help"],
     )
     export.add_argument("--title", default="sticker-forge pack")
     export.add_argument("--author", default="sticker-forge")
-    export.add_argument("--chroma-key", action="store_true", help="remove background before export")
+    export.add_argument("--chroma-key", action="store_true", help=text["chroma_export_help"])
     export.add_argument("--key-name", choices=["green", "magenta"], default="green")
     export.add_argument("--key-color", type=parse_hex_color)
     export.add_argument("--tune", choices=["safe", "balanced", "aggressive"], default="balanced")
 
-    stickers = subparsers.add_parser("stickers", help="export all 9 stickers as a PNG-only ZIP")
+    stickers = subparsers.add_parser("stickers", parents=[language_parent], help=text["stickers_help"])
     stickers.add_argument("input", type=Path)
     stickers.add_argument("-o", "--output", type=Path, required=True)
-    stickers.add_argument("--chroma-key", action="store_true", help="remove background before export")
+    stickers.add_argument("--chroma-key", action="store_true", help=text["chroma_export_help"])
     stickers.add_argument("--key-name", choices=["green", "magenta"], default="green")
     stickers.add_argument("--key-color", type=parse_hex_color)
     stickers.add_argument("--tune", choices=["safe", "balanced", "aggressive"], default="balanced")
 
-    validate = subparsers.add_parser("validate", help="validate a LINE-style sticker ZIP")
+    validate = subparsers.add_parser("validate", parents=[language_parent], help=text["validate_help"])
     validate.add_argument("zip", type=Path)
 
-    app = subparsers.add_parser("app", help="open the local HTML sticker workspace")
-    app.add_argument("--print-path", action="store_true", help="print the HTML path without opening it")
+    app = subparsers.add_parser("app", parents=[language_parent], help=text["app_help"])
+    app.add_argument("--print-path", action="store_true", help=text["print_path_help"])
 
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = build_parser()
+    locale = _locale_from_argv(argv)
+    parser = build_parser(locale)
     args = parser.parse_args(argv)
+    locale = normalize_locale(args.lang)
+    text = MESSAGES[locale]
 
     if args.command == "prompt":
         prompt_text = render_line_static_prompt(
             with_text=not args.no_text,
+            locale=locale,
             character=args.character,
             theme=args.theme,
             tone=args.tone,
@@ -187,7 +252,7 @@ def main(argv: list[str] | None = None) -> int:
             for error in errors:
                 print(error)
             return 1
-        print("OK")
+        print(text["ok"])
         return 0
 
     if args.command == "app":
@@ -195,5 +260,5 @@ def main(argv: list[str] | None = None) -> int:
         print(path)
         return 0
 
-    parser.error(f"unknown command: {args.command}")
+    parser.error(f"{text['unknown_command']}: {args.command}")
     return 2

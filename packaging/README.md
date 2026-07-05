@@ -11,6 +11,14 @@
 
 目前打包工具固定為 PyInstaller。
 
+CLI 與 exe 內建繁體中文 / English：
+
+```powershell
+sticker-forge.exe --lang zh-Hant prompt
+sticker-forge.exe --lang en prompt
+sticker-forge.exe --lang en app
+```
+
 ## Build
 
 ```powershell
@@ -25,7 +33,10 @@
 - PyInstaller workpath 使用 `%TEMP%\sticker-forge-pyinstaller-build`，distpath 使用 `%TEMP%\sticker-forge-pyinstaller-dist`，避免 OneDrive 鎖住 build / dist cache。
 - 執行 `sticker-forge.exe --help` smoke test。
 - `app/` 本機 HTML 介面會一起打進 PyInstaller bundle，可用 `sticker-forge.exe app` 開啟。
+- `app/` 介面內建語言切換，支援繁體中文與 English。
 - Windows console 若顯示繁中亂碼，可用 `sticker-forge.exe prompt --output prompt.md` 寫出 UTF-8 prompt 檔。
+
+目前腳本和最早的 repo-local `build/`、`dist/` 草稿不同；正式腳本把 PyInstaller cache 與產物放到 `%TEMP%`，避免 OneDrive 鎖住 repo 內的 build / dist 目錄。
 
 ## Release checklist
 

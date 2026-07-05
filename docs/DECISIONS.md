@@ -42,3 +42,13 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 - 保留根目錄 `LICENSE` 的原作者 MIT notice。
 - 新增 `NOTICE.md` 說明 fork 來源、授權義務、第三方服務聲明與 AI 內容責任。
 
+## 2026-07-06：語系策略
+
+決定使用單一 exe 內建繁體中文與 English，不拆兩份安裝包。
+
+決策：
+
+- CLI 使用 `--lang zh-Hant|en` 切換 help、prompt 與狀態輸出。
+- 本機 HTML 工作台提供語言選單，並以 localStorage 記住使用者選擇。
+- prompt template 維持中英文各一份，全部打包進 PyInstaller bundle。
+- README 維持繁體中文主入口，另建 `README.en.md`。

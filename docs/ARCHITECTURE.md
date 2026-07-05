@@ -29,6 +29,7 @@ split -> cleanup -> resize -> preview -> export ZIP
   - 貼圖文字
   - 動作描述
   - 風格
+  - 繁體中文 / English template
   - LINE 審核風險提醒
 - Image import
   - 匯入 3x3 grid
@@ -36,6 +37,9 @@ split -> cleanup -> resize -> preview -> export ZIP
 - Grid split
   - 切 9 格
   - 選 8 張
+- Preview metadata
+  - 貼圖檔名、尺寸、透明度、選取狀態
+  - 匯出前選圖錯誤檢查
 - Cleanup
   - chroma-key 去背
   - 邊緣清理
@@ -48,6 +52,7 @@ split -> cleanup -> resize -> preview -> export ZIP
   - ZIP 結構檢查
 - Local HTML app
   - 直接開啟 `app/index.html`
+  - 繁體中文 / English 切換
   - 產 prompt
   - 匯入 3x3 grid
   - 切圖、去背、選 8 張

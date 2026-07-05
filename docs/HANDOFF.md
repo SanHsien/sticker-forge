@@ -1,6 +1,6 @@
 # Handoff
 
-最後更新：2026-07-05
+最後更新：2026-07-06
 
 ## 目前方向
 
@@ -25,14 +25,18 @@
   - `examples/`
 - 改寫 `README.md`，移除原本「架 AI server」的產品敘事。
 - 新增 `prompts/line-static-3x3.md`，提供有字版與無字版 prompt。
+- 新增 `prompts/line-static-3x3.en.md`，提供英文有字版與無字版 prompt。
 - 新增 `src/sticker_forge/prompts.py`，可渲染 prompt 欄位。
 - 新增 `src/sticker_forge/spec.py`，集中 LINE 尺寸與 chroma-key 規格。
 - 新增 `src/sticker_forge/splitter.py`，可切 3x3 grid，支援 upstream 3% inset。
 - 新增 `src/sticker_forge/cleanup.py`，可 green / magenta chroma-key 去背。
 - 新增 `src/sticker_forge/exporter.py`，可匯出 8 張 sticker、main image、tab image 與 README 的 LINE ZIP，可匯出 9 張 PNG-only ZIP，並驗證 LINE ZIP。
+- 新增 `src/sticker_forge/preview.py`，提供貼圖預覽 metadata 與選圖檢查。
 - 新增 `src/sticker_forge/cli.py`，支援 `prompt`、`split`、`cleanup`、`export`、`stickers`、`validate`、`app`。
+- CLI 支援 `--lang zh-Hant|en`，可切換中文 / 英文 help、prompt 與狀態輸出。
 - 新增 `src/sticker_forge/app_launcher.py`，可從 CLI / exe 開啟本機 HTML 介面。
-- 新增 `app/index.html`、`app/styles.css`、`app/app.js`，提供可直接開啟的本機 HTML 介面；ZIP 由本機 JavaScript 產生，不依賴 CDN，支援 LINE ZIP 與 9 張 PNG-only ZIP。
+- 新增 `app/index.html`、`app/styles.css`、`app/app.js`，提供可直接開啟的本機 HTML 介面；ZIP 由本機 JavaScript 產生，不依賴 CDN，支援 LINE ZIP 與 9 張 PNG-only ZIP，並支援繁體中文 / English 切換。
+- 新增 `README.en.md`。
 - 新增 `docs/LINE_SUBMISSION.md`，保留 upstream 的 LINE Creators Market 手動上架/送審說明。
 - 新增 `packaging/sticker-forge.spec` 與 `packaging/build-windows.ps1`。
 - 新增 pytest 測試。

@@ -17,6 +17,15 @@ def test_cli_prompt_prints_template(capsys) -> None:
     assert "{character}" not in output
 
 
+def test_cli_prompt_prints_english_template(capsys) -> None:
+    assert main(["--lang", "en", "prompt"]) == 0
+
+    output = capsys.readouterr().out
+    assert "LINE static sticker" in output
+    assert "Text version" in output
+    assert "Good morning" in output
+
+
 def test_cli_prompt_writes_utf8_file(tmp_path) -> None:
     output_path = tmp_path / "prompt.md"
 
@@ -25,6 +34,16 @@ def test_cli_prompt_writes_utf8_file(tmp_path) -> None:
     output = output_path.read_text(encoding="utf-8")
     assert "原創柴犬" in output
     assert "LINE 靜態貼圖" in output
+
+
+def test_cli_english_help(capsys) -> None:
+    try:
+        main(["--lang", "en", "--help"])
+    except SystemExit as exc:
+        assert exc.code == 0
+
+    output = capsys.readouterr().out
+    assert "Local LINE static sticker pack toolkit." in output
 
 
 def test_cli_export_creates_zip(tmp_path) -> None:

@@ -6,6 +6,8 @@
 [![LINE static stickers](https://img.shields.io/badge/LINE-static_stickers-00B900.svg)](prompts/line-static-3x3.md)
 [![Tests: pytest](https://img.shields.io/badge/tests-pytest-blueviolet.svg)](tests)
 
+[繁體中文](README.md) | [English](README.en.md)
+
 Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup, slicing, and export.
 
 `sticker-forge` 是本機優先的 LINE 靜態貼圖包製作工具。它不架 AI server、不代管 API key，也不收集使用者圖片；使用者自行用 ChatGPT、Gemini 或其他生圖工具產圖，再把圖片匯回本機程式加工與匯出。
@@ -68,7 +70,10 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 - 建立最小 CLI：`python -m sticker_forge prompt|split|cleanup|export|stickers|validate|app`。
 - 建立本機 HTML 介面原型：`app/index.html`，可離線匯出 ZIP。
 - 建立 `sticker-forge app` 指令，可從 CLI / exe 開啟本機 HTML 介面。
+- 建立 CLI / HTML 工作台中英文語系切換。
+- 建立英文 README：`README.en.md`。
 - 建立 prompt 欄位渲染、3x3 grid inset 切圖、chroma-key 去背、LINE ZIP exporter、PNG-only stickers ZIP exporter 與 ZIP validator。
+- 建立預覽資料模型：`src/sticker_forge/preview.py`。
 - 保留 upstream 的 LINE Creators Market 手動上架/送審說明：`docs/LINE_SUBMISSION.md`。
 - 建立 PyInstaller Windows 打包腳本與 spec。
 - 建立 pytest 測試，覆蓋 prompt CLI、prompt 渲染、切圖、去背、ZIP 結構與 ZIP validator。
@@ -117,6 +122,7 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 
 - [x] **Phase 1：提示詞模板**
   - [x] `prompts/line-static-3x3.md` 提供第一版 LINE 靜態貼圖 prompt。
+  - [x] `prompts/line-static-3x3.en.md` 提供英文 prompt template。
   - [x] 支援角色、主題、語氣、語言、8 句貼圖文字、8 個動作描述與 chroma-key 背景。
   - [x] 提供有字版、無字版、3x3 grid 輸出規則。
   - [x] 加入上架風險提醒與禁止事項。
@@ -127,6 +133,7 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
   - [x] CLI export 已支援 9 選 8。
   - [x] `cleanup.py` 已實作 green / magenta chroma-key 去背。
   - [x] `exporter.py` 已實作透明 padding 與尺寸輸出。
+  - [x] `preview.py` 已建立貼圖預覽 metadata 與選圖檢查。
   - [x] `tests/` 已覆蓋切圖、去背與輸出。
 
 - [x] **Phase 3：LINE ZIP exporter**
@@ -141,7 +148,9 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 - [x] **Phase 4：本機介面**
   - [x] 已建立最小 CLI。
   - [x] CLI 流程包含：產 prompt、匯入 grid、切圖、去背、選 8 張、匯出 LINE ZIP、匯出 9 張 PNG-only ZIP、驗證 ZIP。
+  - [x] CLI 支援 `--lang zh-Hant|en`，可切換中文 / 英文 help、prompt 與狀態輸出。
   - [x] `app/index.html` 提供本機 HTML 工作台，作為 exe GUI 前的可用介面。
+  - [x] HTML 工作台支援繁體中文 / English 語系切換。
   - [x] HTML 工作台可離線匯出 ZIP，不依賴 CDN。
   - [x] 所有圖片處理都在本機完成。
 
@@ -158,6 +167,10 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
   - [x] release 檔名：`sticker-forge-v0.1.0-windows-x64.zip`。
   - [x] 發佈 SHA256 checksum。
   - [x] 發行前確認沒有 API key、使用者圖片、生成 ZIP 或本機暫存檔進版控。
+
+- [x] **英文文件**
+  - [x] 建立 `README.en.md`。
+  - [x] 中文 README 與英文 README 都寫明打包方式與 roadmap 狀態。
 
 ### ⏳ 待完成
 
