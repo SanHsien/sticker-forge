@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>sticker-forge</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>sticker-forge</h1>
+      <p>LINE 靜態貼圖本機製作台</p>
+    </div>
+    <div class="status" id="status">等待素材</div>
+  </header>
+
+  <main class="layout">
+    <section class="panel prompt-panel">
+      <div class="section-head">
+        <h2>Prompt</h2>
+        <button id="copy-prompt" type="button">複製</button>
+      </div>
+
+      <div class="field-grid">
+        <label>角色<input id="character" value="原創可愛角色"></label>
+        <label>主題<input id="theme" value="日常聊天貼圖"></label>
+        <label>語氣<input id="tone" value="可愛、清楚、友善"></label>
+        <label>語言<input id="language" value="繁體中文"></label>
+        <label class="wide">風格<input id="style" value="粗黑線、扁平上色、適合聊天視窗縮圖閱讀"></label>
+      </div>
+
+      <div class="toolbar">
+        <label class="check"><input id="with-text" type="checkbox" checked> 有字版</label>
+        <label>背景色
+          <select id="chroma-key">
+            <option value="green">Green #00FF00</option>
+            <option value="magenta">Magenta #FF00FF</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="slots" id="slots"></div>
+      <textarea id="prompt-output" spellcheck="false"></textarea>
+    </section>
+
+    <section class="panel work-panel">
+      <div class="section-head">
+        <h2>Grid</h2>
+        <label class="file-button">
+          匯入 3x3
+          <input id="grid-file" type="file" accept="image/*">
+        </label>
+      </div>
+
+      <div class="stage">
+        <canvas id="source-canvas" width="360" height="360"></canvas>
+      </div>
+
+      <div class="actions">
+        <button id="split-grid" type="button">切圖</button>
+        <button id="cleanup-all" type="button">去背</button>
+        <button id="select-first-eight" type="button">選前 8 張</button>
+        <button id="export-stickers" type="button">匯出 9 張 PNG</button>
+        <button id="export-zip" type="button" class="primary">匯出 ZIP</button>
+      </div>
+
+      <details class="submission">
+        <summary>LINE Creators Market 上架</summary>
+        <ol>
+          <li>到 creator.line.me 登入 LINE 帳號。</li>
+          <li>新增 Sticker，填寫貼圖介紹、圖片編輯、販售資訊。</li>
+          <li>在圖片編輯頁上傳整包 ZIP，或逐張上傳 main.png、tab.png、01.png 到 08.png。</li>
+          <li>三個區段完成後點「申請販售」。通過後再手動點「上架」。</li>
+        </ol>
+      </details>
+
+      <div class="tile-grid" id="tile-grid"></div>
+    </section>
+  </main>
+
+  <template id="slot-template">
+    <div class="slot-row">
+      <span class="slot-num"></span>
+      <input class="slot-text" aria-label="文字">
+      <input class="slot-action" aria-label="動作">
+    </div>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>

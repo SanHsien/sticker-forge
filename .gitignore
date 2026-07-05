@@ -1,0 +1,45 @@
+# Python / local app
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+*.egg-info/
+
+# Build / packaging
+build/
+dist/
+*.spec
+!packaging/*.spec
+*.exe
+*.msi
+*.zip
+
+# Legacy worker artifacts and secrets, if reference code is tested locally
+reference/upstream-line-sticker-studio/worker/node_modules/
+reference/upstream-line-sticker-studio/worker/.wrangler/
+reference/upstream-line-sticker-studio/worker/.dev.vars
+reference/upstream-line-sticker-studio/worker/.dev.vars.*
+reference/upstream-line-sticker-studio/worker/dist/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Local test artifacts
+/tmp/
+test-output/
+outputs/
+generated/
