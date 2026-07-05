@@ -74,6 +74,29 @@
         <button id="export-zip" type="button" class="primary" data-i18n="exportZip">匯出 ZIP</button>
       </div>
 
+      <div class="export-controls">
+        <label><span data-i18n="cleanupTune">去背強度</span>
+          <select id="cleanup-tune">
+            <option value="safe" data-i18n="tuneSafe">保守</option>
+            <option value="balanced" selected data-i18n="tuneBalanced">平衡</option>
+            <option value="aggressive" data-i18n="tuneAggressive">強力</option>
+          </select>
+        </label>
+        <label><span data-i18n="padding">Padding</span>
+          <input id="sticker-padding" type="range" min="0" max="40" step="2" value="10">
+        </label>
+        <output id="padding-value">10 px</output>
+      </div>
+
+      <section class="export-preview" aria-live="polite">
+        <div class="section-head compact">
+          <h2 data-i18n="exportPreview">匯出前預覽</h2>
+          <span id="selection-summary">0 / 8</span>
+        </div>
+        <ul id="preview-errors"></ul>
+        <div id="preview-files" class="preview-files"></div>
+      </section>
+
       <details class="submission">
         <summary data-i18n="submissionTitle">LINE Creators Market 上架</summary>
         <ol>

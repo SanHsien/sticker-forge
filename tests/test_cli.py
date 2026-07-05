@@ -72,6 +72,19 @@ def test_cli_stickers_creates_png_only_zip(tmp_path) -> None:
         assert archive.namelist()[-1] == "09.png"
 
 
+def test_cli_preview_reports_grid_readiness(tmp_path, capsys) -> None:
+    grid = Image.new("RGBA", (300, 300), (255, 255, 255, 0))
+    grid_path = tmp_path / "grid.png"
+    grid.save(grid_path)
+
+    assert main(["preview", str(grid_path), "--select", "1,2,3,4,5,6,7,9"]) == 0
+
+    output = capsys.readouterr().out
+    assert "01.png" in output
+    assert "09.png" in output
+    assert "370x320" in output
+
+
 def test_cli_app_prints_local_html_path(capsys) -> None:
     assert main(["app", "--print-path"]) == 0
 

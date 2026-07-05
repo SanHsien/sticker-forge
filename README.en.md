@@ -32,7 +32,9 @@ The current scope is LINE static sticker packs. This project does not auto-submi
 - 9 PNG-only ZIP export for non-LINE use.
 - ZIP structure validation.
 - Preview metadata and selection validation model.
-- Local HTML workspace bundled into the Windows executable.
+- Native Windows GUI as the main executable.
+- CLI executable split out as `sticker-forge-cli.exe`.
+- Local HTML workspace kept as an offline fallback.
 
 ## Install From Source
 
@@ -41,6 +43,7 @@ python -m pip install -e ".[dev,packaging]"
 python -m pytest
 python -m sticker_forge --lang en prompt
 python -m sticker_forge --lang en app
+sticker-forge-gui --lang en
 ```
 
 ## Build Windows Executable
@@ -49,15 +52,16 @@ python -m sticker_forge --lang en app
 .\packaging\build-windows.ps1
 ```
 
-The build script installs `.[dev,packaging]`, runs tests, builds with PyInstaller, and smoke-tests `sticker-forge.exe --help`.
+The build script installs `.[dev,packaging]`, runs tests, builds with PyInstaller, smoke-tests `sticker-forge.exe --smoke`, and checks `sticker-forge-cli.exe --help`.
 
 Build output:
 
 ```text
 %TEMP%\sticker-forge-pyinstaller-dist\sticker-forge\sticker-forge.exe
+%TEMP%\sticker-forge-pyinstaller-dist\sticker-forge\sticker-forge-cli.exe
 ```
 
-The script uses `%TEMP%` for PyInstaller build/dist folders to avoid OneDrive file-locking issues in the repo directory.
+`sticker-forge.exe` opens the native GUI without a console window. `sticker-forge-cli.exe` is the console command-line tool. The script uses `%TEMP%` for PyInstaller build/dist folders to avoid OneDrive file-locking issues in the repo directory.
 
 ## CLI
 
@@ -66,6 +70,7 @@ python -m sticker_forge --lang en prompt
 python -m sticker_forge --lang en prompt --no-text --output outputs\prompt.md
 python -m sticker_forge split examples\grid.png -o outputs\cells --inset-ratio 0.03
 python -m sticker_forge cleanup examples\cell.png -o outputs\cell-clean.png --chroma-key green
+python -m sticker_forge preview examples\grid.png --select 1,2,3,4,5,6,7,8
 python -m sticker_forge export examples\grid.png -o outputs\line-stickers.zip --select 1,2,3,4,5,6,7,8 --chroma-key
 python -m sticker_forge stickers examples\grid.png -o outputs\transparent-stickers.zip --chroma-key
 python -m sticker_forge validate outputs\line-stickers.zip
@@ -89,7 +94,7 @@ python -m sticker_forge --lang en app
 
 ## Roadmap
 
-Status: **Phase 0-5 are complete for the first publishable flow; `v0.1.0` is the first Windows release.**
+Status: **Phase 0-6 are complete for the publishable local workflow; `v0.2.0` fixes Windows exe startup and adds a native GUI.**
 
 ### ✅ Done
 
@@ -101,15 +106,19 @@ Status: **Phase 0-5 are complete for the first publishable flow; `v0.1.0` is the
 - [x] Offline local HTML workspace.
 - [x] PyInstaller Windows packaging.
 - [x] First Windows release artifact: `v0.1.0`.
+- [x] Native GUI Windows release artifact: `v0.2.0`.
 - [x] Traditional Chinese and English README.
 - [x] Traditional Chinese and English CLI/app language support.
+- [x] Native GUI main executable.
+- [x] Separate CLI executable.
+- [x] CLI `preview` command and HTML pre-export preview controls.
 
 ### ⏳ Next
 
-- [ ] Stronger cleanup, padding, and preview controls.
-- [ ] More complete pre-export error hints.
+- [ ] Drag-and-drop import.
+- [ ] More detailed preview zoom and per-sticker adjustment.
 - [ ] Decide user data and temporary file locations.
-- [ ] Remove or archive unneeded hosted-backend legacy reference files.
+- [ ] Windows icon, installer, and update check.
 
 ## Related References
 

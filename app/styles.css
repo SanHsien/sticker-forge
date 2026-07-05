@@ -103,12 +103,17 @@ h2 {
 
 .section-head,
 .toolbar,
-.actions {
+.actions,
+.export-controls {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
   margin-bottom: 12px;
+}
+
+.compact {
+  margin-bottom: 8px;
 }
 
 .field-grid {
@@ -163,6 +168,11 @@ button,
 button:hover,
 .file-button:hover {
   border-color: #98a2b3;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .primary {
@@ -231,6 +241,41 @@ textarea {
   background: #fcfcfd;
 }
 
+.export-preview {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  background: #fcfcfd;
+}
+
+#selection-summary {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+#preview-errors {
+  margin: 0 0 8px;
+  padding-left: 18px;
+  color: var(--danger);
+  font-size: 13px;
+}
+
+.preview-files {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.preview-file {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: #fff;
+}
+
 .submission summary {
   cursor: pointer;
   font-weight: 700;
@@ -286,7 +331,8 @@ textarea {
   .top-actions,
   .section-head,
   .toolbar,
-  .actions {
+  .actions,
+  .export-controls {
     align-items: stretch;
     flex-direction: column;
   }

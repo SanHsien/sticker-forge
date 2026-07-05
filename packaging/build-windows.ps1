@@ -17,5 +17,9 @@ if (Test-Path $dist) {
 }
 
 python -m PyInstaller --clean --noconfirm packaging\sticker-forge.spec --distpath $dist --workpath $work
-& (Join-Path $dist "sticker-forge\sticker-forge.exe") --help
+$gui = Start-Process -FilePath (Join-Path $dist "sticker-forge\sticker-forge.exe") -ArgumentList "--smoke" -Wait -PassThru -WindowStyle Hidden
+if ($gui.ExitCode -ne 0) {
+    throw "GUI smoke test failed with exit code $($gui.ExitCode)"
+}
+& (Join-Path $dist "sticker-forge\sticker-forge-cli.exe") --help
 Write-Host "Build output: $dist\sticker-forge"

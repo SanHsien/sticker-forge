@@ -35,6 +35,12 @@ const defaultActions = [
   "抱著枕頭打呵欠",
 ];
 
+const chromaTuneProfiles = {
+  safe: { hard: 0.32, soft: 0.12, minKey: 60, maxOther: 100, dominance: 1.9 },
+  balanced: { hard: 0.25, soft: 0.05, minKey: 50, maxOther: 110, dominance: 1.7 },
+  aggressive: { hard: 0.20, soft: 0.04, minKey: 40, maxOther: 125, dominance: 1.45 },
+};
+
 const localeData = {
   "zh-Hant": {
     subtitle: "LINE 靜態貼圖本機製作台",
@@ -54,6 +60,12 @@ const localeData = {
     selectFirstEight: "選前 8 張",
     exportPng: "匯出 9 張 PNG",
     exportZip: "匯出 ZIP",
+    cleanupTune: "去背強度",
+    tuneSafe: "保守",
+    tuneBalanced: "平衡",
+    tuneAggressive: "強力",
+    padding: "Padding",
+    exportPreview: "匯出前預覽",
     submissionTitle: "LINE Creators Market 上架",
     submission1: "到 creator.line.me 登入 LINE 帳號。",
     submission2: "新增 Sticker，填寫貼圖介紹、圖片編輯、販售資訊。",
@@ -68,11 +80,17 @@ const localeData = {
     noTilesCleanup: "沒有可去背的貼圖",
     cleanupDone: (hex) => `已去除 ${hex} 背景`,
     needEight: (count) => `LINE 最小套組需選 8 張，目前 ${count} 張`,
+    needGridForExport: "請先匯入並切圖。",
     zipDone: "ZIP 已匯出",
     noTilesExport: "沒有可匯出的貼圖",
     pngDone: "9 張 PNG 已匯出",
     spareCell: "空白備用格，保持同一角色與風格，不加文字。",
     spareCellNoText: "空白備用格，保持同一角色與風格。",
+    selectedSummary: (count) => `${count} / 8 已選`,
+    previewPlaceholder: "匯入 3x3 圖後會列出 01.png 到 08.png、main.png、tab.png。",
+    previewSticker: (index, included) => `${String(index).padStart(2, "0")}.png：370 x 320${included ? "" : "（未選）"}`,
+    previewMain: "main.png：240 x 240",
+    previewTab: "tab.png：96 x 74",
     defaultFields: {
       character: "原創可愛角色",
       theme: "日常聊天貼圖",
@@ -101,6 +119,12 @@ const localeData = {
     selectFirstEight: "Select first 8",
     exportPng: "Export 9 PNG",
     exportZip: "Export ZIP",
+    cleanupTune: "Cleanup strength",
+    tuneSafe: "Safe",
+    tuneBalanced: "Balanced",
+    tuneAggressive: "Aggressive",
+    padding: "Padding",
+    exportPreview: "Pre-export preview",
     submissionTitle: "LINE Creators Market submission",
     submission1: "Sign in to creator.line.me with a LINE account.",
     submission2: "Create a Sticker item and fill in description, image, and sales information.",
@@ -115,11 +139,17 @@ const localeData = {
     noTilesCleanup: "No stickers to clean up",
     cleanupDone: (hex) => `Removed ${hex} background`,
     needEight: (count) => `LINE minimum set needs 8 stickers; ${count} selected`,
+    needGridForExport: "Import and split a grid first.",
     zipDone: "ZIP exported",
     noTilesExport: "No stickers to export",
     pngDone: "9 PNG stickers exported",
     spareCell: "Blank spare cell, same character and style, no text.",
     spareCellNoText: "Blank spare cell, same character and style.",
+    selectedSummary: (count) => `${count} / 8 selected`,
+    previewPlaceholder: "Import a 3x3 image to list 01.png to 08.png, main.png, and tab.png.",
+    previewSticker: (index, included) => `${String(index).padStart(2, "0")}.png: 370 x 320${included ? "" : " (not selected)"}`,
+    previewMain: "main.png: 240 x 240",
+    previewTab: "tab.png: 96 x 74",
     defaultFields: {
       character: "an original cute character",
       theme: "everyday chat stickers",
@@ -190,6 +220,7 @@ function setLocale(locale) {
   state.locale = localeData[locale] ? locale : "zh-Hant";
   localStorage.setItem("stickerForgeLocale", state.locale);
   applyLocale(previousLocale);
+  updatePreview();
 }
 
 function setupSlots() {
@@ -326,6 +357,7 @@ function splitGrid() {
     }
   }
   renderTiles();
+  updatePreview();
   setStatus(currentLocale().splitDone);
 }
 
@@ -346,6 +378,7 @@ function renderTiles() {
     checkbox.addEventListener("change", () => {
       tile.included = checkbox.checked;
       item.classList.toggle("excluded", !tile.included);
+      updatePreview();
       setStatus(currentLocale().selectedCount(includedTiles().length));
     });
     label.append(checkbox, ` ${String(i + 1).padStart(2, "0")}`);
@@ -368,6 +401,7 @@ function selectFirstEight() {
     tile.included = index < PACK_SIZE;
   });
   renderTiles();
+  updatePreview();
   setStatus(currentLocale().firstEight);
 }
 
@@ -379,6 +413,7 @@ function cleanupAll() {
   const keyName = $("chroma-key").value;
   state.tiles.forEach((tile) => chromaKeyCanvas(tile.canvas, keyName));
   renderTiles();
+  updatePreview();
   setStatus(currentLocale().cleanupDone(selectedKey().hex));
 }
 
@@ -386,7 +421,7 @@ function chromaKeyCanvas(canvas, keyName) {
   const ctx = canvas.getContext("2d");
   const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = img.data;
-  const profile = { hard: 0.25, soft: 0.05, minKey: 50, maxOther: 110, dominance: 1.7 };
+  const profile = chromaTuneProfiles[$("cleanup-tune").value] || chromaTuneProfiles.balanced;
   for (let i = 0; i < data.length; i += 4) {
     const r = data[i];
     const g = data[i + 1];
@@ -426,11 +461,12 @@ async function exportZip() {
     setStatus(currentLocale().needEight(selected.length), true);
     return;
   }
+  const padding = Number($("sticker-padding").value);
   const files = [];
   for (let i = 0; i < PACK_SIZE; i++) {
     files.push({
       name: `${String(i + 1).padStart(2, "0")}.png`,
-      data: await canvasToBlob(selected[i].canvas),
+      data: await canvasToBlob(fitCanvas(selected[i].canvas, STICKER_W, STICKER_H, padding)),
     });
   }
   files.push({ name: "main.png", data: await canvasToBlob(fitCanvas(selected[0].canvas, MAIN_SIZE, MAIN_SIZE, 12)) });
@@ -450,12 +486,46 @@ async function exportStickersOnly() {
   for (let i = 0; i < state.tiles.length; i++) {
     files.push({
       name: `${String(i + 1).padStart(2, "0")}.png`,
-      data: await canvasToBlob(state.tiles[i].canvas),
+      data: await canvasToBlob(fitCanvas(state.tiles[i].canvas, STICKER_W, STICKER_H, Number($("sticker-padding").value))),
     });
   }
   const blob = await createZipBlob(files);
   downloadBlob(blob, `transparent-stickers-${Date.now()}.zip`);
   setStatus(currentLocale().pngDone);
+}
+
+function updatePreview() {
+  const data = currentLocale();
+  const selected = includedTiles();
+  $("selection-summary").textContent = data.selectedSummary(selected.length);
+  $("padding-value").textContent = `${$("sticker-padding").value} px`;
+  const errors = $("preview-errors");
+  errors.innerHTML = "";
+  if (!state.tiles.length) {
+    const item = document.createElement("li");
+    item.textContent = data.previewPlaceholder;
+    errors.appendChild(item);
+  } else if (selected.length !== PACK_SIZE) {
+    const item = document.createElement("li");
+    item.textContent = data.needEight(selected.length);
+    errors.appendChild(item);
+  }
+  $("export-zip").disabled = selected.length !== PACK_SIZE;
+  const files = $("preview-files");
+  files.innerHTML = "";
+  if (!state.tiles.length) return;
+  state.tiles.forEach((tile, index) => {
+    const item = document.createElement("div");
+    item.className = "preview-file";
+    item.textContent = data.previewSticker(index + 1, tile.included);
+    files.appendChild(item);
+  });
+  for (const text of [data.previewMain, data.previewTab]) {
+    const item = document.createElement("div");
+    item.className = "preview-file";
+    item.textContent = text;
+    files.appendChild(item);
+  }
 }
 
 const crcTable = (() => {
@@ -606,6 +676,8 @@ function downloadBlob(blob, filename) {
 
 function bindEvents() {
   document.querySelectorAll("input, select").forEach((node) => node.addEventListener("input", renderPrompt));
+  $("sticker-padding").addEventListener("input", updatePreview);
+  $("cleanup-tune").addEventListener("change", updatePreview);
   $("ui-language").addEventListener("change", (event) => setLocale(event.target.value));
   $("copy-prompt").addEventListener("click", copyPrompt);
   $("grid-file").addEventListener("change", (event) => {
@@ -623,3 +695,4 @@ $("ui-language").value = state.locale;
 setupSlots();
 bindEvents();
 applyLocale();
+updatePreview();

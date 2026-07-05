@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 from PIL import Image
@@ -10,6 +11,8 @@ from .app_launcher import app_path, open_local_app
 from .cleanup import parse_hex_color, remove_chroma_background
 from .exporter import export_line_zip, export_stickers_zip, validate_line_zip
 from .prompts import DEFAULT_FIELDS, normalize_locale, render_line_static_prompt
+from .preview import build_pack_preview
+from .spec import LINE_STATIC_SPEC
 from .spec import resolve_chroma_key
 from .splitter import split_grid_file, split_grid_to_stickers
 
@@ -22,6 +25,7 @@ MESSAGES = {
         "cleanup_help": "用 chroma-key 移除單色背景",
         "export_help": "從 3x3 grid 匯出 LINE 靜態貼圖 ZIP",
         "stickers_help": "匯出 9 張 PNG-only 貼圖 ZIP",
+        "preview_help": "預覽 3x3 grid 匯出狀態",
         "validate_help": "檢查 LINE 靜態貼圖 ZIP",
         "app_help": "開啟本機 HTML 貼圖工作台",
         "text_help": "重複輸入剛好 8 次",
@@ -29,8 +33,10 @@ MESSAGES = {
         "output_prompt_help": "將 UTF-8 prompt 寫入檔案",
         "select_help": "要匯出的 8 格，使用 1-based row-major 清單。預設：1,2,3,4,5,6,7,8",
         "chroma_export_help": "匯出前移除背景",
+        "padding_help": "貼圖透明 padding，單位 px。預設：10",
         "print_path_help": "只印出 HTML 路徑，不開啟",
         "ok": "OK",
+        "preview_header": "idx file included size alpha line_size",
         "unknown_command": "未知指令",
     },
     "en": {
@@ -41,6 +47,7 @@ MESSAGES = {
         "cleanup_help": "remove a solid background with chroma-key",
         "export_help": "export a LINE static sticker ZIP from a 3x3 grid",
         "stickers_help": "export all 9 stickers as a PNG-only ZIP",
+        "preview_help": "preview export readiness for a 3x3 grid",
         "validate_help": "validate a LINE static sticker ZIP",
         "app_help": "open the local HTML sticker workspace",
         "text_help": "repeat exactly 8 times",
@@ -48,8 +55,10 @@ MESSAGES = {
         "output_prompt_help": "write UTF-8 prompt text to a file",
         "select_help": "8 cells to export, 1-based row-major list. Default: 1,2,3,4,5,6,7,8",
         "chroma_export_help": "remove background before export",
+        "padding_help": "transparent sticker padding in px. Default: 10",
         "print_path_help": "print the HTML path without opening it",
         "ok": "OK",
+        "preview_header": "idx file included size alpha line_size",
         "unknown_command": "unknown command",
     },
 }
@@ -138,6 +147,7 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     export.add_argument("--key-name", choices=["green", "magenta"], default="green")
     export.add_argument("--key-color", type=parse_hex_color)
     export.add_argument("--tune", choices=["safe", "balanced", "aggressive"], default="balanced")
+    export.add_argument("--padding", type=int, default=LINE_STATIC_SPEC.sticker_padding, help=text["padding_help"])
 
     stickers = subparsers.add_parser("stickers", parents=[language_parent], help=text["stickers_help"])
     stickers.add_argument("input", type=Path)
@@ -146,6 +156,21 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     stickers.add_argument("--key-name", choices=["green", "magenta"], default="green")
     stickers.add_argument("--key-color", type=parse_hex_color)
     stickers.add_argument("--tune", choices=["safe", "balanced", "aggressive"], default="balanced")
+    stickers.add_argument("--padding", type=int, default=LINE_STATIC_SPEC.sticker_padding, help=text["padding_help"])
+
+    preview = subparsers.add_parser("preview", parents=[language_parent], help=text["preview_help"])
+    preview.add_argument("input", type=Path)
+    preview.add_argument(
+        "--select",
+        type=_parse_selection,
+        default=_parse_selection("1,2,3,4,5,6,7,8"),
+        help=text["select_help"],
+    )
+    preview.add_argument("--chroma-key", action="store_true", help=text["chroma_export_help"])
+    preview.add_argument("--key-name", choices=["green", "magenta"], default="green")
+    preview.add_argument("--key-color", type=parse_hex_color)
+    preview.add_argument("--tune", choices=["safe", "balanced", "aggressive"], default="balanced")
+    preview.add_argument("--padding", type=int, default=LINE_STATIC_SPEC.sticker_padding, help=text["padding_help"])
 
     validate = subparsers.add_parser("validate", parents=[language_parent], help=text["validate_help"])
     validate.add_argument("zip", type=Path)
@@ -210,9 +235,10 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "export":
+        spec = replace(LINE_STATIC_SPEC, sticker_padding=args.padding)
         with Image.open(args.input) as image:
             key = resolve_chroma_key(args.key_name)
-            cells = split_grid_to_stickers(image, background=(*key.rgb, 255))
+            cells = split_grid_to_stickers(image, spec=spec, background=(*key.rgb, 255))
         selected = [cells[index - 1] for index in args.select]
         if args.chroma_key:
             selected = [
@@ -224,14 +250,15 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 for sticker in selected
             ]
-        output = export_line_zip(selected, args.output, title=args.title, author=args.author)
+        output = export_line_zip(selected, args.output, title=args.title, author=args.author, spec=spec)
         print(output)
         return 0
 
     if args.command == "stickers":
+        spec = replace(LINE_STATIC_SPEC, sticker_padding=args.padding)
         with Image.open(args.input) as image:
             key = resolve_chroma_key(args.key_name)
-            stickers = split_grid_to_stickers(image, background=(*key.rgb, 255))
+            stickers = split_grid_to_stickers(image, spec=spec, background=(*key.rgb, 255))
         if args.chroma_key:
             stickers = [
                 remove_chroma_background(
@@ -242,8 +269,39 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 for sticker in stickers
             ]
-        output = export_stickers_zip(stickers, args.output)
+        output = export_stickers_zip(stickers, args.output, spec=spec)
         print(output)
+        return 0
+
+    if args.command == "preview":
+        spec = replace(LINE_STATIC_SPEC, sticker_padding=args.padding)
+        with Image.open(args.input) as image:
+            key = resolve_chroma_key(args.key_name)
+            stickers = split_grid_to_stickers(image, spec=spec, background=(*key.rgb, 255))
+        if args.chroma_key:
+            stickers = [
+                remove_chroma_background(
+                    sticker,
+                    key_color=args.key_color,
+                    key_name=args.key_name,
+                    tune=args.tune,
+                )
+                for sticker in stickers
+            ]
+        preview_data = build_pack_preview(stickers, selected=args.select, spec=spec)
+        print(text["preview_header"])
+        for item in preview_data.stickers:
+            print(
+                f"{item.index:02d} {item.filename} "
+                f"{'yes' if item.included else 'no'} "
+                f"{item.width}x{item.height} "
+                f"{'yes' if item.has_alpha else 'no'} "
+                f"{'yes' if item.is_line_size else 'no'}"
+            )
+        if preview_data.errors:
+            for error in preview_data.errors:
+                print(error)
+            return 1
         return 0
 
     if args.command == "validate":

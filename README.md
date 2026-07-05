@@ -70,6 +70,8 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 - 建立最小 CLI：`python -m sticker_forge prompt|split|cleanup|export|stickers|validate|app`。
 - 建立本機 HTML 介面原型：`app/index.html`，可離線匯出 ZIP。
 - 建立 `sticker-forge app` 指令，可從 CLI / exe 開啟本機 HTML 介面。
+- 建立原生 Windows GUI 入口：雙擊 `sticker-forge.exe` 直接開啟圖形介面，不再閃 console 視窗。
+- 建立 `sticker-forge-cli.exe` 作為命令列入口。
 - 建立 CLI / HTML 工作台中英文語系切換。
 - 建立英文 README：`README.en.md`。
 - 建立 prompt 欄位渲染、3x3 grid inset 切圖、chroma-key 去背、LINE ZIP exporter、PNG-only stickers ZIP exporter 與 ZIP validator。
@@ -81,7 +83,7 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 
 目前尚未完成：
 
-- 還沒有去背、padding 細部調整 UI 與預覽流程。
+- 原生 GUI 還是首版，後續可強化拖放、更多預覽細節與 icon / installer。
 
 ## 專案結構
 
@@ -111,7 +113,7 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 
 ## 改作路線圖
 
-目前進度：**Phase 0–5 已完成首版可發佈流程；`v0.1.0` 是第一個 Windows release。**
+目前進度：**Phase 0–6 已完成可發佈流程；`v0.2.0` 修正 Windows exe 啟動方式並加入原生 GUI。**
 
 ### ✅ 已完成
 
@@ -152,6 +154,7 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
   - [x] `app/index.html` 提供本機 HTML 工作台，作為 exe GUI 前的可用介面。
   - [x] HTML 工作台支援繁體中文 / English 語系切換。
   - [x] HTML 工作台可離線匯出 ZIP，不依賴 CDN。
+  - [x] HTML 工作台支援匯出前預覽、padding 與去背強度控制。
   - [x] 所有圖片處理都在本機完成。
 
 - [x] **Phase 5：Windows exe 打包基礎**
@@ -159,12 +162,15 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
   - [x] 已建立 Windows build script。
   - [x] 已補 release checklist 與 smoke test。
   - [x] `sticker-forge app` 可從 CLI / exe 開啟本機 HTML 介面。
-  - [x] 已本機驗證 `dist/sticker-forge/sticker-forge.exe --help` 與 `prompt --output`。
+  - [x] 已本機驗證 `sticker-forge.exe --smoke`、`sticker-forge-cli.exe --help` 與 `prompt --output`。
+  - [x] 主程式 `sticker-forge.exe` 改為無 console 原生 GUI。
+  - [x] 命令列工具分離為 `sticker-forge-cli.exe`。
 
 - [x] **正式 Windows release artifact**
-  - [x] 版本號固定為 `v0.1.0`。
+  - [x] 第一版版本號固定為 `v0.1.0`。
+  - [x] 第二版版本號固定為 `v0.2.0`。
   - [x] 產生可發佈的 Windows zip artifact。
-  - [x] release 檔名：`sticker-forge-v0.1.0-windows-x64.zip`。
+  - [x] release 檔名：`sticker-forge-v0.2.0-windows-x64.zip`。
   - [x] 發佈 SHA256 checksum。
   - [x] 發行前確認沒有 API key、使用者圖片、生成 ZIP 或本機暫存檔進版控。
 
@@ -172,11 +178,19 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
   - [x] 建立 `README.en.md`。
   - [x] 中文 README 與英文 README 都寫明打包方式與 roadmap 狀態。
 
+- [x] **Phase 6：原生 GUI 與 exe 啟動修正**
+  - [x] 新增 `src/sticker_forge/gui.py`，使用 tkinter 提供原生圖形介面。
+  - [x] GUI 支援 prompt、3x3 匯入、切圖、去背、選 8 張、padding、匯出 LINE ZIP 與 9 張 PNG ZIP。
+  - [x] GUI 支援繁體中文 / English。
+  - [x] 新增 `preview` CLI 指令，可檢查匯出前檔名、尺寸、選取狀態。
+  - [x] PyInstaller 產出 GUI exe 與 CLI exe，修正雙擊主 exe 閃退問題。
+
 ### ⏳ 待完成
 
 - [ ] **介面強化**
-  - [ ] 補更細的去背、padding 與預覽控制。
-  - [ ] 補匯出前錯誤提示與使用者導引。
+  - [ ] 補拖放匯入。
+  - [ ] 補更細的預覽縮放與單張重切控制。
+  - [ ] 補 Windows icon、installer 與自動更新檢查。
 
 ## 維護文件
 

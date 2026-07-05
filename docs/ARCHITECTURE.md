@@ -3,9 +3,9 @@
 ## 目標架構
 
 ```text
-Local desktop app / exe
+Local native desktop app / exe
   |
-  | or local HTML app opened from disk
+  | or CLI / local HTML fallback
   |
   | generates prompt
   v
@@ -57,8 +57,14 @@ split -> cleanup -> resize -> preview -> export ZIP
   - 匯入 3x3 grid
   - 切圖、去背、選 8 張
   - 瀏覽器端 ZIP 匯出
+- Native GUI
+  - `sticker-forge.exe`
+  - tkinter 原生視窗，無 console
+  - 產 prompt、匯入 3x3、切圖、去背、選 8 張、padding、匯出 ZIP
+  - 繁體中文 / English 切換
 - Packaging
-  - Windows `.exe`
+  - Windows GUI `.exe`
+  - Windows CLI `.exe`
   - release artifact
 
 ## Legacy

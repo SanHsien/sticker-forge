@@ -34,9 +34,10 @@
 - [x] 產生 9 張 PNG-only ZIP，供非 LINE 上架用途使用。
 - [x] 檔名、張數與尺寸檢查。
 - [x] `validate` 指令檢查 ZIP 結構。
+- [x] `preview` 指令檢查匯出前檔名、尺寸、選取狀態。
 - [x] 保留 LINE Creators Market 手動上架/送審說明。
-- [ ] 匯出前預覽。
-- [ ] 更完整錯誤提示。
+- [x] 匯出前預覽。
+- [x] 更完整錯誤提示。
 
 ## P4：本機 app 與 exe
 
@@ -47,14 +48,27 @@
 - [x] 本機 HTML 介面支援繁體中文 / English 切換。
 - [x] 本機 HTML 介面可離線匯出 ZIP，不依賴 JSZip CDN。
 - [x] 本機 HTML 介面可匯出 9 張 PNG-only ZIP。
+- [x] 本機 HTML 介面支援匯出前預覽、padding 與去背強度控制。
 - [x] 補 Windows exe 打包設定。
 - [x] `sticker-forge app` 可從 CLI / exe 開啟本機 HTML 介面。
 - [x] 補 release checklist。
 - [x] 產生正式 Windows release artifact：`v0.1.0`。
+- [x] 產生原生 GUI Windows release artifact：`v0.2.0`。
 - [x] GUI 或簡單本機介面封裝進 exe。
 - [x] 建立英文 README：`README.en.md`。
 
-## P5：Legacy 清理
+## P5：原生 GUI 與 exe 啟動修正
+
+- [x] 新增 `src/sticker_forge/gui.py` 原生 tkinter GUI。
+- [x] 雙擊 `sticker-forge.exe` 直接開啟 GUI，不再顯示 console 後閃退。
+- [x] 命令列入口分離為 `sticker-forge-cli.exe`。
+- [x] GUI 支援 prompt、3x3 匯入、切圖、去背、選 8 張、padding、LINE ZIP 與 PNG-only ZIP。
+- [x] GUI 支援繁體中文 / English。
+- [x] PyInstaller build script smoke test 改為 `sticker-forge.exe --smoke` 與 `sticker-forge-cli.exe --help`。
+- [ ] 拖放匯入。
+- [ ] Windows icon、installer、自動更新檢查。
+
+## P6：Legacy 清理
 
 - [x] 從 `reference/upstream-line-sticker-studio/` 抽出尺寸、切圖 inset、chroma-key、ZIP 與上架說明。
 - [ ] 刪除不再需要的 `worker/` 參考。

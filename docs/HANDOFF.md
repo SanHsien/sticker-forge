@@ -34,8 +34,11 @@
 - 新增 `src/sticker_forge/preview.py`，提供貼圖預覽 metadata 與選圖檢查。
 - 新增 `src/sticker_forge/cli.py`，支援 `prompt`、`split`、`cleanup`、`export`、`stickers`、`validate`、`app`。
 - CLI 支援 `--lang zh-Hant|en`，可切換中文 / 英文 help、prompt 與狀態輸出。
+- CLI 新增 `preview` 指令。
+- 新增 `src/sticker_forge/gui.py`，提供原生 tkinter GUI。
+- PyInstaller 目前產出兩個 exe：`sticker-forge.exe` 是無 console GUI，`sticker-forge-cli.exe` 是命令列。
 - 新增 `src/sticker_forge/app_launcher.py`，可從 CLI / exe 開啟本機 HTML 介面。
-- 新增 `app/index.html`、`app/styles.css`、`app/app.js`，提供可直接開啟的本機 HTML 介面；ZIP 由本機 JavaScript 產生，不依賴 CDN，支援 LINE ZIP 與 9 張 PNG-only ZIP，並支援繁體中文 / English 切換。
+- 新增 `app/index.html`、`app/styles.css`、`app/app.js`，提供可直接開啟的本機 HTML fallback；ZIP 由本機 JavaScript 產生，不依賴 CDN，支援 LINE ZIP 與 9 張 PNG-only ZIP，並支援繁體中文 / English 切換。
 - 新增 `README.en.md`。
 - 新增 `docs/LINE_SUBMISSION.md`，保留 upstream 的 LINE Creators Market 手動上架/送審說明。
 - 新增 `packaging/sticker-forge.spec` 與 `packaging/build-windows.ps1`。
@@ -53,8 +56,8 @@
 
 ## 下一步
 
-1. 補匯出前預覽與更完整錯誤提示。
-2. 強化本機 HTML 介面的去背、padding 與預覽控制。
+1. 強化原生 GUI：拖放匯入、單張預覽縮放、icon。
+2. 建立 Windows installer。
 3. 決定使用者資料與暫存檔位置。
 4. 清理不再需要的 legacy hosted backend reference。
 
