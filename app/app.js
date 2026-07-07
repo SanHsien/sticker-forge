@@ -430,10 +430,24 @@ function chromaKeyCanvas(canvas, keyName) {
     const pure = keyName === "magenta"
       ? Math.min(r, b) >= profile.minKey && g <= profile.maxOther && r >= g * profile.dominance && b >= g * profile.dominance
       : g >= profile.minKey && r <= profile.maxOther && b <= profile.maxOther && g >= r * profile.dominance && g >= b * profile.dominance;
+    let alphaOut = data[i + 3];
     if (pure && score > profile.hard) {
-      data[i + 3] = 0;
+      alphaOut = 0;
     } else if (pure && score > profile.soft) {
-      data[i + 3] = Math.round(255 * (profile.hard - score) / Math.max(0.01, profile.hard - profile.soft));
+      alphaOut = Math.round(255 * (profile.hard - score) / Math.max(0.01, profile.hard - profile.soft));
+    }
+    if (alphaOut === 0) {
+      data[i + 3] = 0;
+    } else {
+      // Despill retained pixels to match the Python CLI/GUI cleanup output.
+      if (keyName === "magenta") {
+        data[i] = g;
+        data[i + 1] = g;
+        data[i + 2] = g;
+      } else {
+        data[i + 1] = (r + b) >> 1;
+      }
+      data[i + 3] = alphaOut;
     }
   }
   ctx.putImageData(img, 0, 0);
