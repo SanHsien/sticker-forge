@@ -70,7 +70,7 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 
 ## 專案狀態與路線圖
 
-目前版本 **v0.3.0**：local-first LINE 靜態貼圖工具，CLI + 原生 Windows GUI + 本機 HTML fallback 三條入口皆可用，`python -m pytest` 全數通過。
+目前版本 **v0.4.0**：local-first LINE 靜態貼圖工具，CLI + 原生 Windows GUI + 本機 HTML fallback 三條入口皆可用，`python -m pytest` 全數通過。
 
 ### ✅ 已完成
 
@@ -92,6 +92,10 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 - **validate 檢查透明背景**：`validate` 新增透明度檢查，完全不透明（背景未去）的貼圖會被標記，擋下 LINE 第一大退件原因。
 
 細節見 [`REVIEW.md`](REVIEW.md) 與 [`docs/DECISIONS.md`](docs/DECISIONS.md)。
+
+### 🚀 v0.4.0 新增
+
+- **Prompt 下拉建議**：角色／主題／語氣／風格／語言與 8 句文字、8 個動作欄位都提供下拉建議，沒靈感可直接選、也能自己打字。原生 GUI 用可編輯下拉（Combobox）、HTML 用 `datalist`，建議會隨中/英語系切換。
 
 ### 🚀 v0.3.0 新增
 

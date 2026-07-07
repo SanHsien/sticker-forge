@@ -86,7 +86,7 @@ python -m sticker_forge validate outputs\line-stickers.zip
 
 ## Roadmap
 
-Version **v0.3.0**: local-first LINE static sticker toolkit with three entry points (CLI, native Windows GUI, offline HTML). `python -m pytest` passes.
+Version **v0.4.0**: local-first LINE static sticker toolkit with three entry points (CLI, native Windows GUI, offline HTML). `python -m pytest` passes.
 
 ### ✅ Done
 
@@ -106,6 +106,10 @@ Version **v0.3.0**: local-first LINE static sticker toolkit with three entry poi
 - **`validate` checks transparency**: `validate` now flags fully opaque stickers (background not removed), catching the most common LINE rejection reason.
 
 See [`REVIEW.md`](REVIEW.md) and [`docs/DECISIONS.md`](docs/DECISIONS.md).
+
+### 🚀 New in v0.4.0
+
+- **Prompt dropdown suggestions**: character / theme / tone / style / language and the 8 text and action slots offer dropdown suggestions — pick one when you are short on ideas, or type your own. The native GUI uses editable comboboxes, the HTML app uses `datalist`, and suggestions switch with the zh/en language.
 
 ### 🚀 New in v0.3.0
 

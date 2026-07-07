@@ -27,8 +27,7 @@
 
 - 原專案檔案已搬到 `reference/upstream-line-sticker-studio/`。
 - web frontend 參考：`reference/upstream-line-sticker-studio/app.js`、`index.html`、`styles.css`。
-- Worker 參考：`reference/upstream-line-sticker-studio/worker/`。
-- 新方向應逐步把可用邏輯搬成本機工具，Worker 相關內容只作參考。
+- upstream Cloudflare `worker/` 與 campaign-checker CI 已於 v0.3.0 移除（不符合 local-first）；不要重建。
 
 ## 回覆要求
 

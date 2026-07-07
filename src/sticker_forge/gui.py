@@ -11,7 +11,7 @@ from PIL import Image, ImageTk
 
 from .cleanup import remove_chroma_background
 from .exporter import export_line_zip, export_stickers_zip
-from .prompts import DEFAULT_ACTIONS, DEFAULT_FIELDS, DEFAULT_TEXTS, normalize_locale, render_line_static_prompt
+from .prompts import DEFAULT_ACTIONS, DEFAULT_FIELDS, DEFAULT_TEXTS, SUGGESTIONS, normalize_locale, render_line_static_prompt
 from .spec import LINE_STATIC_SPEC, resolve_chroma_key
 from .splitter import split_grid_to_stickers
 
@@ -108,6 +108,9 @@ class StickerForgeApp:
         self.action_vars = [tk.StringVar(value=value) for value in DEFAULT_ACTIONS[self.locale]]
 
         self.labels: dict[str, ttk.Label | ttk.LabelFrame | ttk.Button | ttk.Checkbutton] = {}
+        self.field_combos: dict[str, ttk.Combobox] = {}
+        self.text_combos: list[ttk.Combobox] = []
+        self.action_combos: list[ttk.Combobox] = []
         self.status = tk.StringVar(value=self._t("status_ready"))
         self._build()
         self._bind_prompt_updates()
@@ -148,8 +151,13 @@ class StickerForgeApp:
             field_key = "language" if key == "prompt_language" else key
             self.labels[key] = ttk.Label(form, text=self._t(key))
             self.labels[key].grid(row=row, column=0, sticky="w", pady=3)
-            entry = ttk.Entry(form, textvariable=self.fields[field_key])
-            entry.grid(row=row, column=1, sticky="ew", pady=3)
+            combo = ttk.Combobox(
+                form,
+                textvariable=self.fields[field_key],
+                values=SUGGESTIONS[self.locale][field_key],
+            )
+            combo.grid(row=row, column=1, sticky="ew", pady=3)
+            self.field_combos[field_key] = combo
         form.columnconfigure(1, weight=1)
 
         options = ttk.Frame(left)
@@ -163,8 +171,16 @@ class StickerForgeApp:
         slots.pack(fill="x")
         for index in range(8):
             ttk.Label(slots, text=f"{index + 1:02d}").grid(row=index, column=0, padx=(0, 4), pady=2)
-            ttk.Entry(slots, textvariable=self.text_vars[index], width=14).grid(row=index, column=1, sticky="ew", pady=2)
-            ttk.Entry(slots, textvariable=self.action_vars[index], width=24).grid(row=index, column=2, sticky="ew", pady=2, padx=(4, 0))
+            text_combo = ttk.Combobox(
+                slots, textvariable=self.text_vars[index], values=SUGGESTIONS[self.locale]["texts"], width=14
+            )
+            text_combo.grid(row=index, column=1, sticky="ew", pady=2)
+            self.text_combos.append(text_combo)
+            action_combo = ttk.Combobox(
+                slots, textvariable=self.action_vars[index], values=SUGGESTIONS[self.locale]["actions"], width=24
+            )
+            action_combo.grid(row=index, column=2, sticky="ew", pady=2, padx=(4, 0))
+            self.action_combos.append(action_combo)
         slots.columnconfigure(1, weight=1)
         slots.columnconfigure(2, weight=2)
 
@@ -229,6 +245,13 @@ class StickerForgeApp:
         for index, var in enumerate(self.action_vars):
             if var.get() == DEFAULT_ACTIONS[previous][index]:
                 var.set(DEFAULT_ACTIONS[self.locale][index])
+        suggest = SUGGESTIONS[self.locale]
+        for field_key, combo in self.field_combos.items():
+            combo.configure(values=suggest[field_key])
+        for combo in self.text_combos:
+            combo.configure(values=suggest["texts"])
+        for combo in self.action_combos:
+            combo.configure(values=suggest["actions"])
         for key, widget in self.labels.items():
             if key in TEXT[self.locale]:
                 if isinstance(widget, ttk.LabelFrame):
