@@ -5,6 +5,7 @@ from pathlib import Path
 block_cipher = None
 spec_dir = Path(SPECPATH)
 repo_dir = spec_dir.parent
+icon_path = str(spec_dir / "icon.ico")
 
 datas = [
     (str(repo_dir / "prompts"), "prompts"),
@@ -47,6 +48,7 @@ gui_exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon=icon_path,
 )
 
 cli_analysis = Analysis(
@@ -70,6 +72,7 @@ cli_exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon=icon_path,
 )
 
 coll = COLLECT(

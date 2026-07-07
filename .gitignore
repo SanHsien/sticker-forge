@@ -17,13 +17,6 @@ dist/
 *.msi
 *.zip
 
-# Legacy worker artifacts and secrets, if reference code is tested locally
-reference/upstream-line-sticker-studio/worker/node_modules/
-reference/upstream-line-sticker-studio/worker/.wrangler/
-reference/upstream-line-sticker-studio/worker/.dev.vars
-reference/upstream-line-sticker-studio/worker/.dev.vars.*
-reference/upstream-line-sticker-studio/worker/dist/
-
 # Logs
 *.log
 npm-debug.log*

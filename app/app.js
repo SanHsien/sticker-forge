@@ -55,6 +55,7 @@ const localeData = {
     withText: "有字版",
     background: "背景色",
     importGrid: "匯入 3x3",
+    dropHint: "把 3x3 圖拖放到這裡，或用上方「匯入 3x3」",
     split: "切圖",
     cleanup: "去背",
     selectFirstEight: "選前 8 張",
@@ -114,6 +115,7 @@ const localeData = {
     withText: "Text version",
     background: "Background",
     importGrid: "Import 3x3",
+    dropHint: "Drag a 3x3 image here, or use Import 3x3 above",
     split: "Split",
     cleanup: "Clean up",
     selectFirstEight: "Select first 8",
@@ -688,6 +690,33 @@ function downloadBlob(blob, filename) {
   URL.revokeObjectURL(url);
 }
 
+function setupDropzone() {
+  const zone = $("dropzone");
+  if (!zone) return;
+  const stop = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+  };
+  ["dragenter", "dragover"].forEach((type) =>
+    zone.addEventListener(type, (event) => {
+      stop(event);
+      zone.classList.add("dragover");
+    })
+  );
+  ["dragleave", "dragend"].forEach((type) =>
+    zone.addEventListener(type, (event) => {
+      stop(event);
+      zone.classList.remove("dragover");
+    })
+  );
+  zone.addEventListener("drop", (event) => {
+    stop(event);
+    zone.classList.remove("dragover");
+    const file = Array.from(event.dataTransfer?.files || []).find((item) => item.type.startsWith("image/"));
+    if (file) loadGrid(file);
+  });
+}
+
 function bindEvents() {
   document.querySelectorAll("input, select").forEach((node) => node.addEventListener("input", renderPrompt));
   $("sticker-padding").addEventListener("input", updatePreview);
@@ -698,6 +727,7 @@ function bindEvents() {
     const file = event.target.files?.[0];
     if (file) loadGrid(file);
   });
+  setupDropzone();
   $("split-grid").addEventListener("click", splitGrid);
   $("cleanup-all").addEventListener("click", cleanupAll);
   $("select-first-eight").addEventListener("click", selectFirstEight);

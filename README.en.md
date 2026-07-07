@@ -86,7 +86,7 @@ python -m sticker_forge validate outputs\line-stickers.zip
 
 ## Roadmap
 
-Version **v0.2.0**: local-first LINE static sticker toolkit with three entry points (CLI, native Windows GUI, offline HTML). `python -m pytest` passes.
+Version **v0.3.0**: local-first LINE static sticker toolkit with three entry points (CLI, native Windows GUI, offline HTML). `python -m pytest` passes.
 
 ### ✅ Done
 
@@ -107,9 +107,16 @@ Version **v0.2.0**: local-first LINE static sticker toolkit with three entry poi
 
 See [`REVIEW.md`](REVIEW.md) and [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
-### ⏳ Next
+### 🚀 New in v0.3.0
 
-- Drag-and-drop import, per-sticker re-slice and preview zoom, Windows icon/installer/update check.
+- **Drag-and-drop import** in the offline HTML workspace (native, zero-dep, browser-verified).
+- **Windows icon** for the GUI/CLI executables (`packaging/icon.ico`).
+- **Legacy cleanup**: removed `reference/.../worker/` (Cloudflare/Gemini backend) and the campaign-checker CI; kept the upstream UI reference for provenance.
+
+### ⏳ Remaining (mostly decided)
+
+- **Decided against** (see [`docs/DECISIONS.md`](docs/DECISIONS.md)): installer/auto-update (needs an update server, conflicts with local-first), user-data/temp directory (no hidden data written), tkinter GUI drag-drop (avoids an extra dependency).
+- **Optional future**: per-sticker re-slice and preview zoom.
 - Decide user data and temporary file locations.
 - Remove no-longer-needed `reference/.../worker/` and upstream hosted config.
 

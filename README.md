@@ -70,7 +70,7 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 
 ## 專案狀態與路線圖
 
-目前版本 **v0.2.0**：local-first LINE 靜態貼圖工具，CLI + 原生 Windows GUI + 本機 HTML fallback 三條入口皆可用，`python -m pytest` 全數通過。
+目前版本 **v0.3.0**：local-first LINE 靜態貼圖工具，CLI + 原生 Windows GUI + 本機 HTML fallback 三條入口皆可用，`python -m pytest` 全數通過。
 
 ### ✅ 已完成
 
@@ -93,11 +93,16 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 
 細節見 [`REVIEW.md`](REVIEW.md) 與 [`docs/DECISIONS.md`](docs/DECISIONS.md)。
 
-### ⏳ 待辦
+### 🚀 v0.3.0 新增
 
-- **介面強化**：拖放匯入、單張重切與預覽縮放、Windows icon / installer / 自動更新檢查。
-- **使用者資料位置**：決定使用者資料與暫存檔存放位置。
-- **Legacy 清理**：移除不再需要的 `reference/.../worker/` 與 upstream hosted 設定。
+- **拖放匯入**：本機 HTML 工作台可直接把 3x3 圖拖放進來（原生、zero-dep，已於瀏覽器實測）。
+- **Windows icon**：GUI / CLI exe 使用自製 `packaging/icon.ico`。
+- **Legacy 清理**：移除 `reference/.../worker/`（Cloudflare/Gemini 後端）與 campaign-checker CI；保留 upstream UI 參考作 provenance。
+
+### ⏳ 剩餘（多已定案）
+
+- **已決定不做**（見 [`docs/DECISIONS.md`](docs/DECISIONS.md)）：installer／自動更新（需更新伺服器，違反 local-first）、使用者資料／暫存目錄（不寫隱藏資料）、tkinter GUI 拖放（避免外部相依）。
+- **可選未來**：單張重切與預覽縮放等 GUI 細節。
 
 ## 維護文件
 
