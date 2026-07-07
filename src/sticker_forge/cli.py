@@ -145,7 +145,6 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     export.add_argument("--author", default="sticker-forge")
     export.add_argument("--chroma-key", action="store_true", help=text["chroma_export_help"])
     export.add_argument("--key-name", choices=["green", "magenta"], default="green")
-    export.add_argument("--key-color", type=parse_hex_color)
     export.add_argument("--tune", choices=["safe", "balanced", "aggressive"], default="balanced")
     export.add_argument("--padding", type=int, default=LINE_STATIC_SPEC.sticker_padding, help=text["padding_help"])
 
@@ -154,7 +153,6 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     stickers.add_argument("-o", "--output", type=Path, required=True)
     stickers.add_argument("--chroma-key", action="store_true", help=text["chroma_export_help"])
     stickers.add_argument("--key-name", choices=["green", "magenta"], default="green")
-    stickers.add_argument("--key-color", type=parse_hex_color)
     stickers.add_argument("--tune", choices=["safe", "balanced", "aggressive"], default="balanced")
     stickers.add_argument("--padding", type=int, default=LINE_STATIC_SPEC.sticker_padding, help=text["padding_help"])
 
@@ -168,7 +166,6 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     )
     preview.add_argument("--chroma-key", action="store_true", help=text["chroma_export_help"])
     preview.add_argument("--key-name", choices=["green", "magenta"], default="green")
-    preview.add_argument("--key-color", type=parse_hex_color)
     preview.add_argument("--tune", choices=["safe", "balanced", "aggressive"], default="balanced")
     preview.add_argument("--padding", type=int, default=LINE_STATIC_SPEC.sticker_padding, help=text["padding_help"])
 
@@ -244,7 +241,6 @@ def main(argv: list[str] | None = None) -> int:
             selected = [
                 remove_chroma_background(
                     sticker,
-                    key_color=args.key_color,
                     key_name=args.key_name,
                     tune=args.tune,
                 )
@@ -263,7 +259,6 @@ def main(argv: list[str] | None = None) -> int:
             stickers = [
                 remove_chroma_background(
                     sticker,
-                    key_color=args.key_color,
                     key_name=args.key_name,
                     tune=args.tune,
                 )
@@ -282,7 +277,6 @@ def main(argv: list[str] | None = None) -> int:
             stickers = [
                 remove_chroma_background(
                     sticker,
-                    key_color=args.key_color,
                     key_name=args.key_name,
                     tune=args.tune,
                 )
@@ -320,3 +314,7 @@ def main(argv: list[str] | None = None) -> int:
 
     parser.error(f"{text['unknown_command']}: {args.command}")
     return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
