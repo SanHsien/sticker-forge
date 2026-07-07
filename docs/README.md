@@ -5,7 +5,7 @@
 ## 入口
 
 - [`HANDOFF.md`](HANDOFF.md)：目前接手狀態、已知風險、下一步。
-- [`PROJECT_REVIEW_2026-07-05.md`](PROJECT_REVIEW_2026-07-05.md)：目前專案 review 與改作順序。
+- [`../REVIEW.md`](../REVIEW.md)：最新專案 review（在根目錄，僅保留最新版）。
 - [`ARCHITECTURE.md`](ARCHITECTURE.md)：local-first 目標架構與 legacy 邊界。
 - [`DEVELOPMENT.md`](DEVELOPMENT.md)：本機 app、測試與 exe 打包方向。
 - [`ROADMAP.md`](ROADMAP.md)：fork 後整理與改寫計畫。

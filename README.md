@@ -194,7 +194,7 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 
 ## 維護文件
 
-- [`docs/PROJECT_REVIEW_2026-07-05.md`](docs/PROJECT_REVIEW_2026-07-05.md)：目前專案 review 與改作順序。
+- [`REVIEW.md`](REVIEW.md)：最新專案 review（僅保留最新版）。
 - [`docs/ROADMAP.md`](docs/ROADMAP.md)：內部 roadmap。
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)：目標架構。
 - [`docs/HANDOFF.md`](docs/HANDOFF.md)：接手狀態。
