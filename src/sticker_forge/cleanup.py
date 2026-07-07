@@ -42,6 +42,8 @@ def remove_chroma_background(
     output = Image.new("RGBA", source.size)
     pixels = []
 
+    # Pillow 14 removes Image.getdata() in favor of get_flattened_data();
+    # prefer the new API when available, fall back on older Pillow.
     if hasattr(source, "get_flattened_data"):
         source_pixels = source.get_flattened_data()
     else:
