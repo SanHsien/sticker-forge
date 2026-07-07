@@ -60,6 +60,40 @@ def test_cli_export_creates_zip(tmp_path) -> None:
     assert main(["validate", str(output_path)]) == 0
 
 
+def _read_zip_image(archive_path, name):
+    from io import BytesIO
+
+    with ZipFile(archive_path) as archive:
+        return Image.open(BytesIO(archive.read(name))).convert("RGBA")
+
+
+def test_cli_export_removes_background_by_default(tmp_path) -> None:
+    # A green-screen grid should export transparent stickers without any flag,
+    # because LINE requires transparent backgrounds.
+    grid = Image.new("RGBA", (300, 300), (0, 255, 0, 255))
+    grid_path = tmp_path / "grid.png"
+    grid.save(grid_path)
+    output_path = tmp_path / "pack.zip"
+
+    assert main(["export", str(grid_path), "-o", str(output_path)]) == 0
+
+    sticker = _read_zip_image(output_path, "01.png")
+    assert sticker.getpixel((0, 0))[3] == 0
+
+
+def test_cli_export_keep_background_leaves_solid_fill(tmp_path) -> None:
+    grid = Image.new("RGBA", (300, 300), (0, 255, 0, 255))
+    grid_path = tmp_path / "grid.png"
+    grid.save(grid_path)
+    output_path = tmp_path / "pack.zip"
+
+    assert main(["export", str(grid_path), "-o", str(output_path), "--keep-background"]) == 0
+
+    # export adds a 10px transparent padding border, so check the center fill.
+    sticker = _read_zip_image(output_path, "01.png")
+    assert sticker.getpixel((185, 160)) == (0, 255, 0, 255)
+
+
 def test_cli_stickers_creates_png_only_zip(tmp_path) -> None:
     grid = Image.new("RGBA", (300, 300), (255, 255, 255, 0))
     grid_path = tmp_path / "grid.png"

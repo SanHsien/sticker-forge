@@ -49,13 +49,16 @@ python -m sticker_forge prompt --character "原創柴犬" --chroma-key magenta -
 python -m sticker_forge split examples\grid.png -o outputs\cells --inset-ratio 0.03
 python -m sticker_forge cleanup examples\cell.png -o outputs\cell-clean.png --key-color 00ff00
 python -m sticker_forge preview examples\grid.png --select 1,2,3,4,5,6,7,8
-python -m sticker_forge export examples\grid.png -o outputs\line-stickers.zip --select 1,2,3,4,5,6,7,8 --chroma-key
-python -m sticker_forge stickers examples\grid.png -o outputs\transparent-stickers.zip --chroma-key
+python -m sticker_forge export examples\grid.png -o outputs\line-stickers.zip --select 1,2,3,4,5,6,7,8
+python -m sticker_forge export examples\grid.png -o outputs\raw.zip --keep-background
+python -m sticker_forge stickers examples\grid.png -o outputs\transparent-stickers.zip
 python -m sticker_forge validate outputs\line-stickers.zip
 python -m sticker_forge app --print-path
 start .\app\index.html
 ```
 
+> **去背預設開啟**：`export` / `stickers` / `preview` 因為切圖會用 key 色填背景、且 LINE 要求透明背景，預設就會去背。加 `--keep-background` 可保留實心底色（少數非 LINE 用途）。
+>
 > `--key-color` 只在 `cleanup` 有效（distance-based 去背）。`export` / `stickers` / `preview` 固定走 `--key-name` 的 green/magenta score-based 去背，不接受 `--key-color`。
 
 修改 JavaScript 時可加跑語法檢查：

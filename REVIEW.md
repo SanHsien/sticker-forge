@@ -17,18 +17,13 @@
 | **P1**：web 去背缺 despill、與 Python 不一致 | ✅ 已修 | 移植 despill 到 `app.js`；Node×Python 60/60 像素交叉比對一致 |
 | 附帶：`python -m sticker_forge.cli` 靜默 no-op | ✅ 已修 | 補 `__main__` guard |
 | 附帶：打包 exe 實機驗證（roadmap item 4） | ✅ 已驗 | `pyinstaller` build 成功，GUI `--smoke` exit 0、CLI export/validate OK、bundle 含 app/+prompts/ |
+| **P2**：未去背時匯出成品是實心底色 | ✅ 已修 | 研究 LINE 官方＋upstream 後，`export`/`stickers`/`preview` 改預設去背，加 `--keep-background` opt-out；補測試（預設→透明、opt-out→實心） |
 
-現況：`python -m pytest -q` → **29 passed**，無 DeprecationWarning。
+現況：`python -m pytest -q` → **31 passed**，無 DeprecationWarning。
 
 ---
 
-## 仍開放（P2，多為產品決策）
-
-### P2：未加 `--chroma-key` 時，匯出成品是實心綠/洋紅底
-
-CLI `export`/`stickers` 不去背就直接匯出時，每格底色是 key 色（[cli.py:241](src/sticker_forge/cli.py#L241)、[cli.py:261](src/sticker_forge/cli.py#L261)）。邏輯正確（設計預期使用者會去背），但只跑一次 export 的人會踩雷。
-
-- 需主人決定：(a) export/stickers 預設就去背；或 (b) 在輸出訊息／`preview` 提示「尚未去背，成品為實心底色」。屬改變預設行為，未逕自更動。
+## 仍開放
 
 ### P2：去背是逐像素 Python 迴圈
 

@@ -88,12 +88,12 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 - **`--key-color`**：從 `export` / `stickers` / `preview` 移除死參數（那條路徑固定走 green/magenta score-based 去背），保留在 `cleanup`。
 - **web 去背 despill**：`app/app.js` 對齊 Python 的 despill，三入口去背輸出一致（60/60 像素交叉比對）。
 - **打包驗證**：實測 PyInstaller build，GUI `--smoke`、CLI export/validate、bundle 資源皆通過；`python -m sticker_forge.cli` 補上 `__main__` guard。
+- **匯出預設去背**：`export` / `stickers` / `preview` 改為預設去背（LINE 強制要求透明背景，且切圖本就用 key 色填背景配對去背）。想保留實心底色改用 `--keep-background`。
 
 細節見 [`REVIEW.md`](REVIEW.md) 與 [`docs/DECISIONS.md`](docs/DECISIONS.md)。
 
 ### ⏳ 待辦
 
-- **產品決策（P2）**：`export` / `stickers` 未加 `--chroma-key` 時成品是實心綠/洋紅底——待決定「預設去背」或「輸出時提示」。
 - **介面強化**：拖放匯入、單張重切與預覽縮放、Windows icon / installer / 自動更新檢查。
 - **使用者資料位置**：決定使用者資料與暫存檔存放位置。
 - **Legacy 清理**：移除不再需要的 `reference/.../worker/` 與 upstream hosted 設定。

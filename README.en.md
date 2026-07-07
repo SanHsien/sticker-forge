@@ -65,8 +65,8 @@ python -m sticker_forge --lang en prompt
 python -m sticker_forge split examples\grid.png -o outputs\cells --inset-ratio 0.03
 python -m sticker_forge cleanup examples\cell.png -o outputs\cell-clean.png --chroma-key green
 python -m sticker_forge preview examples\grid.png --select 1,2,3,4,5,6,7,8
-python -m sticker_forge export examples\grid.png -o outputs\line-stickers.zip --select 1,2,3,4,5,6,7,8 --chroma-key
-python -m sticker_forge stickers examples\grid.png -o outputs\transparent-stickers.zip --chroma-key
+python -m sticker_forge export examples\grid.png -o outputs\line-stickers.zip --select 1,2,3,4,5,6,7,8
+python -m sticker_forge stickers examples\grid.png -o outputs\transparent-stickers.zip
 python -m sticker_forge validate outputs\line-stickers.zip
 ```
 
@@ -102,12 +102,12 @@ Version **v0.2.0**: local-first LINE static sticker toolkit with three entry poi
 - **`--key-color`**: removed the dead flag from `export`/`stickers`/`preview` (that path always uses green/magenta score-based cleanup); kept on `cleanup`.
 - **Web despill**: `app/app.js` now despills to match Python, so all three paths produce identical output (verified 60/60 pixels).
 - **Packaging verified**: PyInstaller build tested — GUI `--smoke`, CLI export/validate, and bundled resources all pass.
+- **Cleanup on by default**: `export`/`stickers`/`preview` now remove the background by default (LINE requires transparent backgrounds, and the split step fills the key color specifically for removal). Use `--keep-background` to keep the solid fill.
 
 See [`REVIEW.md`](REVIEW.md) and [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
 ### ⏳ Next
 
-- **Product decision (P2)**: without `--chroma-key`, `export`/`stickers` output has a solid key-color background — decide whether to clean up by default or warn on export.
 - Drag-and-drop import, per-sticker re-slice and preview zoom, Windows icon/installer/update check.
 - Decide user data and temporary file locations.
 - Remove no-longer-needed `reference/.../worker/` and upstream hosted config.

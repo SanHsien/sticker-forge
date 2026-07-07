@@ -32,7 +32,7 @@ MESSAGES = {
         "action_help": "重複輸入剛好 8 次",
         "output_prompt_help": "將 UTF-8 prompt 寫入檔案",
         "select_help": "要匯出的 8 格，使用 1-based row-major 清單。預設：1,2,3,4,5,6,7,8",
-        "chroma_export_help": "匯出前移除背景",
+        "keep_background_help": "保留實心底色不去背（預設會去背，因為 LINE 要求透明背景）",
         "padding_help": "貼圖透明 padding，單位 px。預設：10",
         "print_path_help": "只印出 HTML 路徑，不開啟",
         "ok": "OK",
@@ -54,7 +54,7 @@ MESSAGES = {
         "action_help": "repeat exactly 8 times",
         "output_prompt_help": "write UTF-8 prompt text to a file",
         "select_help": "8 cells to export, 1-based row-major list. Default: 1,2,3,4,5,6,7,8",
-        "chroma_export_help": "remove background before export",
+        "keep_background_help": "keep the solid background instead of removing it (cleanup is on by default; LINE requires transparent backgrounds)",
         "padding_help": "transparent sticker padding in px. Default: 10",
         "print_path_help": "print the HTML path without opening it",
         "ok": "OK",
@@ -143,7 +143,7 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     )
     export.add_argument("--title", default="sticker-forge pack")
     export.add_argument("--author", default="sticker-forge")
-    export.add_argument("--chroma-key", action="store_true", help=text["chroma_export_help"])
+    export.add_argument("--keep-background", action="store_true", help=text["keep_background_help"])
     export.add_argument("--key-name", choices=["green", "magenta"], default="green")
     export.add_argument("--tune", choices=["safe", "balanced", "aggressive"], default="balanced")
     export.add_argument("--padding", type=int, default=LINE_STATIC_SPEC.sticker_padding, help=text["padding_help"])
@@ -151,7 +151,7 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     stickers = subparsers.add_parser("stickers", parents=[language_parent], help=text["stickers_help"])
     stickers.add_argument("input", type=Path)
     stickers.add_argument("-o", "--output", type=Path, required=True)
-    stickers.add_argument("--chroma-key", action="store_true", help=text["chroma_export_help"])
+    stickers.add_argument("--keep-background", action="store_true", help=text["keep_background_help"])
     stickers.add_argument("--key-name", choices=["green", "magenta"], default="green")
     stickers.add_argument("--tune", choices=["safe", "balanced", "aggressive"], default="balanced")
     stickers.add_argument("--padding", type=int, default=LINE_STATIC_SPEC.sticker_padding, help=text["padding_help"])
@@ -164,7 +164,7 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
         default=_parse_selection("1,2,3,4,5,6,7,8"),
         help=text["select_help"],
     )
-    preview.add_argument("--chroma-key", action="store_true", help=text["chroma_export_help"])
+    preview.add_argument("--keep-background", action="store_true", help=text["keep_background_help"])
     preview.add_argument("--key-name", choices=["green", "magenta"], default="green")
     preview.add_argument("--tune", choices=["safe", "balanced", "aggressive"], default="balanced")
     preview.add_argument("--padding", type=int, default=LINE_STATIC_SPEC.sticker_padding, help=text["padding_help"])
@@ -237,7 +237,7 @@ def main(argv: list[str] | None = None) -> int:
             key = resolve_chroma_key(args.key_name)
             cells = split_grid_to_stickers(image, spec=spec, background=(*key.rgb, 255))
         selected = [cells[index - 1] for index in args.select]
-        if args.chroma_key:
+        if not args.keep_background:
             selected = [
                 remove_chroma_background(
                     sticker,
@@ -255,7 +255,7 @@ def main(argv: list[str] | None = None) -> int:
         with Image.open(args.input) as image:
             key = resolve_chroma_key(args.key_name)
             stickers = split_grid_to_stickers(image, spec=spec, background=(*key.rgb, 255))
-        if args.chroma_key:
+        if not args.keep_background:
             stickers = [
                 remove_chroma_background(
                     sticker,
@@ -273,7 +273,7 @@ def main(argv: list[str] | None = None) -> int:
         with Image.open(args.input) as image:
             key = resolve_chroma_key(args.key_name)
             stickers = split_grid_to_stickers(image, spec=spec, background=(*key.rgb, 255))
-        if args.chroma_key:
+        if not args.keep_background:
             stickers = [
                 remove_chroma_background(
                     sticker,
