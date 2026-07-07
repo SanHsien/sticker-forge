@@ -117,11 +117,3 @@ def test_cli_preview_reports_grid_readiness(tmp_path, capsys) -> None:
     assert "01.png" in output
     assert "09.png" in output
     assert "370x320" in output
-
-
-def test_cli_app_prints_local_html_path(capsys) -> None:
-    assert main(["app", "--print-path"]) == 0
-
-    output = capsys.readouterr().out
-    assert "app" in output
-    assert "index.html" in output

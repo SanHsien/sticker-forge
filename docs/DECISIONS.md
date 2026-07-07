@@ -95,3 +95,17 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 - **Legacy 清理**：移除 `reference/.../worker/`（Cloudflare/Gemini/Turnstile/quota 後端，明確禁止項）與 campaign-checker（CI workflow＋script）。保留 upstream UI 參考（`app.js`/`index.html`/`styles.css`）與 assets 作 provenance 與邏輯參考。
 - **Installer / 自動更新**：**決定不做**。自動更新需要更新伺服器與版本 endpoint，與「不架 server」的 local-first 原則衝突；installer（Inno/NSIS）＋程式碼簽章屬額外發行基建，目前以「下載 zip、解壓即用」的 onedir 發行足夠。未來若有需求再評估 portable installer（不含線上更新）。
 - **使用者資料 / 暫存檔位置**：**決定不引入**。工具不寫隱藏使用者資料；所有輸出由使用者以 `-o`（CLI）或存檔對話框（GUI）指定路徑；打包用 onedir，`_MEIPASS` 為持久路徑，無 onefile 臨時檔問題。故無需額外的 user-data 目錄設計。
+
+## 2026-07-07：UI 收斂成一套（pywebview，v0.5.0）
+
+原本核心邏輯有兩套實作：Python（CLI＋tkinter GUI）與 JavaScript（HTML app 自己做切圖/去背/ZIP/prompt）。這是 despill parity bug、以及每次改動要手動同步兩份（如 SUGGESTIONS）的根源。
+
+決策：**桌面 GUI 改用 pywebview 原生視窗載入 `app/index.html`，前端只做 UI，切圖/去背/匯出/prompt/資料全透過 `webapi.Api` bridge 呼叫 Python core。** 砍掉 tkinter `gui.py` 實作與 JS 的平行演算法。CLI 不變。
+
+依據與取捨：
+
+- 一個 Python core = 單一事實來源，parity 問題根除；JS 從 ~660 行的完整實作縮成純 UI。
+- 相依：`pywebview`（Windows 用系統內建 WebView2，Win10/11 預裝）。已驗證 Python 3.14 可裝可跑。
+- 取捨：**放棄「純瀏覽器離線開 index.html」的能力**——前端現在需要 pywebview bridge，直接用 file:// 開會顯示「請用 sticker-forge.exe 開啟」。移除了 CLI `app` 指令與 `app_launcher.open_local_app`。
+- 驗證：`webapi.Api` 全 unit test（36 passed）＋實際驅動 pywebview 視窗確認 bootstrap/prompt/split/locale 端到端可用；exe 打包後的視窗需在 Windows 桌面實跑確認。
+- pywebview 選型見上一則 GUI 決策（主人 2026-07-07 指示「收斂成一套，直接做」）。

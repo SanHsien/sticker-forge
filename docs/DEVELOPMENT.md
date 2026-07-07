@@ -5,37 +5,40 @@
 ## 架構
 
 ```text
-Native GUI / exe  (或 CLI / 本機 HTML fallback)
-  │  產生 prompt
-  ▼
+桌面 GUI（pywebview 視窗載入 app/ HTML）    CLI（python -m sticker_forge）
+        │                                        │
+        └──────────► 同一套 Python core ◄────────┘
+                     產生 prompt
+                        ▼
 使用者複製 prompt 到 ChatGPT / Gemini / 其他生圖工具，下載 3x3 grid
-  │  匯入
-  ▼
+        │  匯入
+        ▼
 split → cleanup → resize → preview → export ZIP
 ```
 
-不需要 hosted backend。AI 生成發生在使用者自選的外部工具，`sticker-forge` 只處理提示詞與本機圖片加工。三條入口（CLI / 原生 GUI / HTML）共用同一套規格與演算法，行為應保持一致。
+不需要 hosted backend。AI 生成發生在使用者自選的外部工具，`sticker-forge` 只處理提示詞與本機圖片加工。**GUI 與 CLI 共用同一套 Python core**：GUI 的 `app/` HTML 只負責畫面，切圖/去背/匯出/prompt 全透過 pywebview bridge 呼叫 Python（`webapi.Api`），不再有 JavaScript 平行實作。
 
 ### 模組（`src/sticker_forge/`）
 
 | 模組 | 職責 |
 |------|------|
 | `spec` | LINE 尺寸、張數、chroma-key 與去背 tune profile 的單一來源 |
-| `prompts` | 提示詞欄位渲染（中英文模板、有字／無字） |
+| `prompts` | 提示詞欄位渲染（中英文模板、有字／無字）、`SUGGESTIONS` 下拉建議 |
 | `splitter` | 3x3 grid 切圖，3% inset；尺寸不整除時向下取整丟餘數 |
 | `cleanup` | green / magenta chroma-key 去背 + despill |
-| `exporter` | LINE ZIP、PNG-only ZIP 匯出與 ZIP 驗證、尺寸整理與 padding |
+| `exporter` | LINE ZIP、PNG-only ZIP 匯出與 ZIP 驗證（含透明背景檢查）、尺寸整理與 padding |
 | `preview` | 貼圖預覽 metadata 與選圖檢查 |
 | `cli` | 命令列入口（`python -m sticker_forge`） |
-| `gui` | 原生 tkinter GUI（`sticker-forge.exe`） |
-| `app_launcher` | 從 CLI / exe 開啟本機 HTML 介面 |
+| `webapi` | pywebview bridge：`Api`（JS 呼叫的 render_prompt/split/cleanup/export）＋ `run()` 開視窗 |
+| `gui` | 桌面 GUI 入口（`sticker-forge.exe`），呼叫 `webapi.run()` |
+| `app_launcher` | 定位打包後的 `app/index.html`（供 webview 載入） |
 
-本機 HTML fallback（`app/index.html` + `app.js` + `styles.css`）在瀏覽器端用純 JavaScript 產生 ZIP，不依賴 CDN。
+前端 `app/`（`index.html` + `app.js` + `styles.css`）是純 UI，透過 `window.pywebview.api` 呼叫 Python core，不含影像演算法。
 
 ## 本機開發
 
 ```powershell
-python -m pip install -e ".[dev,packaging]"
+python -m pip install -e ".[dev,gui,packaging]"
 git diff --check
 python -m pytest
 ```
@@ -53,8 +56,7 @@ python -m sticker_forge export examples\grid.png -o outputs\line-stickers.zip --
 python -m sticker_forge export examples\grid.png -o outputs\raw.zip --keep-background
 python -m sticker_forge stickers examples\grid.png -o outputs\transparent-stickers.zip
 python -m sticker_forge validate outputs\line-stickers.zip
-python -m sticker_forge app --print-path
-start .\app\index.html
+sticker-forge-gui --lang en          # or: python -m sticker_forge.gui  (opens the pywebview desktop app)
 ```
 
 > **去背預設開啟**：`export` / `stickers` / `preview` 因為切圖會用 key 色填背景、且 LINE 要求透明背景，預設就會去背。加 `--keep-background` 可保留實心底色（少數非 LINE 用途）。
@@ -69,7 +71,7 @@ node --check app/app.js
 
 ## 測試涵蓋
 
-`python -m pytest`（目前 32 passed）。最小涵蓋：prompt CLI 輸出與渲染、中英文語系、3x3 inset 切圖（含 1024×1024 非整除尺寸）、選 8 張、green/magenta 去背、匯出預設去背與 `--keep-background`、main/tab image、ZIP 結構與 validator（含透明背景檢查）、PNG-only ZIP、padding。
+`python -m pytest`（目前 36 passed）。最小涵蓋：prompt CLI 輸出與渲染、中英文語系、3x3 inset 切圖（含 1024×1024 非整除尺寸）、選 8 張、green/magenta 去背、匯出預設去背與 `--keep-background`、main/tab image、ZIP 結構與 validator（含透明背景檢查）、PNG-only ZIP、padding、`webapi.Api` bridge（bootstrap/prompt/split/cleanup/export）。GUI 視窗本身需在 Windows 桌面實跑 `sticker-forge-gui` 或 exe 驗證。
 
 ## 打包與發行
 
@@ -85,7 +87,7 @@ node --check app/app.js
 %TEMP%\sticker-forge-pyinstaller-dist\sticker-forge\sticker-forge-cli.exe   # 命令列
 ```
 
-`app/` 與 `prompts/` 會一起打進 bundle（`_internal/app`、`_internal/prompts`），`sticker-forge-cli.exe app` 可開啟。因為是 onedir，`_MEIPASS` 指向持久資料夾，沒有 onefile 的臨時檔清理問題。
+`app/` 與 `prompts/` 會一起打進 bundle（`_internal/app`、`_internal/prompts`），GUI 由 pywebview 載入 `_internal/app/index.html`。spec 的 `hiddenimports` 含 `webview.platforms.edgechromium`（Windows WebView2 backend）。因為是 onedir，`_MEIPASS` 指向持久資料夾。
 
 ### Release checklist
 
@@ -101,7 +103,7 @@ sticker-forge-v{VERSION}-windows-x64.zip
 sticker-forge-v{VERSION}-windows-x64.zip.sha256
 ```
 
-已發行：`v0.1.0`、`v0.2.0`、`v0.3.0`、`v0.4.0`。exe 圖示為 `packaging/icon.ico`。
+已發行：`v0.1.0`…`v0.5.0`。exe 圖示為 `packaging/icon.ico`。
 
 ## Legacy 邊界
 

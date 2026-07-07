@@ -1,0 +1,177 @@
+"""pywebview bridge: the desktop GUI is the HTML app driven by the Python core.
+
+The window renders ``app/index.html`` and the JavaScript calls into ``Api``
+for every non-UI operation (prompt text, splitting, cleanup, export). This
+keeps a single source of truth — the Python core — instead of a parallel
+JavaScript reimplementation.
+"""
+
+from __future__ import annotations
+
+import base64
+from dataclasses import replace
+from io import BytesIO
+from pathlib import Path
+
+from PIL import Image
+
+from .app_launcher import app_path
+from .cleanup import remove_chroma_background
+from .exporter import export_line_zip, export_stickers_zip
+from .prompts import (
+    DEFAULT_ACTIONS,
+    DEFAULT_FIELDS,
+    DEFAULT_TEXTS,
+    SUGGESTIONS,
+    normalize_locale,
+    render_line_static_prompt,
+)
+from .spec import CHROMA_KEYS, LINE_STATIC_SPEC, resolve_chroma_key
+from .splitter import split_grid_to_stickers
+
+
+def _decode(data_url: str) -> Image.Image:
+    _, _, encoded = data_url.partition(",")
+    raw = base64.b64decode(encoded or data_url)
+    return Image.open(BytesIO(raw)).convert("RGBA")
+
+
+def _encode(image: Image.Image) -> str:
+    buffer = BytesIO()
+    image.convert("RGBA").save(buffer, format="PNG")
+    return "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode("ascii")
+
+
+def _spec_for(options: dict) -> "LINE_STATIC_SPEC.__class__":
+    padding = int(options.get("padding", LINE_STATIC_SPEC.sticker_padding))
+    return replace(LINE_STATIC_SPEC, sticker_padding=padding)
+
+
+class Api:
+    """Methods exposed to the HTML app via ``window.pywebview.api``."""
+
+    def __init__(self, locale: str = "zh-Hant") -> None:
+        self.locale = normalize_locale(locale)
+        self._window = None
+
+    # --- data (single source of truth for the UI) ---------------------------
+    def bootstrap(self, locale: str | None = None) -> dict:
+        loc = normalize_locale(locale or self.locale)
+        return {
+            "locale": loc,
+            "defaults": DEFAULT_FIELDS[loc],
+            "texts": DEFAULT_TEXTS[loc],
+            "actions": DEFAULT_ACTIONS[loc],
+            "suggestions": SUGGESTIONS[loc],
+            "spec": {
+                "stickerW": LINE_STATIC_SPEC.sticker_size[0],
+                "stickerH": LINE_STATIC_SPEC.sticker_size[1],
+                "mainSize": LINE_STATIC_SPEC.main_size[0],
+                "tabW": LINE_STATIC_SPEC.tab_size[0],
+                "tabH": LINE_STATIC_SPEC.tab_size[1],
+                "packSize": LINE_STATIC_SPEC.sticker_count,
+                "padding": LINE_STATIC_SPEC.sticker_padding,
+            },
+            "chromaKeys": {
+                name: {"label": key.label, "hex": key.hex} for name, key in CHROMA_KEYS.items()
+            },
+        }
+
+    # --- prompt -------------------------------------------------------------
+    def render_prompt(self, payload: dict) -> str:
+        return render_line_static_prompt(
+            with_text=bool(payload.get("withText", True)),
+            locale=payload.get("locale", self.locale),
+            character=payload.get("character"),
+            theme=payload.get("theme"),
+            tone=payload.get("tone"),
+            style=payload.get("style"),
+            language=payload.get("language"),
+            texts=payload.get("texts"),
+            actions=payload.get("actions"),
+            chroma_key=payload.get("chromaKey", "green"),
+        )
+
+    # --- image pipeline -----------------------------------------------------
+    def split(self, image_data_url: str, options: dict) -> list[str]:
+        options = options or {}
+        image = _decode(image_data_url)
+        key = resolve_chroma_key(options.get("keyName", "green"))
+        spec = _spec_for(options)
+        tiles = split_grid_to_stickers(image, spec=spec, background=(*key.rgb, 255))
+        if options.get("cleanup", False):
+            tiles = self._cleanup_tiles(tiles, options)
+        return [_encode(tile) for tile in tiles]
+
+    def cleanup(self, tile_data_urls: list[str], options: dict) -> list[str]:
+        options = options or {}
+        tiles = [_decode(url) for url in tile_data_urls]
+        return [_encode(tile) for tile in self._cleanup_tiles(tiles, options)]
+
+    def _cleanup_tiles(self, tiles: list[Image.Image], options: dict) -> list[Image.Image]:
+        return [
+            remove_chroma_background(
+                tile,
+                key_name=options.get("keyName", "green"),
+                tune=options.get("tune", "balanced"),
+            )
+            for tile in tiles
+        ]
+
+    # --- export -------------------------------------------------------------
+    def export_line(self, tile_data_urls: list[str], options: dict) -> dict:
+        path = self._ask_save_path("line-stickers.zip")
+        if not path:
+            return {"cancelled": True}
+        self._write_line_zip([_decode(url) for url in tile_data_urls], path, options or {})
+        return {"saved": str(path)}
+
+    def export_stickers(self, tile_data_urls: list[str], options: dict) -> dict:
+        path = self._ask_save_path("transparent-stickers.zip")
+        if not path:
+            return {"cancelled": True}
+        self._write_stickers_zip([_decode(url) for url in tile_data_urls], path, options or {})
+        return {"saved": str(path)}
+
+    def save_png(self, data_url: str, default_name: str = "sticker.png") -> dict:
+        path = self._ask_save_path(default_name, ("PNG (*.png)",))
+        if not path:
+            return {"cancelled": True}
+        _decode(data_url).save(path)
+        return {"saved": str(path)}
+
+    # Split from the dialog-less write helpers so tests can drive them directly.
+    def _write_line_zip(self, tiles: list[Image.Image], path: str | Path, options: dict) -> Path:
+        return export_line_zip(tiles, path, spec=_spec_for(options))
+
+    def _write_stickers_zip(self, tiles: list[Image.Image], path: str | Path, options: dict) -> Path:
+        return export_stickers_zip(tiles, path, spec=_spec_for(options))
+
+    def _ask_save_path(self, default_name: str, file_types: tuple[str, ...] = ("ZIP (*.zip)",)):
+        if self._window is None:
+            return None
+        import webview
+
+        result = self._window.create_file_dialog(
+            webview.SAVE_DIALOG, save_filename=default_name, file_types=file_types
+        )
+        if not result:
+            return None
+        return result if isinstance(result, str) else result[0]
+
+
+def run(locale: str = "zh-Hant") -> int:
+    import webview
+
+    api = Api(locale)
+    window = webview.create_window(
+        "sticker-forge",
+        url=str(app_path()),
+        js_api=api,
+        width=1180,
+        height=820,
+        min_size=(960, 640),
+    )
+    api._window = window
+    webview.start()
+    return 0

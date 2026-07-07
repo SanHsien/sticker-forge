@@ -31,15 +31,14 @@ The current scope is LINE static sticker packs. This project does not auto-submi
 - LINE ZIP export with `01.png`–`08.png`, `main.png`, `tab.png`, and README.
 - 9 PNG-only ZIP export for non-LINE use.
 - ZIP structure validation and pre-export preview metadata.
-- Native Windows GUI as the main executable, with a separate CLI executable and an offline HTML fallback.
+- Native Windows desktop GUI (a pywebview window rendering the HTML UI, backed by the Python core) plus a separate CLI executable.
 
 ## Entry Points
 
 | Entry | Notes |
 |-------|-------|
-| `sticker-forge.exe` | Native Windows GUI, no console window |
+| `sticker-forge.exe` | Desktop GUI: a pywebview window rendering the `app/` HTML UI; split/cleanup/export all run in the local Python core. No console. |
 | `sticker-forge-cli.exe` / `python -m sticker_forge` | Command line, `--lang zh-Hant\|en` |
-| `app/index.html` | Offline HTML workspace, ZIP built locally with no CDN |
 
 ## Install From Source
 
@@ -86,7 +85,7 @@ python -m sticker_forge validate outputs\line-stickers.zip
 
 ## Roadmap
 
-Version **v0.4.0**: local-first LINE static sticker toolkit with three entry points (CLI, native Windows GUI, offline HTML). `python -m pytest` passes.
+Version **v0.5.0**: local-first LINE static sticker toolkit. The desktop GUI (a pywebview window rendering the HTML) and the CLI share one Python core. `python -m pytest` passes.
 
 ### ✅ Done
 
@@ -106,6 +105,10 @@ Version **v0.4.0**: local-first LINE static sticker toolkit with three entry poi
 - **`validate` checks transparency**: `validate` now flags fully opaque stickers (background not removed), catching the most common LINE rejection reason.
 
 See [`REVIEW.md`](REVIEW.md) and [`docs/DECISIONS.md`](docs/DECISIONS.md).
+
+### 🚀 New in v0.5.0
+
+- **One UI codebase**: the desktop GUI moved from tkinter to a **pywebview window rendering the HTML UI**, with split/cleanup/export/prompt all handled by the local Python core (JS is UI-only). The previously duplicated tkinter + JavaScript implementations are now a single core, ending the parity-maintenance burden. Dependency: pywebview (uses the built-in WebView2 on Windows).
 
 ### 🚀 New in v0.4.0
 

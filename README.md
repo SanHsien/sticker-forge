@@ -41,11 +41,10 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 
 | 入口 | 說明 |
 |------|------|
-| `sticker-forge.exe` | 原生 Windows GUI，無 console，雙擊即用 |
+| `sticker-forge.exe` | 桌面 GUI：pywebview 原生視窗載入 `app/` 的 HTML 介面，切圖/去背/匯出全由本機 Python core 處理，無 console，雙擊即用 |
 | `sticker-forge-cli.exe` / `python -m sticker_forge` | 命令列，支援 `--lang zh-Hant\|en` |
-| `app/index.html` | 離線 HTML 工作台，瀏覽器直接開，ZIP 本機產生不依賴 CDN |
 
-從原始碼安裝與打包步驟見 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)。
+GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge 呼叫 Python）。從原始碼安裝與打包步驟見 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)。
 
 ## 目前狀態
 
@@ -70,7 +69,7 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 
 ## 專案狀態與路線圖
 
-目前版本 **v0.4.0**：local-first LINE 靜態貼圖工具，CLI + 原生 Windows GUI + 本機 HTML fallback 三條入口皆可用，`python -m pytest` 全數通過。
+目前版本 **v0.5.0**：local-first LINE 靜態貼圖工具，桌面 GUI（pywebview 載入 HTML）與 CLI 共用同一套 Python core，`python -m pytest` 全數通過。
 
 ### ✅ 已完成
 
@@ -78,7 +77,7 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 - prompt 模板：中英文、有字／無字、green/magenta 背景、高風險內容提醒。
 - 圖片處理核心：3x3 切圖、去背、尺寸／padding、main/tab image、預覽 metadata 與選圖檢查。
 - 匯出：LINE ZIP、9 張 PNG-only ZIP、`validate` 與 `preview` 指令、上架說明。
-- 三入口：CLI（`--lang` 中英）、原生 tkinter GUI、離線 HTML 工作台。
+- 桌面 GUI（pywebview HTML）與 CLI 共用 Python core（`--lang` 中英）。
 - PyInstaller Windows 打包，已發行 `v0.1.0`、`v0.2.0`，含 SHA256 checksum。
 - 中英文 README。
 
@@ -92,6 +91,10 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 - **validate 檢查透明背景**：`validate` 新增透明度檢查，完全不透明（背景未去）的貼圖會被標記，擋下 LINE 第一大退件原因。
 
 細節見 [`REVIEW.md`](REVIEW.md) 與 [`docs/DECISIONS.md`](docs/DECISIONS.md)。
+
+### 🚀 v0.5.0 新增
+
+- **UI 收斂成一套**：桌面 GUI 從 tkinter 改為 **pywebview 原生視窗載入 HTML 介面**，切圖/去背/匯出/prompt 全部由本機 Python core 處理（JS 只負責畫面）。原本 tkinter GUI 與 JavaScript 各一套的重複實作收斂成單一 core，parity 問題根除。相依：pywebview（Windows 用內建 WebView2）。
 
 ### 🚀 v0.4.0 新增
 

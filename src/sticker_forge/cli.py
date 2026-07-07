@@ -7,7 +7,6 @@ from pathlib import Path
 
 from PIL import Image
 
-from .app_launcher import app_path, open_local_app
 from .cleanup import parse_hex_color, remove_chroma_background
 from .exporter import export_line_zip, export_stickers_zip, validate_line_zip
 from .prompts import DEFAULT_FIELDS, normalize_locale, render_line_static_prompt
@@ -27,14 +26,12 @@ MESSAGES = {
         "stickers_help": "匯出 9 張 PNG-only 貼圖 ZIP",
         "preview_help": "預覽 3x3 grid 匯出狀態",
         "validate_help": "檢查 LINE 靜態貼圖 ZIP",
-        "app_help": "開啟本機 HTML 貼圖工作台",
         "text_help": "重複輸入剛好 8 次",
         "action_help": "重複輸入剛好 8 次",
         "output_prompt_help": "將 UTF-8 prompt 寫入檔案",
         "select_help": "要匯出的 8 格，使用 1-based row-major 清單。預設：1,2,3,4,5,6,7,8",
         "keep_background_help": "保留實心底色不去背（預設會去背，因為 LINE 要求透明背景）",
         "padding_help": "貼圖透明 padding，單位 px。預設：10",
-        "print_path_help": "只印出 HTML 路徑，不開啟",
         "ok": "OK",
         "preview_header": "idx file included size alpha line_size",
         "unknown_command": "未知指令",
@@ -49,14 +46,12 @@ MESSAGES = {
         "stickers_help": "export all 9 stickers as a PNG-only ZIP",
         "preview_help": "preview export readiness for a 3x3 grid",
         "validate_help": "validate a LINE static sticker ZIP",
-        "app_help": "open the local HTML sticker workspace",
         "text_help": "repeat exactly 8 times",
         "action_help": "repeat exactly 8 times",
         "output_prompt_help": "write UTF-8 prompt text to a file",
         "select_help": "8 cells to export, 1-based row-major list. Default: 1,2,3,4,5,6,7,8",
         "keep_background_help": "keep the solid background instead of removing it (cleanup is on by default; LINE requires transparent backgrounds)",
         "padding_help": "transparent sticker padding in px. Default: 10",
-        "print_path_help": "print the HTML path without opening it",
         "ok": "OK",
         "preview_header": "idx file included size alpha line_size",
         "unknown_command": "unknown command",
@@ -171,9 +166,6 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
 
     validate = subparsers.add_parser("validate", parents=[language_parent], help=text["validate_help"])
     validate.add_argument("zip", type=Path)
-
-    app = subparsers.add_parser("app", parents=[language_parent], help=text["app_help"])
-    app.add_argument("--print-path", action="store_true", help=text["print_path_help"])
 
     return parser
 
@@ -305,11 +297,6 @@ def main(argv: list[str] | None = None) -> int:
                 print(error)
             return 1
         print(text["ok"])
-        return 0
-
-    if args.command == "app":
-        path = app_path() if args.print_path else open_local_app()
-        print(path)
         return 0
 
     parser.error(f"{text['unknown_command']}: {args.command}")

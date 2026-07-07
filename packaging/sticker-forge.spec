@@ -16,7 +16,7 @@ common_kwargs = {
     "pathex": [str(repo_dir / "src")],
     "binaries": [],
     "datas": datas,
-    "hiddenimports": [],
+    "hiddenimports": ["webview.platforms.edgechromium"],
     "hookspath": [],
     "hooksconfig": {},
     "runtime_hooks": [],

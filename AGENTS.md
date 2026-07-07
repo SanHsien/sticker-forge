@@ -49,7 +49,7 @@
 
 ## 驗證方向
 
-本機工具已建立（CLI + 原生 GUI + HTML fallback + PyInstaller 打包）。改動後至少確認：
+本機工具已建立（CLI + pywebview 桌面 GUI，共用同一套 Python core + PyInstaller 打包）。改動後至少確認：
 
 ```powershell
 git diff --check
