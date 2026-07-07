@@ -85,7 +85,7 @@ python -m sticker_forge validate outputs\line-stickers.zip
 
 ## Roadmap
 
-Version **v0.5.0**: local-first LINE static sticker toolkit. The desktop GUI (a pywebview window rendering the HTML) and the CLI share one Python core. `python -m pytest` passes.
+Version **v0.6.0**: local-first LINE static sticker toolkit. The desktop GUI (a pywebview window rendering the HTML) and the CLI share one Python core. `python -m pytest` passes.
 
 ### ✅ Done
 
@@ -106,6 +106,11 @@ Version **v0.5.0**: local-first LINE static sticker toolkit. The desktop GUI (a 
 
 See [`REVIEW.md`](REVIEW.md) and [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
+### 🚀 New in v0.6.0
+
+- **Per-sticker zoom**: click any tile thumbnail to open an enlarged view (on a transparency checkerboard) to inspect the cleanup.
+- **Per-sticker clean / reset**: the zoom view can clean up just that tile or reset it to the original slice. Both "clean all" and per-tile clean now work from the original slice, so re-running at a different strength never stacks fringe artifacts.
+
 ### 🚀 New in v0.5.0
 
 - **One UI codebase**: the desktop GUI moved from tkinter to a **pywebview window rendering the HTML UI**, with split/cleanup/export/prompt all handled by the local Python core (JS is UI-only). The previously duplicated tkinter + JavaScript implementations are now a single core, ending the parity-maintenance burden. Dependency: pywebview (uses the built-in WebView2 on Windows).
@@ -122,8 +127,8 @@ See [`REVIEW.md`](REVIEW.md) and [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
 ### ⏳ Remaining (mostly decided)
 
-- **Decided against** (see [`docs/DECISIONS.md`](docs/DECISIONS.md)): installer/auto-update (needs an update server, conflicts with local-first), user-data/temp directory (no hidden data written), tkinter GUI drag-drop (avoids an extra dependency).
-- **Optional future**: per-sticker re-slice and preview zoom.
+- **Decided against** (see [`docs/DECISIONS.md`](docs/DECISIONS.md)): auto-update (needs an update server, conflicts with local-first) and an installer (the portable unzip-and-run zip fits local-first better than an install flow).
+- **Resolved by the architecture**: desktop drag-and-drop (the webview's HTML dropzone already handles it, so the old tkinter drag-drop need is gone); user-data/temp (WebView2 runs with `private_mode`, an ephemeral profile, so nothing persistent is written).
 - Decide user data and temporary file locations.
 - Remove no-longer-needed `reference/.../worker/` and upstream hosted config.
 

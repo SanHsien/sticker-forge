@@ -69,7 +69,7 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 
 ## 專案狀態與路線圖
 
-目前版本 **v0.5.0**：local-first LINE 靜態貼圖工具，桌面 GUI（pywebview 載入 HTML）與 CLI 共用同一套 Python core，`python -m pytest` 全數通過。
+目前版本 **v0.6.0**：local-first LINE 靜態貼圖工具，桌面 GUI（pywebview 載入 HTML）與 CLI 共用同一套 Python core，`python -m pytest` 全數通過。
 
 ### ✅ 已完成
 
@@ -92,6 +92,11 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 
 細節見 [`REVIEW.md`](REVIEW.md) 與 [`docs/DECISIONS.md`](docs/DECISIONS.md)。
 
+### 🚀 v0.6.0 新增
+
+- **單張放大檢視**：點任一張貼圖縮圖，跳出放大視窗（透明格背景），可看清去背結果。
+- **單張去背／還原**：放大視窗可只對這一張去背，或還原回原始切圖；「全部去背」與單張去背都從原始切圖計算，改去背強度重跑不會疊加髒邊。
+
 ### 🚀 v0.5.0 新增
 
 - **UI 收斂成一套**：桌面 GUI 從 tkinter 改為 **pywebview 原生視窗載入 HTML 介面**，切圖/去背/匯出/prompt 全部由本機 Python core 處理（JS 只負責畫面）。原本 tkinter GUI 與 JavaScript 各一套的重複實作收斂成單一 core，parity 問題根除。相依：pywebview（Windows 用內建 WebView2）。
@@ -108,8 +113,8 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 
 ### ⏳ 剩餘（多已定案）
 
-- **已決定不做**（見 [`docs/DECISIONS.md`](docs/DECISIONS.md)）：installer／自動更新（需更新伺服器，違反 local-first）、使用者資料／暫存目錄（不寫隱藏資料）、tkinter GUI 拖放（避免外部相依）。
-- **可選未來**：單張重切與預覽縮放等 GUI 細節。
+- **已決定不做**（見 [`docs/DECISIONS.md`](docs/DECISIONS.md)）：自動更新（需更新伺服器，違反 local-first）、installer（下載 zip 解壓即用，portable 比安裝流程更符合 local-first）。
+- **已隨架構解決**：桌面拖放匯入（webview 的 HTML dropzone 已內建，原 tkinter 拖放需求消失）；使用者資料／暫存（WebView2 用 `private_mode` 臨時 profile，不寫持久隱藏資料）。
 
 ## 維護文件
 

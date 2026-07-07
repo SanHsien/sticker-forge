@@ -173,5 +173,9 @@ def run(locale: str = "zh-Hant") -> int:
         min_size=(960, 640),
     )
     api._window = window
-    webview.start()
+    # private_mode keeps the WebView2 profile ephemeral (a temp folder cleared on
+    # exit), so the app writes no persistent user data — consistent with the
+    # local-first "no hidden data" stance. The trade-off is that the UI language
+    # preference is not remembered across launches.
+    webview.start(private_mode=True)
     return 0

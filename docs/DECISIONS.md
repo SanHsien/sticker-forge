@@ -109,3 +109,18 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 - 取捨：**放棄「純瀏覽器離線開 index.html」的能力**——前端現在需要 pywebview bridge，直接用 file:// 開會顯示「請用 sticker-forge.exe 開啟」。移除了 CLI `app` 指令與 `app_launcher.open_local_app`。
 - 驗證：`webapi.Api` 全 unit test（36 passed）＋實際驅動 pywebview 視窗確認 bootstrap/prompt/split/locale 端到端可用；exe 打包後的視窗需在 Windows 桌面實跑確認。
 - pywebview 選型見上一則 GUI 決策（主人 2026-07-07 指示「收斂成一套，直接做」）。
+
+## 2026-07-07：v0.6.0 GUI 細節與「已決定不做」再評估
+
+新增（GUI，webview HTML）：
+
+- **單張放大檢視**：點縮圖跳出放大 modal（透明格背景）。
+- **單張去背／還原**：modal 內可只對該張去背或還原回原始切圖。每張保留 `raw`（原始切圖），「全部去背」與單張去背都從 `raw` 計算，改去背強度重跑不疊加髒邊。
+- 實測：live pywebview drive + 像素驗證（raw 角落 alpha 255 → 單張去背 0 → 還原 255）。
+
+「已決定不做」再評估結果：
+
+- **tkinter GUI 拖放** → **需求消失**。GUI 已是 webview，HTML dropzone 拖放已內建（v0.3.0 做的），桌面版直接有。
+- **使用者資料／暫存目錄** → **以 `private_mode` 處理**。WebView2 一定要 profile 資料夾，改用 pywebview `private_mode=True`（臨時 profile、離開清除），不寫持久隱藏資料，符合原則。取捨：UI 語言偏好不跨啟動記憶（可接受）。
+- **自動更新** → **維持不做**。需更新伺服器，違反 local-first。
+- **installer** → **維持不做**。可下載 zip 解壓即用（portable、免安裝、免管理員），比 Inno/NSIS 安裝流程更符合 local-first；未來真有需求再評估不含線上更新的 portable installer。

@@ -18,6 +18,10 @@ const UI = {
     dropHint: "把 3x3 圖拖放到這裡，或用上方「匯入 3x3」",
     split: "切圖",
     cleanup: "去背",
+    cleanupOne: "去背這張",
+    resetOne: "還原",
+    savePng: "存 PNG",
+    zoomHint: "點擊放大檢視",
     selectFirstEight: "選前 8 張",
     exportPng: "匯出 9 張 PNG",
     exportZip: "匯出 ZIP",
@@ -70,6 +74,10 @@ const UI = {
     dropHint: "Drag a 3x3 image here, or use Import 3x3 above",
     split: "Split",
     cleanup: "Clean up",
+    cleanupOne: "Clean this",
+    resetOne: "Reset",
+    savePng: "Save PNG",
+    zoomHint: "Click to zoom",
     selectFirstEight: "Select first 8",
     exportPng: "Export 9 PNG",
     exportZip: "Export ZIP",
@@ -113,6 +121,7 @@ const state = {
   locale: UI[localStorage.getItem("stickerForgeLocale")] ? localStorage.getItem("stickerForgeLocale") : "zh-Hant",
   sourceDataUrl: null,
   tiles: [],
+  zoomIndex: -1,
 };
 // bootstrap data (defaults, suggestions, spec) per locale, from Python
 const boots = {};
@@ -271,7 +280,7 @@ async function splitGrid() {
   setStatus(ui().splitting);
   try {
     const urls = await bridge.split(state.sourceDataUrl, { ...options(), cleanup: false });
-    state.tiles = urls.map((url, i) => ({ url, included: i < PACK_SIZE }));
+    state.tiles = urls.map((url, i) => ({ raw: url, url, included: i < PACK_SIZE }));
     renderTiles();
     updatePreview();
     setStatus(ui().splitDone);
@@ -289,6 +298,8 @@ function renderTiles() {
     const img = document.createElement("img");
     img.src = tile.url;
     img.alt = `${i + 1}`;
+    img.title = ui().zoomHint;
+    img.addEventListener("click", () => openZoom(i));
     item.appendChild(img);
     const footer = document.createElement("div");
     footer.className = "tile-footer";
@@ -333,7 +344,9 @@ async function cleanupAll() {
   if (!state.tiles.length) return setStatus(ui().noTilesCleanup, true);
   setStatus(ui().cleaning);
   try {
-    const urls = await bridge.cleanup(state.tiles.map((t) => t.url), options());
+    // Clean from the original split so re-cleaning (e.g. after changing the
+    // strength) never stacks on an already-cleaned tile.
+    const urls = await bridge.cleanup(state.tiles.map((t) => t.raw), options());
     state.tiles.forEach((tile, i) => {
       tile.url = urls[i];
     });
@@ -343,6 +356,42 @@ async function cleanupAll() {
   } catch (err) {
     setStatus(String(err), true);
   }
+}
+
+async function cleanupOne(index) {
+  const bridge = api();
+  if (!bridge || !state.tiles[index]) return;
+  try {
+    const [url] = await bridge.cleanup([state.tiles[index].raw], options());
+    state.tiles[index].url = url;
+    renderTiles();
+    if (state.zoomIndex === index) $("zoom-img").src = url;
+    setStatus(ui().cleanupDone);
+  } catch (err) {
+    setStatus(String(err), true);
+  }
+}
+
+function resetOne(index) {
+  const tile = state.tiles[index];
+  if (!tile) return;
+  tile.url = tile.raw;
+  renderTiles();
+  if (state.zoomIndex === index) $("zoom-img").src = tile.url;
+}
+
+function openZoom(index) {
+  const tile = state.tiles[index];
+  if (!tile) return;
+  state.zoomIndex = index;
+  $("zoom-title").textContent = `${String(index + 1).padStart(2, "0")}.png · 370 x 320`;
+  $("zoom-img").src = tile.url;
+  $("zoom-modal").hidden = false;
+}
+
+function closeZoom() {
+  state.zoomIndex = -1;
+  $("zoom-modal").hidden = true;
 }
 
 async function exportZip() {
@@ -464,6 +513,19 @@ function bindEvents() {
   $("select-first-eight").addEventListener("click", selectFirstEight);
   $("export-stickers").addEventListener("click", exportStickersOnly);
   $("export-zip").addEventListener("click", exportZip);
+  $("zoom-close").addEventListener("click", closeZoom);
+  $("zoom-modal").addEventListener("click", (event) => {
+    if (event.target === $("zoom-modal")) closeZoom();
+  });
+  $("zoom-clean").addEventListener("click", () => cleanupOne(state.zoomIndex));
+  $("zoom-reset").addEventListener("click", () => resetOne(state.zoomIndex));
+  $("zoom-png").addEventListener("click", () => {
+    const tile = state.tiles[state.zoomIndex];
+    if (tile) savePng(tile.url, `sticker-${String(state.zoomIndex + 1).padStart(2, "0")}.png`);
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !$("zoom-modal").hidden) closeZoom();
+  });
 }
 
 async function init() {

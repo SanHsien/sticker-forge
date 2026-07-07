@@ -120,6 +120,21 @@
     </section>
   </main>
 
+  <div id="zoom-modal" class="modal" hidden>
+    <div class="modal-card">
+      <div class="modal-head">
+        <span id="zoom-title"></span>
+        <button id="zoom-close" type="button" aria-label="close">✕</button>
+      </div>
+      <div class="zoom-stage"><img id="zoom-img" alt="preview"></div>
+      <div class="modal-actions">
+        <button id="zoom-clean" type="button" data-i18n="cleanupOne">去背這張</button>
+        <button id="zoom-reset" type="button" data-i18n="resetOne">還原</button>
+        <button id="zoom-png" type="button" data-i18n="savePng">存 PNG</button>
+      </div>
+    </div>
+  </div>
+
   <template id="slot-template">
     <div class="slot-row">
       <span class="slot-num"></span>
