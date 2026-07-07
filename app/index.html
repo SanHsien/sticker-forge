@@ -32,12 +32,20 @@
       </div>
 
       <div class="field-grid">
-        <label><span data-i18n="character">角色</span><input id="character" value="原創可愛角色"></label>
-        <label><span data-i18n="theme">主題</span><input id="theme" value="日常聊天貼圖"></label>
-        <label><span data-i18n="tone">語氣</span><input id="tone" value="可愛、清楚、友善"></label>
-        <label><span data-i18n="promptLanguage">語言</span><input id="language" value="繁體中文"></label>
-        <label class="wide"><span data-i18n="style">風格</span><input id="style" value="粗黑線、扁平上色、適合聊天視窗縮圖閱讀"></label>
+        <label><span data-i18n="character">角色</span><input id="character" list="dl-character" value="原創可愛角色"></label>
+        <label><span data-i18n="theme">主題</span><input id="theme" list="dl-theme" value="日常聊天貼圖"></label>
+        <label><span data-i18n="tone">語氣</span><input id="tone" list="dl-tone" value="可愛、清楚、友善"></label>
+        <label><span data-i18n="promptLanguage">語言</span><input id="language" list="dl-language" value="繁體中文"></label>
+        <label class="wide"><span data-i18n="style">風格</span><input id="style" list="dl-style" value="粗黑線、扁平上色、適合聊天視窗縮圖閱讀"></label>
       </div>
+
+      <datalist id="dl-character"></datalist>
+      <datalist id="dl-theme"></datalist>
+      <datalist id="dl-tone"></datalist>
+      <datalist id="dl-style"></datalist>
+      <datalist id="dl-language"></datalist>
+      <datalist id="dl-text"></datalist>
+      <datalist id="dl-action"></datalist>
 
       <div class="toolbar">
         <label class="check"><input id="with-text" type="checkbox" checked> <span data-i18n="withText">有字版</span></label>
@@ -115,8 +123,8 @@
   <template id="slot-template">
     <div class="slot-row">
       <span class="slot-num"></span>
-      <input class="slot-text" aria-label="文字">
-      <input class="slot-action" aria-label="動作">
+      <input class="slot-text" list="dl-text" aria-label="文字">
+      <input class="slot-action" list="dl-action" aria-label="動作">
     </div>
   </template>
 

@@ -101,6 +101,15 @@ const localeData = {
     },
     texts: defaultTexts,
     actions: defaultActions,
+    suggest: {
+      character: ["原創可愛角色", "原創柴犬", "原創貓咪", "圓臉小人", "Q版女孩", "療癒白熊", "上班族貓", "貓耳少女", "小恐龍"],
+      theme: ["日常聊天貼圖", "上班族日常", "情侶對話", "學生生活", "節慶祝福", "療癒安慰", "搞笑吐槽", "寵物日常"],
+      tone: ["可愛、清楚、友善", "活潑、搞笑、有活力", "溫暖、療癒、安心", "酷、簡約、有個性", "傲嬌、吐槽、幽默"],
+      style: ["粗黑線、扁平上色、適合聊天視窗縮圖閱讀", "日系可愛、柔和色彩", "韓系簡約、線條乾淨", "手繪水彩風", "像素風、復古", "貼紙風、白色描邊"],
+      language: ["繁體中文", "English", "日本語", "한국어", "粵語"],
+      texts: ["早安", "晚安", "謝謝", "抱歉", "收到", "OK", "加油", "辛苦了", "太棒了", "等一下", "在嗎", "哈哈哈", "愛你", "生日快樂", "恭喜", "掰掰"],
+      actions: ["開心揮手", "雙手比心", "點頭確認", "握拳打氣", "大哭", "大笑", "跳起來歡呼", "比讚", "鞠躬道謝", "舉手發問", "睡覺打呼", "震驚張嘴", "翻白眼", "送花", "灑花", "托腮思考"],
+    },
   },
   en: {
     subtitle: "Local LINE static sticker workspace",
@@ -170,6 +179,15 @@ const localeData = {
       "raising one hand to pause",
       "yawning while hugging a pillow",
     ],
+    suggest: {
+      character: ["an original cute character", "an original shiba dog", "an original cat", "a round-faced blob", "a chibi girl", "a healing polar bear", "an office-worker cat", "a cat-ear girl", "a little dinosaur"],
+      theme: ["everyday chat stickers", "office worker life", "couple chat", "student life", "holiday greetings", "comfort and healing", "funny reactions", "pet daily life"],
+      tone: ["cute, clear, friendly", "lively, funny, energetic", "warm, healing, reassuring", "cool, minimal, stylish", "tsundere, snarky, witty"],
+      style: ["bold black outlines, flat colors, readable at chat thumbnail size", "soft Japanese kawaii colors", "clean minimal Korean style", "hand-drawn watercolor", "retro pixel art", "sticker style with a white outline"],
+      language: ["English", "繁體中文", "日本語", "한국어"],
+      texts: ["Good morning", "Good night", "Thanks", "Sorry", "Got it", "OK", "You can do it", "Nice work", "Great", "Wait a sec", "You there?", "Haha", "Love you", "Happy birthday", "Congrats", "Bye"],
+      actions: ["happily waving", "making a heart with both hands", "nodding in confirmation", "cheering with a clenched fist", "crying", "laughing", "jumping in celebration", "thumbs up", "bowing in thanks", "raising a hand to ask", "sleeping and snoring", "shocked with mouth open", "rolling eyes", "giving flowers", "throwing confetti", "resting chin while thinking"],
+    },
   },
 };
 
@@ -213,8 +231,31 @@ function applyLocale(previousLocale = state.locale) {
     if (!input.value || previous.actions.includes(input.value)) input.value = data.actions[index];
   });
   $("ui-language").value = state.locale;
+  populateDatalists();
   setStatus(data.statusReady);
   renderPrompt();
+}
+
+function populateDatalists() {
+  const suggest = currentLocale().suggest;
+  if (!suggest) return;
+  const fill = (id, items) => {
+    const list = $(id);
+    if (!list) return;
+    list.innerHTML = "";
+    (items || []).forEach((value) => {
+      const option = document.createElement("option");
+      option.value = value;
+      list.appendChild(option);
+    });
+  };
+  fill("dl-character", suggest.character);
+  fill("dl-theme", suggest.theme);
+  fill("dl-tone", suggest.tone);
+  fill("dl-style", suggest.style);
+  fill("dl-language", suggest.language);
+  fill("dl-text", suggest.texts);
+  fill("dl-action", suggest.actions);
 }
 
 function setLocale(locale) {
