@@ -14,20 +14,24 @@ def split_grid(
     *,
     inset_ratio: float = 0,
 ) -> list[Image.Image]:
-    """Split a regular image grid into row-major cells."""
+    """Split a regular image grid into row-major cells.
+
+    Cell size is floored, so sizes that do not divide evenly (e.g. the common
+    1024x1024 AI export) are handled by dropping the leftover pixels on the
+    right and bottom edges. This matches the web app's ``Math.floor`` behavior.
+    """
     if rows <= 0 or columns <= 0:
         raise ValueError("rows and columns must be positive")
     if inset_ratio < 0 or inset_ratio >= 0.5:
         raise ValueError("inset_ratio must be between 0 and 0.5")
 
     width, height = image.size
-    if width % columns != 0 or height % rows != 0:
-        raise ValueError(
-            f"image size {width}x{height} is not evenly divisible by {columns}x{rows}"
-        )
-
     cell_width = width // columns
     cell_height = height // rows
+    if cell_width <= 0 or cell_height <= 0:
+        raise ValueError(
+            f"image size {width}x{height} is too small to split into {columns}x{rows} cells"
+        )
     cells: list[Image.Image] = []
 
     for row in range(rows):

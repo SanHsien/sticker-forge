@@ -39,15 +39,25 @@ def test_split_grid_returns_row_major_cells() -> None:
     assert cells[8].getpixel((50, 50)) == (0, 0, 128, 255)
 
 
-def test_split_grid_rejects_uneven_grid() -> None:
-    image = Image.new("RGBA", (301, 300), (255, 255, 255, 255))
+def test_split_grid_floors_uneven_sizes() -> None:
+    # 1024x1024 is the most common AI export size and 1024 % 3 == 1.
+    image = Image.new("RGBA", (1024, 1024), (255, 255, 255, 255))
+
+    cells = split_grid(image)
+
+    assert len(cells) == 9
+    assert [cell.size for cell in cells] == [(341, 341)] * 9
+
+
+def test_split_grid_rejects_too_small_image() -> None:
+    image = Image.new("RGBA", (2, 2), (255, 255, 255, 255))
 
     try:
         split_grid(image)
     except ValueError as exc:
-        assert "not evenly divisible" in str(exc)
+        assert "too small" in str(exc)
     else:
-        raise AssertionError("split_grid should reject uneven grid sizes")
+        raise AssertionError("split_grid should reject images too small to split")
 
 
 def test_split_grid_supports_inset_ratio() -> None:
