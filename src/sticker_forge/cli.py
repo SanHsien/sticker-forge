@@ -8,7 +8,7 @@ from pathlib import Path
 from PIL import Image
 
 from .cleanup import parse_hex_color, remove_chroma_background
-from .exporter import export_line_zip, export_stickers_zip, validate_line_zip
+from .exporter import PLATFORM_SPECS, export_line_zip, export_platform_zip, export_stickers_zip, validate_line_zip
 from .prompts import DEFAULT_FIELDS, normalize_locale, render_line_static_prompt
 from .preview import build_pack_preview
 from .spec import LINE_STATIC_SPEC
@@ -24,6 +24,8 @@ MESSAGES = {
         "cleanup_help": "用 chroma-key 移除單色背景",
         "export_help": "從 3x3 grid 匯出 LINE 靜態貼圖 ZIP",
         "stickers_help": "匯出 9 張 PNG-only 貼圖 ZIP",
+        "platform_help": "匯出其他平台尺寸的貼圖 ZIP（Telegram/WhatsApp/Discord/Signal）",
+        "target_help": "目標平台",
         "preview_help": "預覽 3x3 grid 匯出狀態",
         "validate_help": "檢查 LINE 靜態貼圖 ZIP",
         "text_help": "重複輸入剛好 8 次",
@@ -44,6 +46,8 @@ MESSAGES = {
         "cleanup_help": "remove a solid background with chroma-key",
         "export_help": "export a LINE static sticker ZIP from a 3x3 grid",
         "stickers_help": "export all 9 stickers as a PNG-only ZIP",
+        "platform_help": "export a sticker ZIP sized for another platform (Telegram/WhatsApp/Discord/Signal)",
+        "target_help": "target platform",
         "preview_help": "preview export readiness for a 3x3 grid",
         "validate_help": "validate a LINE static sticker ZIP",
         "text_help": "repeat exactly 8 times",
@@ -151,6 +155,14 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     stickers.add_argument("--tune", choices=["safe", "balanced", "aggressive"], default="balanced")
     stickers.add_argument("--padding", type=int, default=LINE_STATIC_SPEC.sticker_padding, help=text["padding_help"])
 
+    platform = subparsers.add_parser("platform", parents=[language_parent], help=text["platform_help"])
+    platform.add_argument("input", type=Path)
+    platform.add_argument("-o", "--output", type=Path, required=True)
+    platform.add_argument("--target", choices=sorted(PLATFORM_SPECS), required=True, help=text["target_help"])
+    platform.add_argument("--keep-background", action="store_true", help=text["keep_background_help"])
+    platform.add_argument("--key-name", choices=["green", "magenta"], default="green")
+    platform.add_argument("--tune", choices=["safe", "balanced", "aggressive"], default="balanced")
+
     preview = subparsers.add_parser("preview", parents=[language_parent], help=text["preview_help"])
     preview.add_argument("input", type=Path)
     preview.add_argument(
@@ -257,6 +269,19 @@ def main(argv: list[str] | None = None) -> int:
                 for sticker in stickers
             ]
         output = export_stickers_zip(stickers, args.output, spec=spec)
+        print(output)
+        return 0
+
+    if args.command == "platform":
+        with Image.open(args.input) as image:
+            key = resolve_chroma_key(args.key_name)
+            stickers = split_grid_to_stickers(image, background=(*key.rgb, 255))
+        if not args.keep_background:
+            stickers = [
+                remove_chroma_background(sticker, key_name=args.key_name, tune=args.tune)
+                for sticker in stickers
+            ]
+        output = export_platform_zip(stickers, args.output, platform=args.target)
         print(output)
         return 0
 

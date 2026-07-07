@@ -126,6 +126,59 @@ def export_stickers_zip(
     return output
 
 
+# Static-sticker specs for other chat platforms (all transparent PNG/WebP).
+# References: sticker-convert, StampNyaa, each platform's creator docs.
+PLATFORM_SPECS = {
+    "telegram": {"size": (512, 512), "format": "PNG", "ext": "png", "tray": None},
+    "whatsapp": {"size": (512, 512), "format": "WEBP", "ext": "webp", "tray": (96, 96)},
+    "discord": {"size": (320, 320), "format": "PNG", "ext": "png", "tray": None},
+    "signal": {"size": (512, 512), "format": "PNG", "ext": "png", "tray": None},
+}
+
+
+def _encode_image(image: Image.Image, image_format: str) -> bytes:
+    buffer = BytesIO()
+    if image_format == "WEBP":
+        image.save(buffer, format="WEBP", lossless=True)
+    else:
+        image.save(buffer, format=image_format, optimize=True)
+    return buffer.getvalue()
+
+
+def export_platform_zip(
+    stickers: Sequence[ImageSource],
+    output_path: str | Path,
+    *,
+    platform: str,
+) -> Path:
+    """Export stickers resized to another chat platform's sticker spec."""
+    if platform not in PLATFORM_SPECS:
+        raise ValueError(f"unknown platform: {platform}")
+    if not stickers:
+        raise ValueError("expected at least one sticker")
+
+    profile = PLATFORM_SPECS[platform]
+    loaded = [_load_image(sticker) for sticker in stickers]
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+
+    with ZipFile(output, "w", compression=ZIP_DEFLATED) as archive:
+        for index, sticker in enumerate(loaded, start=1):
+            fitted = fit_to_canvas(sticker, profile["size"])
+            archive.writestr(f"{index:02d}.{profile['ext']}", _encode_image(fitted, profile["format"]))
+        if profile["tray"]:
+            tray = fit_to_canvas(loaded[0], profile["tray"])
+            archive.writestr("tray.png", _png_bytes(tray))
+        archive.writestr(
+            "README.txt",
+            f"{platform} sticker pack generated locally by sticker-forge.\n"
+            f"Sticker size: {profile['size'][0]}x{profile['size'][1]} {profile['format']}.\n"
+            "Review the platform's current sticker rules before publishing.\n",
+        )
+
+    return output
+
+
 def _is_fully_opaque(image: Image.Image) -> bool:
     """True if the image has no transparent pixels (a solid background)."""
     if image.mode == "P":

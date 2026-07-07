@@ -25,6 +25,8 @@ const UI = {
     selectFirstEight: "選前 8 張",
     exportPng: "匯出 9 張 PNG",
     exportZip: "匯出 ZIP",
+    platformLabel: "其他平台",
+    exportPlatform: "匯出到平台",
     cleanupTune: "去背強度",
     tuneSafe: "保守",
     tuneBalanced: "平衡",
@@ -81,6 +83,8 @@ const UI = {
     selectFirstEight: "Select first 8",
     exportPng: "Export 9 PNG",
     exportZip: "Export ZIP",
+    platformLabel: "Other platform",
+    exportPlatform: "Export for platform",
     cleanupTune: "Cleanup strength",
     tuneSafe: "Safe",
     tuneBalanced: "Balanced",
@@ -421,6 +425,21 @@ async function exportStickersOnly() {
   }
 }
 
+async function exportPlatform() {
+  const bridge = api();
+  if (!bridge) return setStatus(ui().bridgeMissing, true);
+  const chosen = includedTiles();
+  const tiles = chosen.length ? chosen : state.tiles;
+  if (!tiles.length) return setStatus(ui().noTilesExport, true);
+  setStatus(ui().exporting);
+  try {
+    const result = await bridge.export_platform(tiles.map((t) => t.url), { platform: $("platform-target").value });
+    reportExport(result);
+  } catch (err) {
+    setStatus(String(err), true);
+  }
+}
+
 async function savePng(dataUrl, defaultName) {
   const bridge = api();
   if (!bridge) return;
@@ -513,6 +532,7 @@ function bindEvents() {
   $("select-first-eight").addEventListener("click", selectFirstEight);
   $("export-stickers").addEventListener("click", exportStickersOnly);
   $("export-zip").addEventListener("click", exportZip);
+  $("export-platform").addEventListener("click", exportPlatform);
   $("zoom-close").addEventListener("click", closeZoom);
   $("zoom-modal").addEventListener("click", (event) => {
     if (event.target === $("zoom-modal")) closeZoom();

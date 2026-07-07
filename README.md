@@ -69,7 +69,7 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 
 ## 專案狀態與路線圖
 
-目前版本 **v0.6.0**：local-first LINE 靜態貼圖工具，桌面 GUI（pywebview 載入 HTML）與 CLI 共用同一套 Python core，`python -m pytest` 全數通過。
+目前版本 **v0.7.0**：local-first LINE 靜態貼圖工具，桌面 GUI（pywebview 載入 HTML）與 CLI 共用同一套 Python core，`python -m pytest` 全數通過。
 
 ### ✅ 已完成
 
@@ -92,6 +92,10 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 
 細節見 [`REVIEW.md`](REVIEW.md) 與 [`docs/DECISIONS.md`](docs/DECISIONS.md)。
 
+### 🚀 v0.7.0 新增
+
+- **多平台匯出**：除了 LINE，還能把貼圖匯出成 **Telegram（512 PNG）、WhatsApp（512 WebP＋96 tray）、Discord（320 PNG）、Signal（512 PNG）** 的尺寸與格式。GUI 選平台按「匯出到平台」；CLI 用 `sticker-forge platform <grid> -o out.zip --target telegram`。（靈感來自參考專案 sticker-convert、StampNyaa。）
+
 ### 🚀 v0.6.0 新增
 
 - **單張放大檢視**：點任一張貼圖縮圖，跳出放大視窗（透明格背景），可看清去背結果。
@@ -111,7 +115,19 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 - **Windows icon**：GUI / CLI exe 使用自製 `packaging/icon.ico`。
 - **Legacy 清理**：移除 `reference/.../worker/`（Cloudflare/Gemini 後端）與 campaign-checker CI；保留 upstream UI 參考作 provenance。
 
-### ⏳ 剩餘（多已定案）
+### 💡 參考來源啟發的候選功能
+
+看 fork 來源（[yazelin/line-sticker-studio](https://github.com/yazelin/line-sticker-studio)）與其他參考專案（sticker-convert、StampNyaa、signal-sticker-tool、LINE Creators Market）整理的候選：
+
+- **更大的 LINE 套組**：LINE 支援 8／16／24／32／40 張，可支援多張 grid 合併成一包。
+- **自選 main／tab 貼圖**：目前固定用第 1 張，可讓使用者指定主圖與聊天室標籤圖。
+- **貼圖排序／命名**：匯出前調整順序（LINE 上架有固定順序）。
+- **更多 prompt 模板**：LINE emoji（不同尺寸／數量）、訊息貼圖、其他主題模板。
+- **更多平台格式**：Signal 完整 pack（含 manifest）、animated（超出目前靜態範圍）。
+- **ML 去背**：非綠幕來源用 rembg 之類（相依較重，需評估是否違反輕量原則）。
+- **grid 歷史**：保留匯入過的 grid 可重用（與現行 `private_mode` 不寫持久資料的取捨需權衡）。
+
+### ⏳ 已定案
 
 - **已決定不做**（見 [`docs/DECISIONS.md`](docs/DECISIONS.md)）：自動更新（需更新伺服器，違反 local-first）、installer（下載 zip 解壓即用，portable 比安裝流程更符合 local-first）。
 - **已隨架構解決**：桌面拖放匯入（webview 的 HTML dropzone 已內建，原 tkinter 拖放需求消失）；使用者資料／暫存（WebView2 用 `private_mode` 臨時 profile，不寫持久隱藏資料）。

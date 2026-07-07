@@ -17,7 +17,7 @@ from PIL import Image
 
 from .app_launcher import app_path
 from .cleanup import remove_chroma_background
-from .exporter import export_line_zip, export_stickers_zip
+from .exporter import PLATFORM_SPECS, export_line_zip, export_platform_zip, export_stickers_zip
 from .prompts import (
     DEFAULT_ACTIONS,
     DEFAULT_FIELDS,
@@ -131,6 +131,16 @@ class Api:
         if not path:
             return {"cancelled": True}
         self._write_stickers_zip([_decode(url) for url in tile_data_urls], path, options or {})
+        return {"saved": str(path)}
+
+    def export_platform(self, tile_data_urls: list[str], options: dict) -> dict:
+        platform = (options or {}).get("platform", "telegram")
+        if platform not in PLATFORM_SPECS:
+            return {"error": f"unknown platform: {platform}"}
+        path = self._ask_save_path(f"{platform}-stickers.zip")
+        if not path:
+            return {"cancelled": True}
+        export_platform_zip([_decode(url) for url in tile_data_urls], path, platform=platform)
         return {"saved": str(path)}
 
     def save_png(self, data_url: str, default_name: str = "sticker.png") -> dict:

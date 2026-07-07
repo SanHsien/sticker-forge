@@ -4,7 +4,9 @@ from .app_launcher import app_path
 from .cleanup import parse_hex_color, remove_chroma_background
 from .exporter import (
     LINEStickerSpec,
+    PLATFORM_SPECS,
     export_line_zip,
+    export_platform_zip,
     export_stickers_zip,
     fit_to_canvas,
     validate_line_zip,
@@ -15,11 +17,13 @@ from .splitter import split_grid, split_grid_file, split_grid_to_stickers
 
 __all__ = [
     "LINEStickerSpec",
+    "PLATFORM_SPECS",
     "PackPreview",
     "StickerPreview",
     "app_path",
     "build_pack_preview",
     "export_line_zip",
+    "export_platform_zip",
     "export_stickers_zip",
     "fit_to_canvas",
     "parse_hex_color",

@@ -7,6 +7,7 @@ from PIL import Image
 
 from sticker_forge.exporter import (
     export_line_zip,
+    export_platform_zip,
     export_stickers_zip,
     fit_to_canvas,
     validate_line_zip,
@@ -91,6 +92,36 @@ def test_export_stickers_zip_writes_png_only_pack(tmp_path) -> None:
             "08.png",
             "09.png",
         ]
+
+
+def test_export_platform_zip_telegram_sizes_png(tmp_path) -> None:
+    output = export_platform_zip(_stickers()[:3], tmp_path / "tg.zip", platform="telegram")
+    with ZipFile(output) as archive:
+        names = archive.namelist()
+        assert "01.png" in names and "03.png" in names and "README.txt" in names
+        image = Image.open(BytesIO(archive.read("01.png")))
+        assert image.size == (512, 512)
+        assert image.format == "PNG"
+
+
+def test_export_platform_zip_whatsapp_has_webp_and_tray(tmp_path) -> None:
+    output = export_platform_zip(_stickers()[:2], tmp_path / "wa.zip", platform="whatsapp")
+    with ZipFile(output) as archive:
+        names = archive.namelist()
+        assert "01.webp" in names and "tray.png" in names
+        sticker = Image.open(BytesIO(archive.read("01.webp")))
+        assert sticker.size == (512, 512) and sticker.format == "WEBP"
+        tray = Image.open(BytesIO(archive.read("tray.png")))
+        assert tray.size == (96, 96)
+
+
+def test_export_platform_zip_rejects_unknown_platform(tmp_path) -> None:
+    try:
+        export_platform_zip(_stickers()[:1], tmp_path / "x.zip", platform="myspace")
+    except ValueError as exc:
+        assert "unknown platform" in str(exc)
+    else:
+        raise AssertionError("export_platform_zip should reject unknown platforms")
 
 
 def test_validate_line_zip_flags_opaque_stickers(tmp_path) -> None:

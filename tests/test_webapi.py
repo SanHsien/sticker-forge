@@ -52,6 +52,15 @@ def test_cleanup_endpoint_removes_key_colour() -> None:
     assert _decode(out[0]).getpixel((0, 0))[3] == 0
 
 
+def test_export_platform_bridge_behaviour() -> None:
+    api = Api()
+    tile = _encode(Image.new("RGBA", (370, 320), (10, 20, 30, 255)))
+    # No window bound -> save dialog unavailable -> cancelled (not a crash).
+    assert api.export_platform([tile], {"platform": "telegram"}) == {"cancelled": True}
+    # Unknown platform is reported, not raised.
+    assert "error" in api.export_platform([tile], {"platform": "myspace"})
+
+
 def test_write_line_zip_is_valid(tmp_path) -> None:
     api = Api()
     tiles = api.split(_grid_data_url(), {"keyName": "green", "cleanup": True})

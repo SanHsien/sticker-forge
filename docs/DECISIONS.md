@@ -124,3 +124,11 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 - **使用者資料／暫存目錄** → **以 `private_mode` 處理**。WebView2 一定要 profile 資料夾，改用 pywebview `private_mode=True`（臨時 profile、離開清除），不寫持久隱藏資料，符合原則。取捨：UI 語言偏好不跨啟動記憶（可接受）。
 - **自動更新** → **維持不做**。需更新伺服器，違反 local-first。
 - **installer** → **維持不做**。可下載 zip 解壓即用（portable、免安裝、免管理員），比 Inno/NSIS 安裝流程更符合 local-first；未來真有需求再評估不含線上更新的 portable installer。
+
+## 2026-07-07：多平台匯出（v0.7.0）＋參考來源功能盤點
+
+參考 fork 來源與 README 列的其他專案（sticker-convert、StampNyaa、signal-sticker-tool、LINE Creators Market），把候選功能寫進 README 路線圖「參考來源啟發的候選功能」，並先實作最強、最 local-first 的一項：
+
+- **多平台匯出**：`exporter.PLATFORM_SPECS` + `export_platform_zip()`，支援 Telegram（512 PNG）、WhatsApp（512 WebP＋96 tray）、Discord（320 PNG）、Signal（512 PNG）。CLI `platform --target`、`webapi.Api.export_platform`、GUI 平台下拉＋按鈕。全部 contain-fit 到目標尺寸、保留透明。
+- 驗證：核心 unit test（4 平台檔名/尺寸/格式/tray）＋CLI test＋webapi bridge test＋live pywebview（按鈕收集 included tiles 呼叫 bridge）。41 passed。
+- 候選未做（留路線圖）：更大 LINE 套組（多 grid）、自選 main/tab、貼圖排序/命名、更多 prompt 模板、Signal manifest、ML 去背（rembg 相依重）、grid 歷史（與 private_mode 不寫持久資料衝突）。

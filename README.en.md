@@ -85,7 +85,7 @@ python -m sticker_forge validate outputs\line-stickers.zip
 
 ## Roadmap
 
-Version **v0.6.0**: local-first LINE static sticker toolkit. The desktop GUI (a pywebview window rendering the HTML) and the CLI share one Python core. `python -m pytest` passes.
+Version **v0.7.0**: local-first LINE static sticker toolkit. The desktop GUI (a pywebview window rendering the HTML) and the CLI share one Python core. `python -m pytest` passes.
 
 ### ✅ Done
 
@@ -106,6 +106,10 @@ Version **v0.6.0**: local-first LINE static sticker toolkit. The desktop GUI (a 
 
 See [`REVIEW.md`](REVIEW.md) and [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
+### 🚀 New in v0.7.0
+
+- **Multi-platform export**: beyond LINE, export the stickers sized and formatted for **Telegram (512 PNG), WhatsApp (512 WebP + 96 tray), Discord (320 PNG), and Signal (512 PNG)**. Pick a platform in the GUI and click "Export for platform", or run `sticker-forge platform <grid> -o out.zip --target telegram`. (Inspired by the sticker-convert and StampNyaa references.)
+
 ### 🚀 New in v0.6.0
 
 - **Per-sticker zoom**: click any tile thumbnail to open an enlarged view (on a transparency checkerboard) to inspect the cleanup.
@@ -125,7 +129,19 @@ See [`REVIEW.md`](REVIEW.md) and [`docs/DECISIONS.md`](docs/DECISIONS.md).
 - **Windows icon** for the GUI/CLI executables (`packaging/icon.ico`).
 - **Legacy cleanup**: removed `reference/.../worker/` (Cloudflare/Gemini backend) and the campaign-checker CI; kept the upstream UI reference for provenance.
 
-### ⏳ Remaining (mostly decided)
+### 💡 Reference-inspired candidates
+
+Drawn from the fork source ([yazelin/line-sticker-studio](https://github.com/yazelin/line-sticker-studio)) and the other reference projects (sticker-convert, StampNyaa, signal-sticker-tool, LINE Creators Market):
+
+- **Larger LINE packs**: LINE supports 8/16/24/32/40 stickers — merge multiple grids into one pack.
+- **Pick main/tab sticker**: currently fixed to the first sticker; let the user choose the main and tab images.
+- **Sticker ordering / naming**: reorder before export (LINE packs have a fixed order).
+- **More prompt templates**: LINE emoji (different size/count), message stickers, more themes.
+- **More platform formats**: a full Signal pack (with manifest), animated stickers (beyond the current static scope).
+- **ML background removal**: for non-chroma-key sources (e.g. rembg — a heavier dependency to weigh against the lightweight principle).
+- **Grid history**: keep imported grids for reuse (weigh against the current `private_mode` "no persistent data").
+
+### ⏳ Decided
 
 - **Decided against** (see [`docs/DECISIONS.md`](docs/DECISIONS.md)): auto-update (needs an update server, conflicts with local-first) and an installer (the portable unzip-and-run zip fits local-first better than an install flow).
 - **Resolved by the architecture**: desktop drag-and-drop (the webview's HTML dropzone already handles it, so the old tkinter drag-drop need is gone); user-data/temp (WebView2 runs with `private_mode`, an ephemeral profile, so nothing persistent is written).
