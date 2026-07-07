@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
-[![Local-first](https://img.shields.io/badge/local--first-no_backend-brightgreen.svg)](docs/ARCHITECTURE.md)
+[![Local-first](https://img.shields.io/badge/local--first-no_backend-brightgreen.svg)](docs/DEVELOPMENT.md)
 [![LINE static stickers](https://img.shields.io/badge/LINE-static_stickers-00B900.svg)](prompts/line-static-3x3.md)
 [![Tests: pytest](https://img.shields.io/badge/tests-pytest-blueviolet.svg)](tests)
 
@@ -25,16 +25,21 @@ The current scope is LINE static sticker packs. This project does not auto-submi
 
 - Traditional Chinese and English CLI/app language support.
 - 3x3 LINE static sticker prompt templates, with text and no-text variants.
-- Local 3x3 grid splitting with 3% inset.
-- Green or magenta chroma-key background cleanup.
+- Local 3x3 grid splitting with 3% inset (handles non-divisible sizes like 1024×1024).
+- Green or magenta chroma-key background cleanup with despill.
 - Selection of 8 stickers from a 9-cell grid.
-- LINE ZIP export with `01.png` to `08.png`, `main.png`, `tab.png`, and README.
+- LINE ZIP export with `01.png`–`08.png`, `main.png`, `tab.png`, and README.
 - 9 PNG-only ZIP export for non-LINE use.
-- ZIP structure validation.
-- Preview metadata and selection validation model.
-- Native Windows GUI as the main executable.
-- CLI executable split out as `sticker-forge-cli.exe`.
-- Local HTML workspace kept as an offline fallback.
+- ZIP structure validation and pre-export preview metadata.
+- Native Windows GUI as the main executable, with a separate CLI executable and an offline HTML fallback.
+
+## Entry Points
+
+| Entry | Notes |
+|-------|-------|
+| `sticker-forge.exe` | Native Windows GUI, no console window |
+| `sticker-forge-cli.exe` / `python -m sticker_forge` | Command line, `--lang zh-Hant\|en` |
+| `app/index.html` | Offline HTML workspace, ZIP built locally with no CDN |
 
 ## Install From Source
 
@@ -43,7 +48,6 @@ python -m pip install -e ".[dev,packaging]"
 python -m pytest
 python -m sticker_forge --lang en prompt
 python -m sticker_forge --lang en app
-sticker-forge-gui --lang en
 ```
 
 ## Build Windows Executable
@@ -52,29 +56,18 @@ sticker-forge-gui --lang en
 .\packaging\build-windows.ps1
 ```
 
-The build script installs `.[dev,packaging]`, runs tests, builds with PyInstaller, smoke-tests `sticker-forge.exe --smoke`, and checks `sticker-forge-cli.exe --help`.
-
-Build output:
-
-```text
-%TEMP%\sticker-forge-pyinstaller-dist\sticker-forge\sticker-forge.exe
-%TEMP%\sticker-forge-pyinstaller-dist\sticker-forge\sticker-forge-cli.exe
-```
-
-`sticker-forge.exe` opens the native GUI without a console window. `sticker-forge-cli.exe` is the console command-line tool. The script uses `%TEMP%` for PyInstaller build/dist folders to avoid OneDrive file-locking issues in the repo directory.
+The script installs `.[dev,packaging]`, runs tests, builds with PyInstaller, and smoke-tests `sticker-forge.exe --smoke` / `sticker-forge-cli.exe --help`. It uses `%TEMP%` for PyInstaller build/dist folders to avoid OneDrive file-locking in the repo directory. See [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) for details.
 
 ## CLI
 
 ```powershell
 python -m sticker_forge --lang en prompt
-python -m sticker_forge --lang en prompt --no-text --output outputs\prompt.md
 python -m sticker_forge split examples\grid.png -o outputs\cells --inset-ratio 0.03
 python -m sticker_forge cleanup examples\cell.png -o outputs\cell-clean.png --chroma-key green
 python -m sticker_forge preview examples\grid.png --select 1,2,3,4,5,6,7,8
 python -m sticker_forge export examples\grid.png -o outputs\line-stickers.zip --select 1,2,3,4,5,6,7,8 --chroma-key
 python -m sticker_forge stickers examples\grid.png -o outputs\transparent-stickers.zip --chroma-key
 python -m sticker_forge validate outputs\line-stickers.zip
-python -m sticker_forge --lang en app
 ```
 
 ## Project Structure
@@ -86,54 +79,38 @@ python -m sticker_forge --lang en app
 ├── prompts/                # Prompt templates
 ├── packaging/              # Windows exe build scripts
 ├── tests/                  # Automated tests
-├── examples/               # Example notes, no infringing assets
-├── docs/                   # Project docs
-└── reference/
-    └── upstream-line-sticker-studio/
+├── examples/               # Input location, no infringing assets
+├── docs/                   # Maintainer docs (DEVELOPMENT / DECISIONS / LINE_SUBMISSION)
+└── reference/upstream-line-sticker-studio/   # Upstream reference, not the target architecture
 ```
 
 ## Roadmap
 
-Status: **Phase 0-6 are complete for the publishable local workflow; `v0.2.0` fixes Windows exe startup and adds a native GUI.**
+Version **v0.2.0**: local-first LINE static sticker toolkit with three entry points (CLI, native Windows GUI, offline HTML). `python -m pytest` passes.
 
 ### ✅ Done
 
-- [x] Local-first project direction.
-- [x] Prompt templates for LINE static sticker 3x3 grids.
-- [x] Python CLI and testable image processing modules.
-- [x] 3x3 splitting, chroma-key cleanup, LINE ZIP export, PNG-only ZIP export, ZIP validation.
-- [x] Preview metadata model for sticker selection checks.
-- [x] Offline local HTML workspace.
-- [x] PyInstaller Windows packaging.
-- [x] First Windows release artifact: `v0.1.0`.
-- [x] Native GUI Windows release artifact: `v0.2.0`.
-- [x] Traditional Chinese and English README.
-- [x] Traditional Chinese and English CLI/app language support.
-- [x] Native GUI main executable.
-- [x] Separate CLI executable.
-- [x] CLI `preview` command and HTML pre-export preview controls.
+- Local-first direction; reusable logic extracted from upstream (split inset, chroma-key, ZIP spec, LINE sizes).
+- Prompt templates (Chinese/English, text/no-text, green/magenta, risk reminders).
+- Image core: 3x3 split, cleanup, resize/padding, main/tab image, preview metadata.
+- Export: LINE ZIP, PNG-only ZIP, `validate` and `preview` commands.
+- Three entry points and PyInstaller packaging; released `v0.1.0` and `v0.2.0`.
+
+### 🔧 2026-07-07 consistency fixes
+
+- **Split sizing**: `split_grid` no longer requires divisible dimensions; it floors and drops edge remainder (matching the web app), so the common 1024×1024 AI export works in CLI/GUI/web.
+- **`--key-color`**: removed the dead flag from `export`/`stickers`/`preview` (that path always uses green/magenta score-based cleanup); kept on `cleanup`.
+- **Web despill**: `app/app.js` now despills to match Python, so all three paths produce identical output (verified 60/60 pixels).
+- **Packaging verified**: PyInstaller build tested — GUI `--smoke`, CLI export/validate, and bundled resources all pass.
+
+See [`REVIEW.md`](REVIEW.md) and [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
 ### ⏳ Next
 
-- [ ] Drag-and-drop import.
-- [ ] More detailed preview zoom and per-sticker adjustment.
-- [ ] Decide user data and temporary file locations.
-- [ ] Windows icon, installer, and update check.
-
-## Related References
-
-These services and projects are references only. They are not runtime dependencies.
-
-| Name | Type | Useful reference |
-| --- | --- | --- |
-| [LINE Creators Market](https://creator.line.me/) | Official platform | Sticker, emoji, and theme creation and sales flow. |
-| [LINE Sticker Maker](https://creator.line.me/en/stickermaker/) | Official mobile app | Mobile sticker creation and manual submission flow. |
-| [yazelin/line-sticker-studio](https://github.com/yazelin/line-sticker-studio) | Upstream source | 3x3 grid, chroma-key, ZIP structure, submission notes, and UI flow. |
-| [laggykiller/sticker-convert](https://github.com/laggykiller/sticker-convert) | Sticker conversion tool | GUI + CLI packaging and multi-platform sticker conversion. |
-| [suchipi/line-sticker-downloader](https://github.com/suchipi/line-sticker-downloader) | LINE asset downloader | CLI output flow for LINE stickers and emojis. |
-| [curegit/line-sticker-downloader](https://github.com/curegit/line-sticker-downloader) | LINE asset downloader | Browser/CLI modes and ZIP output. |
-| [MarvNC/StampNyaa](https://github.com/MarvNC/StampNyaa) | LINE sticker desktop tool | Cross-platform desktop UI patterns. |
-| [ittner/signal-sticker-tool](https://github.com/ittner/signal-sticker-tool) | Signal sticker CLI | Folder, metadata, and CLI packaging model. |
+- **Product decision (P2)**: without `--chroma-key`, `export`/`stickers` output has a solid key-color background — decide whether to clean up by default or warn on export.
+- Drag-and-drop import, per-sticker re-slice and preview zoom, Windows icon/installer/update check.
+- Decide user data and temporary file locations.
+- Remove no-longer-needed `reference/.../worker/` and upstream hosted config.
 
 ## License
 

@@ -49,26 +49,20 @@
 
 ## 驗證方向
 
-目前尚未建立新本機工具。文件整理階段至少確認：
+本機工具已建立（CLI + 原生 GUI + HTML fallback + PyInstaller 打包）。改動後至少確認：
 
 ```powershell
 git diff --check
+python -m pytest
 ```
 
-未來有程式後，最小驗證應包含：
-
-- prompt 模板輸出測試。
-- 3x3 grid 切圖測試。
-- 去背與尺寸整理測試。
-- ZIP 結構測試。
-- exe 打包 smoke test。
+最小涵蓋：prompt CLI 輸出與渲染、3x3 切圖（含非整除尺寸）、green/magenta 去背、ZIP 結構與 validator、exe smoke test。
 
 ## 文件入口
 
-- `README.md`：使用者入口與產品方向。
-- `NOTICE.md`：fork 來源、MIT 授權與第三方聲明。
-- `docs/HANDOFF.md`：接手狀態與下一步。
-- `docs/ARCHITECTURE.md`：目標架構。
-- `docs/DEVELOPMENT.md`：開發與驗證。
-- `docs/ROADMAP.md`：改寫計畫。
+- `README.md` / `README.en.md`：使用者入口、產品方向與路線圖（含最新狀態）。
+- `REVIEW.md`：最新專案 review。
+- `docs/DEVELOPMENT.md`：架構、本機指令、打包發行、legacy 邊界。
 - `docs/DECISIONS.md`：決策紀錄。
+- `docs/LINE_SUBMISSION.md`：LINE 手動上架與送審說明。
+- `NOTICE.md`：fork 來源、MIT 授權與第三方聲明。

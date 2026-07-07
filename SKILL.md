@@ -25,14 +25,14 @@ description: 維護 SanHsien/sticker-forge。本專案目標是本機 LINE 貼�
 
 ## 快速定位
 
-- `README.md`：產品方向。
+- `README.md` / `README.en.md`：產品方向與路線圖（含最新狀態）。
+- `REVIEW.md`：最新專案 review。
 - `NOTICE.md`：fork 來源與授權聲明。
 - `AGENTS.md` / `CLAUDE.md`：AI 接手規則。
-- `src/sticker_forge/`：未來本機工具主程式。
+- `src/sticker_forge/`：本機工具主程式。
 - `prompts/`：提示詞模板。
-- `packaging/`：exe 打包流程。
-- `tests/`：測試。
-- `docs/HANDOFF.md`：目前接手狀態。
+- `docs/DEVELOPMENT.md`：架構、本機指令、打包發行。
+- `docs/DECISIONS.md`：決策紀錄。
 - `reference/upstream-line-sticker-studio/`：upstream legacy，保留目錄結構作參考。
 
 ## 完成回報

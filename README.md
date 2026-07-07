@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
-[![Local-first](https://img.shields.io/badge/local--first-no_backend-brightgreen.svg)](docs/ARCHITECTURE.md)
+[![Local-first](https://img.shields.io/badge/local--first-no_backend-brightgreen.svg)](docs/DEVELOPMENT.md)
 [![LINE static stickers](https://img.shields.io/badge/LINE-static_stickers-00B900.svg)](prompts/line-static-3x3.md)
 [![Tests: pytest](https://img.shields.io/badge/tests-pytest-blueviolet.svg)](tests)
 
@@ -33,57 +33,23 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 
 ## 功能範圍
 
-### 提示詞
+- **提示詞**：依 LINE 規格產生 3x3 grid prompt，支援主題／角色／語氣／語言／8 句文字／8 個動作，有字與無字兩版，可複製微調。
+- **圖片加工**：匯入 3x3 grid、切 9 格選 8 張、green/magenta chroma-key 去背、尺寸與 padding 整理、main/tab image、逐張預覽。
+- **匯出**：LINE Creators Market 靜態貼圖 ZIP、9 張獨立 PNG 的一般貼圖 ZIP、尺寸／張數／檔名／結構檢查、簡短上架說明。
 
-- 依 LINE 貼圖規格產生 3x3 grid prompt。
-- 支援主題、角色設定、語氣、語言、貼圖文字、動作描述。
-- 支援「有字 / 無字」兩種提示詞。
-- 提供可複製、可手動微調的 prompt。
+## 使用入口
 
-### 圖片加工
+| 入口 | 說明 |
+|------|------|
+| `sticker-forge.exe` | 原生 Windows GUI，無 console，雙擊即用 |
+| `sticker-forge-cli.exe` / `python -m sticker_forge` | 命令列，支援 `--lang zh-Hant\|en` |
+| `app/index.html` | 離線 HTML 工作台，瀏覽器直接開，ZIP 本機產生不依賴 CDN |
 
-- 匯入使用者生成的 3x3 grid。
-- 切成 9 格，讓使用者選出 LINE 最小套組需要的 8 張。
-- chroma-key 去背或其他背景清理。
-- 尺寸整理、padding、main image、tab image。
-- 預覽每張貼圖。
-
-### 匯出
-
-- 匯出 LINE Creators Market 靜態貼圖 ZIP。
-- 匯出 9 張獨立 PNG 的一般貼圖 ZIP。
-- 檢查基本尺寸、張數、檔名與 ZIP 結構。
-- 產生簡短上架說明。
+從原始碼安裝與打包步驟見 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)。
 
 ## 目前狀態
 
-本 repo 來自 [`yazelin/line-sticker-studio`](https://github.com/yazelin/line-sticker-studio) 的 MIT fork。原專案 web app 與 Worker 已集中搬到 `reference/upstream-line-sticker-studio/`，作為邏輯參考，不是新架構。
-
-目前已完成：
-
-- 建立 local-first 方向文件。
-- 建立 AI 接手文件：`AGENTS.md`、`CLAUDE.md`、`SKILL.md`。
-- 建立授權與第三方聲明：`NOTICE.md`。
-- 建立後續目錄骨架：`src/`、`prompts/`、`packaging/`、`tests/`、`examples/`、`docs/`。
-- 建立第一版 LINE 靜態貼圖 3x3 prompt：`prompts/line-static-3x3.md`。
-- 建立 Python package 設定：`pyproject.toml`。
-- 建立最小 CLI：`python -m sticker_forge prompt|split|cleanup|export|stickers|validate|app`。
-- 建立本機 HTML 介面原型：`app/index.html`，可離線匯出 ZIP。
-- 建立 `sticker-forge app` 指令，可從 CLI / exe 開啟本機 HTML 介面。
-- 建立原生 Windows GUI 入口：雙擊 `sticker-forge.exe` 直接開啟圖形介面，不再閃 console 視窗。
-- 建立 `sticker-forge-cli.exe` 作為命令列入口。
-- 建立 CLI / HTML 工作台中英文語系切換。
-- 建立英文 README：`README.en.md`。
-- 建立 prompt 欄位渲染、3x3 grid inset 切圖、chroma-key 去背、LINE ZIP exporter、PNG-only stickers ZIP exporter 與 ZIP validator。
-- 建立預覽資料模型：`src/sticker_forge/preview.py`。
-- 保留 upstream 的 LINE Creators Market 手動上架/送審說明：`docs/LINE_SUBMISSION.md`。
-- 建立 PyInstaller Windows 打包腳本與 spec。
-- 建立 pytest 測試，覆蓋 prompt CLI、prompt 渲染、切圖、去背、ZIP 結構與 ZIP validator。
-- 關閉 GitHub Issues、Projects、Wiki、Discussions、Actions。
-
-目前尚未完成：
-
-- 原生 GUI 還是首版，後續可強化拖放、更多預覽細節與 icon / installer。
+本 repo 來自 [`yazelin/line-sticker-studio`](https://github.com/yazelin/line-sticker-studio) 的 MIT fork。原專案 web app 與 Worker 已集中搬到 `reference/upstream-line-sticker-studio/` 作為邏輯參考，不是新架構。
 
 ## 專案結構
 
@@ -91,115 +57,55 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 .
 ├── src/sticker_forge/      # 本機工具主程式
 ├── app/                    # 可直接開啟的本機 HTML 介面
-├── prompts/                # 提示詞模板與範例
+├── prompts/                # 提示詞模板
 ├── packaging/              # exe 打包設定與發行流程
 ├── tests/                  # 自動化測試
-├── examples/               # 範例輸入/輸出說明，不放侵權素材
-├── docs/                   # 維護文件與 review
-├── reference/
-│   └── upstream-line-sticker-studio/
-│       ├── app.js          # 原專案 web frontend 參考
-│       ├── index.html      # 原專案 web frontend 參考
-│       ├── styles.css      # 原專案 web frontend 參考
-│       ├── worker/         # 原專案 Cloudflare Worker 參考
-│       ├── assets/         # 原專案素材
-│       └── scripts/        # 原專案檢查腳本
-├── AGENTS.md
-├── CLAUDE.md
-├── NOTICE.md
-├── SKILL.md
-└── LICENSE
+├── examples/               # 範例輸入位置，不放侵權素材
+├── docs/                   # 維護文件（DEVELOPMENT / DECISIONS / LINE_SUBMISSION）
+├── reference/upstream-line-sticker-studio/   # upstream 參考，非目標架構
+├── README.md / README.en.md / REVIEW.md
+├── AGENTS.md / CLAUDE.md / SKILL.md          # AI 接手指引
+└── NOTICE.md / LICENSE
 ```
 
-## 改作路線圖
+## 專案狀態與路線圖
 
-目前進度：**Phase 0–6 已完成可發佈流程；`v0.2.0` 修正 Windows exe 啟動方式並加入原生 GUI。**
+目前版本 **v0.2.0**：local-first LINE 靜態貼圖工具，CLI + 原生 Windows GUI + 本機 HTML fallback 三條入口皆可用，`python -m pytest` 全數通過。
 
 ### ✅ 已完成
 
-- [x] **Phase 0：收斂專案邊界**
-  - [x] 維持 local-first，不再延伸 Worker / quota / Turnstile / AI proxy。
-  - [x] 從 reference 中抽出可重用邏輯：grid split、chroma-key、ZIP spec、LINE 尺寸。
-  - [x] 清楚分離使用者文件、維護文件與原專案參考資料。
+- 產品方向固定為 local-first；從 upstream 抽出可重用邏輯（切圖 inset、chroma-key、ZIP spec、LINE 尺寸）。
+- prompt 模板：中英文、有字／無字、green/magenta 背景、高風險內容提醒。
+- 圖片處理核心：3x3 切圖、去背、尺寸／padding、main/tab image、預覽 metadata 與選圖檢查。
+- 匯出：LINE ZIP、9 張 PNG-only ZIP、`validate` 與 `preview` 指令、上架說明。
+- 三入口：CLI（`--lang` 中英）、原生 tkinter GUI、離線 HTML 工作台。
+- PyInstaller Windows 打包，已發行 `v0.1.0`、`v0.2.0`，含 SHA256 checksum。
+- 中英文 README。
 
-- [x] **Phase 1：提示詞模板**
-  - [x] `prompts/line-static-3x3.md` 提供第一版 LINE 靜態貼圖 prompt。
-  - [x] `prompts/line-static-3x3.en.md` 提供英文 prompt template。
-  - [x] 支援角色、主題、語氣、語言、8 句貼圖文字、8 個動作描述與 chroma-key 背景。
-  - [x] 提供有字版、無字版、3x3 grid 輸出規則。
-  - [x] 加入上架風險提醒與禁止事項。
+### 🔧 2026-07-07 一致性修正
 
-- [x] **Phase 2：圖片處理核心**
-  - [x] `src/sticker_forge/` 已建立可測試模組。
-  - [x] `splitter.py` 已實作 3x3 grid 匯入、3% inset 切圖與 LINE 尺寸輸出。
-  - [x] CLI export 已支援 9 選 8。
-  - [x] `cleanup.py` 已實作 green / magenta chroma-key 去背。
-  - [x] `exporter.py` 已實作透明 padding 與尺寸輸出。
-  - [x] `preview.py` 已建立貼圖預覽 metadata 與選圖檢查。
-  - [x] `tests/` 已覆蓋切圖、去背與輸出。
+- **切圖尺寸**：`split_grid` 不再要求邊長可被 3 整除，改向下取整丟餘數（對齊 web `Math.floor`），最常見的 1024×1024 AI 生圖在 CLI / GUI / web 都能處理。
+- **`--key-color`**：從 `export` / `stickers` / `preview` 移除死參數（那條路徑固定走 green/magenta score-based 去背），保留在 `cleanup`。
+- **web 去背 despill**：`app/app.js` 對齊 Python 的 despill，三入口去背輸出一致（60/60 像素交叉比對）。
+- **打包驗證**：實測 PyInstaller build，GUI `--smoke`、CLI export/validate、bundle 資源皆通過；`python -m sticker_forge.cli` 補上 `__main__` guard。
 
-- [x] **Phase 3：LINE ZIP exporter**
-  - [x] `exporter.py` 已產生 8 張 sticker image。
-  - [x] 已產生 main image 與 tab image。
-  - [x] 已檢查 LINE 靜態貼圖包的張數、檔名與 ZIP 結構。
-  - [x] 已匯出 ZIP 與簡短上架說明。
-  - [x] 已支援 9 張 PNG-only ZIP，供非 LINE 上架用途使用。
-  - [x] 已提供 `validate` 指令檢查 ZIP。
-  - [x] 已保留手動上架與送審說明。
+細節見 [`REVIEW.md`](REVIEW.md) 與 [`docs/DECISIONS.md`](docs/DECISIONS.md)。
 
-- [x] **Phase 4：本機介面**
-  - [x] 已建立最小 CLI。
-  - [x] CLI 流程包含：產 prompt、匯入 grid、切圖、去背、選 8 張、匯出 LINE ZIP、匯出 9 張 PNG-only ZIP、驗證 ZIP。
-  - [x] CLI 支援 `--lang zh-Hant|en`，可切換中文 / 英文 help、prompt 與狀態輸出。
-  - [x] `app/index.html` 提供本機 HTML 工作台，作為 exe GUI 前的可用介面。
-  - [x] HTML 工作台支援繁體中文 / English 語系切換。
-  - [x] HTML 工作台可離線匯出 ZIP，不依賴 CDN。
-  - [x] HTML 工作台支援匯出前預覽、padding 與去背強度控制。
-  - [x] 所有圖片處理都在本機完成。
+### ⏳ 待辦
 
-- [x] **Phase 5：Windows exe 打包基礎**
-  - [x] `packaging/` 已建立 PyInstaller 打包設定。
-  - [x] 已建立 Windows build script。
-  - [x] 已補 release checklist 與 smoke test。
-  - [x] `sticker-forge app` 可從 CLI / exe 開啟本機 HTML 介面。
-  - [x] 已本機驗證 `sticker-forge.exe --smoke`、`sticker-forge-cli.exe --help` 與 `prompt --output`。
-  - [x] 主程式 `sticker-forge.exe` 改為無 console 原生 GUI。
-  - [x] 命令列工具分離為 `sticker-forge-cli.exe`。
-
-- [x] **正式 Windows release artifact**
-  - [x] 第一版版本號固定為 `v0.1.0`。
-  - [x] 第二版版本號固定為 `v0.2.0`。
-  - [x] 產生可發佈的 Windows zip artifact。
-  - [x] release 檔名：`sticker-forge-v0.2.0-windows-x64.zip`。
-  - [x] 發佈 SHA256 checksum。
-  - [x] 發行前確認沒有 API key、使用者圖片、生成 ZIP 或本機暫存檔進版控。
-
-- [x] **英文文件**
-  - [x] 建立 `README.en.md`。
-  - [x] 中文 README 與英文 README 都寫明打包方式與 roadmap 狀態。
-
-- [x] **Phase 6：原生 GUI 與 exe 啟動修正**
-  - [x] 新增 `src/sticker_forge/gui.py`，使用 tkinter 提供原生圖形介面。
-  - [x] GUI 支援 prompt、3x3 匯入、切圖、去背、選 8 張、padding、匯出 LINE ZIP 與 9 張 PNG ZIP。
-  - [x] GUI 支援繁體中文 / English。
-  - [x] 新增 `preview` CLI 指令，可檢查匯出前檔名、尺寸、選取狀態。
-  - [x] PyInstaller 產出 GUI exe 與 CLI exe，修正雙擊主 exe 閃退問題。
-
-### ⏳ 待完成
-
-- [ ] **介面強化**
-  - [ ] 補拖放匯入。
-  - [ ] 補更細的預覽縮放與單張重切控制。
-  - [ ] 補 Windows icon、installer 與自動更新檢查。
+- **產品決策（P2）**：`export` / `stickers` 未加 `--chroma-key` 時成品是實心綠/洋紅底——待決定「預設去背」或「輸出時提示」。
+- **介面強化**：拖放匯入、單張重切與預覽縮放、Windows icon / installer / 自動更新檢查。
+- **使用者資料位置**：決定使用者資料與暫存檔存放位置。
+- **Legacy 清理**：移除不再需要的 `reference/.../worker/` 與 upstream hosted 設定。
 
 ## 維護文件
 
 - [`REVIEW.md`](REVIEW.md)：最新專案 review（僅保留最新版）。
-- [`docs/ROADMAP.md`](docs/ROADMAP.md)：內部 roadmap。
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)：目標架構。
-- [`docs/HANDOFF.md`](docs/HANDOFF.md)：接手狀態。
+- [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)：架構、本機指令、打包發行、legacy 邊界。
+- [`docs/DECISIONS.md`](docs/DECISIONS.md)：重要決策紀錄。
 - [`docs/LINE_SUBMISSION.md`](docs/LINE_SUBMISSION.md)：LINE Creators Market 手動上架與送審說明。
 - [`NOTICE.md`](NOTICE.md)：授權、fork 來源與第三方聲明。
+- [`AGENTS.md`](AGENTS.md) / [`CLAUDE.md`](CLAUDE.md) / [`SKILL.md`](SKILL.md)：AI 接手規則與硬性邊界。
 
 ## 其他可參考專案
 
