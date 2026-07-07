@@ -103,6 +103,7 @@ Version **v0.2.0**: local-first LINE static sticker toolkit with three entry poi
 - **Web despill**: `app/app.js` now despills to match Python, so all three paths produce identical output (verified 60/60 pixels).
 - **Packaging verified**: PyInstaller build tested — GUI `--smoke`, CLI export/validate, and bundled resources all pass.
 - **Cleanup on by default**: `export`/`stickers`/`preview` now remove the background by default (LINE requires transparent backgrounds, and the split step fills the key color specifically for removal). Use `--keep-background` to keep the solid fill.
+- **`validate` checks transparency**: `validate` now flags fully opaque stickers (background not removed), catching the most common LINE rejection reason.
 
 See [`REVIEW.md`](REVIEW.md) and [`docs/DECISIONS.md`](docs/DECISIONS.md).
 

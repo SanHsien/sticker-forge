@@ -126,6 +126,15 @@ def export_stickers_zip(
     return output
 
 
+def _is_fully_opaque(image: Image.Image) -> bool:
+    """True if the image has no transparent pixels (a solid background)."""
+    if image.mode == "P":
+        image = image.convert("RGBA")
+    if "A" not in image.getbands():
+        return True
+    return image.getchannel("A").getextrema()[0] == 255
+
+
 def validate_line_zip(
     zip_path: str | Path,
     *,
@@ -166,5 +175,7 @@ def validate_line_zip(
                     errors.append(f"{name} size is {image.size[0]}x{image.size[1]}, expected {size[0]}x{size[1]}")
                 if image.format != "PNG":
                     errors.append(f"{name} is not PNG")
+                if _is_fully_opaque(image):
+                    errors.append(f"{name} has no transparent background; LINE requires transparent stickers")
 
     return errors

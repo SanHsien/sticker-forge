@@ -93,6 +93,25 @@ def test_export_stickers_zip_writes_png_only_pack(tmp_path) -> None:
         ]
 
 
+def test_validate_line_zip_flags_opaque_stickers(tmp_path) -> None:
+    # A structurally correct ZIP whose stickers have solid (opaque) backgrounds
+    # should be flagged, because LINE requires transparent stickers.
+    output = tmp_path / "opaque.zip"
+    sizes = {"main.png": (240, 240), "tab.png": (96, 74)}
+    sizes.update({f"{index:02d}.png": (370, 320) for index in range(1, 9)})
+    with ZipFile(output, "w") as archive:
+        for name, size in sizes.items():
+            buffer = BytesIO()
+            Image.new("RGBA", size, (0, 200, 0, 255)).save(buffer, format="PNG")
+            archive.writestr(name, buffer.getvalue())
+        archive.writestr("README.txt", "opaque test")
+
+    errors = validate_line_zip(output)
+
+    assert any("size is" not in error for error in errors)
+    assert any("01.png has no transparent background" in error for error in errors)
+
+
 def test_validate_line_zip_reports_bad_structure(tmp_path) -> None:
     output = tmp_path / "bad.zip"
     with ZipFile(output, "w") as archive:

@@ -89,6 +89,7 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 - **web 去背 despill**：`app/app.js` 對齊 Python 的 despill，三入口去背輸出一致（60/60 像素交叉比對）。
 - **打包驗證**：實測 PyInstaller build，GUI `--smoke`、CLI export/validate、bundle 資源皆通過；`python -m sticker_forge.cli` 補上 `__main__` guard。
 - **匯出預設去背**：`export` / `stickers` / `preview` 改為預設去背（LINE 強制要求透明背景，且切圖本就用 key 色填背景配對去背）。想保留實心底色改用 `--keep-background`。
+- **validate 檢查透明背景**：`validate` 新增透明度檢查，完全不透明（背景未去）的貼圖會被標記，擋下 LINE 第一大退件原因。
 
 細節見 [`REVIEW.md`](REVIEW.md) 與 [`docs/DECISIONS.md`](docs/DECISIONS.md)。
 

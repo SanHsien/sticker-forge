@@ -18,8 +18,9 @@
 | 附帶：`python -m sticker_forge.cli` 靜默 no-op | ✅ 已修 | 補 `__main__` guard |
 | 附帶：打包 exe 實機驗證（roadmap item 4） | ✅ 已驗 | `pyinstaller` build 成功，GUI `--smoke` exit 0、CLI export/validate OK、bundle 含 app/+prompts/ |
 | **P2**：未去背時匯出成品是實心底色 | ✅ 已修 | 研究 LINE 官方＋upstream 後，`export`/`stickers`/`preview` 改預設去背，加 `--keep-background` opt-out；補測試（預設→透明、opt-out→實心） |
+| 強化：`validate` 未檢查透明背景 | ✅ 已加 | 新增透明度檢查，完全不透明的貼圖被標記（LINE 第一大退件原因）；補測試 |
 
-現況：`python -m pytest -q` → **31 passed**，無 DeprecationWarning。
+現況：`python -m pytest -q` → **32 passed**，無 DeprecationWarning。
 
 ---
 
