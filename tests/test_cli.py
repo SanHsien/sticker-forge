@@ -106,6 +106,21 @@ def test_cli_stickers_creates_png_only_zip(tmp_path) -> None:
         assert archive.namelist()[-1] == "09.png"
 
 
+def test_cli_export_multi_grid_16(tmp_path) -> None:
+    grid = Image.new("RGBA", (300, 300), (0, 255, 0, 255))
+    g1, g2 = tmp_path / "a.png", tmp_path / "b.png"
+    grid.save(g1)
+    grid.save(g2)
+    output_path = tmp_path / "pack.zip"
+    selection = ",".join(str(i) for i in range(1, 17))  # 16 cells from 2 grids
+
+    assert main(["export", str(g1), str(g2), "-o", str(output_path), "--select", selection, "--main", "2", "--tab", "3"]) == 0
+
+    with ZipFile(output_path) as archive:
+        assert "16.png" in archive.namelist()
+    assert main(["validate", str(output_path)]) == 0
+
+
 def test_cli_platform_creates_zip(tmp_path) -> None:
     grid = Image.new("RGBA", (300, 300), (0, 255, 0, 255))
     grid_path = tmp_path / "grid.png"

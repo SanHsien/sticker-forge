@@ -8,7 +8,14 @@ from pathlib import Path
 from PIL import Image
 
 from .cleanup import parse_hex_color, remove_chroma_background
-from .exporter import PLATFORM_SPECS, export_line_zip, export_platform_zip, export_stickers_zip, validate_line_zip
+from .exporter import (
+    LINE_PACK_SIZES,
+    PLATFORM_SPECS,
+    export_line_zip,
+    export_platform_zip,
+    export_stickers_zip,
+    validate_line_zip,
+)
 from .prompts import DEFAULT_FIELDS, normalize_locale, render_line_static_prompt
 from .preview import build_pack_preview
 from .spec import LINE_STATIC_SPEC
@@ -31,7 +38,9 @@ MESSAGES = {
         "text_help": "重複輸入剛好 8 次",
         "action_help": "重複輸入剛好 8 次",
         "output_prompt_help": "將 UTF-8 prompt 寫入檔案",
-        "select_help": "要匯出的 8 格，使用 1-based row-major 清單。預設：1,2,3,4,5,6,7,8",
+        "select_help": "要匯出的格（8/16/24/32/40 張），1-based row-major 清單。多張 grid 時編號連續累加。預設：1,2,3,4,5,6,7,8",
+        "main_help": "主圖用選取中的第幾張（1-based）。預設：1",
+        "tab_help": "聊天室標籤用選取中的第幾張（1-based）。預設：1",
         "keep_background_help": "保留實心底色不去背（預設會去背，因為 LINE 要求透明背景）",
         "padding_help": "貼圖透明 padding，單位 px。預設：10",
         "ok": "OK",
@@ -53,7 +62,9 @@ MESSAGES = {
         "text_help": "repeat exactly 8 times",
         "action_help": "repeat exactly 8 times",
         "output_prompt_help": "write UTF-8 prompt text to a file",
-        "select_help": "8 cells to export, 1-based row-major list. Default: 1,2,3,4,5,6,7,8",
+        "select_help": "cells to export (8/16/24/32/40), 1-based row-major list; numbering continues across multiple grids. Default: 1,2,3,4,5,6,7,8",
+        "main_help": "which selected sticker is the main image (1-based). Default: 1",
+        "tab_help": "which selected sticker is the tab image (1-based). Default: 1",
         "keep_background_help": "keep the solid background instead of removing it (cleanup is on by default; LINE requires transparent backgrounds)",
         "padding_help": "transparent sticker padding in px. Default: 10",
         "ok": "OK",
@@ -69,10 +80,11 @@ def _parse_selection(value: str) -> list[int]:
     except ValueError as exc:
         raise argparse.ArgumentTypeError("selection must be comma-separated numbers") from exc
 
-    if len(selected) != 8:
-        raise argparse.ArgumentTypeError("selection must contain exactly 8 cells")
-    if any(index < 1 or index > 9 for index in selected):
-        raise argparse.ArgumentTypeError("selection values must be between 1 and 9")
+    if len(selected) not in LINE_PACK_SIZES:
+        allowed = " / ".join(str(size) for size in LINE_PACK_SIZES)
+        raise argparse.ArgumentTypeError(f"selection must contain {allowed} cells")
+    if any(index < 1 for index in selected):
+        raise argparse.ArgumentTypeError("selection values must be 1 or greater")
     if len(set(selected)) != len(selected):
         raise argparse.ArgumentTypeError("selection values must not repeat")
 
@@ -132,7 +144,7 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     cleanup.add_argument("--tune", choices=["safe", "balanced", "aggressive"], default="balanced")
 
     export = subparsers.add_parser("export", parents=[language_parent], help=text["export_help"])
-    export.add_argument("input", type=Path)
+    export.add_argument("input", type=Path, nargs="+")
     export.add_argument("-o", "--output", type=Path, required=True)
     export.add_argument(
         "--select",
@@ -140,6 +152,8 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
         default=_parse_selection("1,2,3,4,5,6,7,8"),
         help=text["select_help"],
     )
+    export.add_argument("--main", type=int, default=1, help=text["main_help"])
+    export.add_argument("--tab", type=int, default=1, help=text["tab_help"])
     export.add_argument("--title", default="sticker-forge pack")
     export.add_argument("--author", default="sticker-forge")
     export.add_argument("--keep-background", action="store_true", help=text["keep_background_help"])
@@ -237,20 +251,33 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "export":
         spec = replace(LINE_STATIC_SPEC, sticker_padding=args.padding)
-        with Image.open(args.input) as image:
-            key = resolve_chroma_key(args.key_name)
-            cells = split_grid_to_stickers(image, spec=spec, background=(*key.rgb, 255))
-        selected = [cells[index - 1] for index in args.select]
+        key = resolve_chroma_key(args.key_name)
+        pool: list[Image.Image] = []
+        for grid_path in args.input:
+            with Image.open(grid_path) as image:
+                pool.extend(split_grid_to_stickers(image, spec=spec, background=(*key.rgb, 255)))
+        if any(index > len(pool) for index in args.select):
+            parser.error(
+                f"--select values must be between 1 and {len(pool)} "
+                f"({len(args.input)} grid(s) = {len(pool)} cells)"
+            )
+        selected = [pool[index - 1] for index in args.select]
         if not args.keep_background:
             selected = [
-                remove_chroma_background(
-                    sticker,
-                    key_name=args.key_name,
-                    tune=args.tune,
-                )
+                remove_chroma_background(sticker, key_name=args.key_name, tune=args.tune)
                 for sticker in selected
             ]
-        output = export_line_zip(selected, args.output, title=args.title, author=args.author, spec=spec)
+        if not 1 <= args.main <= len(selected) or not 1 <= args.tab <= len(selected):
+            parser.error(f"--main/--tab must be between 1 and {len(selected)}")
+        output = export_line_zip(
+            selected,
+            args.output,
+            title=args.title,
+            author=args.author,
+            main_index=args.main - 1,
+            tab_index=args.tab - 1,
+            spec=spec,
+        )
         print(output)
         return 0
 

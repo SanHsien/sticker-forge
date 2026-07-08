@@ -152,7 +152,16 @@ class Api:
 
     # Split from the dialog-less write helpers so tests can drive them directly.
     def _write_line_zip(self, tiles: list[Image.Image], path: str | Path, options: dict) -> Path:
-        return export_line_zip(tiles, path, spec=_spec_for(options))
+        count = len(tiles)
+        main_index = int(options.get("mainIndex", 0))
+        tab_index = int(options.get("tabIndex", 0))
+        if not 0 <= main_index < count:
+            main_index = 0
+        if not 0 <= tab_index < count:
+            tab_index = 0
+        return export_line_zip(
+            tiles, path, spec=_spec_for(options), main_index=main_index, tab_index=tab_index
+        )
 
     def _write_stickers_zip(self, tiles: list[Image.Image], path: str | Path, options: dict) -> Path:
         return export_stickers_zip(tiles, path, spec=_spec_for(options))

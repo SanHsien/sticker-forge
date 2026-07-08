@@ -407,6 +407,23 @@ textarea {
   opacity: 0.45;
 }
 
+.grid-imports {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tile-move {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.tile-move button {
+  padding: 0 5px;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
 @media (max-width: 980px) {
   .layout {
     grid-template-columns: 1fr;

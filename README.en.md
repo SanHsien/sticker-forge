@@ -8,7 +8,7 @@
 
 [繁體中文](README.md) | English
 
-`sticker-forge` is a local-first toolkit for preparing LINE static sticker packs. It does not run an AI server, host API keys, upload user images, or automate LINE submission. Users generate a 3x3 sticker grid with ChatGPT, Gemini, or another image tool, then import that image back into the local app for cleanup and export.
+`sticker-forge` is a local-first toolkit for making chat sticker packs. It focuses on LINE static stickers and can also export to Telegram, WhatsApp, Discord and Signal sizes/formats. It does not run an AI server, host API keys, upload user images, or automate submission. Users generate a 3x3 sticker grid with ChatGPT, Gemini, or another image tool, then import that image back into the local app for cleanup and export.
 
 ## Workflow
 
@@ -85,7 +85,7 @@ python -m sticker_forge validate outputs\line-stickers.zip
 
 ## Roadmap
 
-Version **v0.7.0**: local-first LINE static sticker toolkit. The desktop GUI (a pywebview window rendering the HTML) and the CLI share one Python core. `python -m pytest` passes.
+Version **v0.8.0**: local-first sticker-pack toolkit (LINE and other platforms). The desktop GUI (a pywebview window rendering the HTML) and the CLI share one Python core. `python -m pytest` passes.
 
 ### ✅ Done
 
@@ -105,6 +105,13 @@ Version **v0.7.0**: local-first LINE static sticker toolkit. The desktop GUI (a 
 - **`validate` checks transparency**: `validate` now flags fully opaque stickers (background not removed), catching the most common LINE rejection reason.
 
 See [`REVIEW.md`](REVIEW.md) and [`docs/DECISIONS.md`](docs/DECISIONS.md).
+
+### 🚀 New in v0.8.0
+
+- **Larger LINE packs (8/16/24/32/40)**: use "Add grid" to accumulate multiple 3×3 grids into a bigger tile pool, tick the stickers you want, and export a pack of the matching size.
+- **Pick main/tab sticker**: no longer fixed to the first sticker — choose which one is `main.png` and which is `tab.png`.
+- **Reorder stickers**: ▲▼ per tile to set the `01…NN` output order.
+- CLI: `sticker-forge export grid1.png grid2.png -o out.zip --select 1,…,16 --main 2 --tab 3`.
 
 ### 🚀 New in v0.7.0
 
@@ -133,13 +140,11 @@ See [`REVIEW.md`](REVIEW.md) and [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
 Drawn from the fork source ([yazelin/line-sticker-studio](https://github.com/yazelin/line-sticker-studio)) and the other reference projects (sticker-convert, StampNyaa, signal-sticker-tool, LINE Creators Market):
 
-- **Larger LINE packs**: LINE supports 8/16/24/32/40 stickers — merge multiple grids into one pack.
-- **Pick main/tab sticker**: currently fixed to the first sticker; let the user choose the main and tab images.
-- **Sticker ordering / naming**: reorder before export (LINE packs have a fixed order).
 - **More prompt templates**: LINE emoji (different size/count), message stickers, more themes.
+- **Sticker naming**: name/label individual stickers before export.
 - **More platform formats**: a full Signal pack (with manifest), animated stickers (beyond the current static scope).
-- **ML background removal**: for non-chroma-key sources (e.g. rembg — a heavier dependency to weigh against the lightweight principle).
-- **Grid history**: keep imported grids for reuse (weigh against the current `private_mode` "no persistent data").
+- **ML background removal**: for non-chroma-key sources (e.g. rembg). **Leaning no**: first run downloads a model (breaks offline use) and the dependency is heavy — against the lightweight local-first principle.
+- **Grid history**: keep imported grids for reuse. **Leaning no**: needs persistent storage, which conflicts with the current `private_mode` "no persistent data" decision.
 
 ### ⏳ Decided
 

@@ -8,9 +8,9 @@
 
 [繁體中文](README.md) | [English](README.en.md)
 
-Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup, slicing, and export.
+Local-first toolkit for making chat sticker packs: prompt templates, image cleanup, slicing, and export for LINE, Telegram, WhatsApp, Discord and Signal.
 
-`sticker-forge` 是本機優先的 LINE 靜態貼圖包製作工具。它不架 AI server、不代管 API key，也不收集使用者圖片；使用者自行用 ChatGPT、Gemini 或其他生圖工具產圖，再把圖片匯回本機程式加工與匯出。
+`sticker-forge` 是本機優先的貼圖包製作工具。以 LINE 靜態貼圖為主，也能一鍵匯出成 Telegram、WhatsApp、Discord、Signal 的尺寸與格式。它不架 AI server、不代管 API key，也不收集使用者圖片；使用者自行用 ChatGPT、Gemini 或其他生圖工具產圖，再把圖片匯回本機程式加工與匯出。
 
 ## 目標流程
 
@@ -69,7 +69,7 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 
 ## 專案狀態與路線圖
 
-目前版本 **v0.7.0**：local-first LINE 靜態貼圖工具，桌面 GUI（pywebview 載入 HTML）與 CLI 共用同一套 Python core，`python -m pytest` 全數通過。
+目前版本 **v0.8.0**：local-first 貼圖包工具（LINE 及多平台），桌面 GUI（pywebview 載入 HTML）與 CLI 共用同一套 Python core，`python -m pytest` 全數通過。
 
 ### ✅ 已完成
 
@@ -91,6 +91,13 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 - **validate 檢查透明背景**：`validate` 新增透明度檢查，完全不透明（背景未去）的貼圖會被標記，擋下 LINE 第一大退件原因。
 
 細節見 [`REVIEW.md`](REVIEW.md) 與 [`docs/DECISIONS.md`](docs/DECISIONS.md)。
+
+### 🚀 v0.8.0 新增
+
+- **更大的 LINE 套組（8／16／24／32／40）**：用「加入 grid」把多張 3×3 累積成更大的貼圖池，勾選要出的張數，匯出對應大小的 LINE 套組。
+- **自選主圖／聊天標籤**：不再固定第 1 張，可指定哪張當 `main.png`、哪張當 `tab.png`。
+- **貼圖排序**：每張可 ▲▼ 調整順序（決定 `01…NN` 的輸出順序）。
+- CLI：`sticker-forge export grid1.png grid2.png -o out.zip --select 1,…,16 --main 2 --tab 3`。
 
 ### 🚀 v0.7.0 新增
 
@@ -119,13 +126,11 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 
 看 fork 來源（[yazelin/line-sticker-studio](https://github.com/yazelin/line-sticker-studio)）與其他參考專案（sticker-convert、StampNyaa、signal-sticker-tool、LINE Creators Market）整理的候選：
 
-- **更大的 LINE 套組**：LINE 支援 8／16／24／32／40 張，可支援多張 grid 合併成一包。
-- **自選 main／tab 貼圖**：目前固定用第 1 張，可讓使用者指定主圖與聊天室標籤圖。
-- **貼圖排序／命名**：匯出前調整順序（LINE 上架有固定順序）。
 - **更多 prompt 模板**：LINE emoji（不同尺寸／數量）、訊息貼圖、其他主題模板。
+- **貼圖命名**：匯出前為單張命名／備註。
 - **更多平台格式**：Signal 完整 pack（含 manifest）、animated（超出目前靜態範圍）。
-- **ML 去背**：非綠幕來源用 rembg 之類（相依較重，需評估是否違反輕量原則）。
-- **grid 歷史**：保留匯入過的 grid 可重用（與現行 `private_mode` 不寫持久資料的取捨需權衡）。
+- **ML 去背**：非綠幕來源用 rembg 之類。**傾向不做**：首次執行需下載模型（破壞離線）＋相依重，違反 local-first 輕量原則。
+- **grid 歷史**：保留匯入過的 grid 可重用。**傾向不做**：需持久儲存，與現行 `private_mode` 不寫持久資料的決策衝突。
 
 ### ⏳ 已定案
 

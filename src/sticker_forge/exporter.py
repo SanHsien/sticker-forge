@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from io import BytesIO
 from pathlib import Path
 from typing import Sequence
@@ -54,38 +55,48 @@ def _png_bytes(image: Image.Image) -> bytes:
     return buffer.getvalue()
 
 
+# Static-sticker pack sizes allowed by LINE Creators Market.
+LINE_PACK_SIZES = (8, 16, 24, 32, 40)
+
+
 def export_line_zip(
     stickers: Sequence[ImageSource],
     output_path: str | Path,
     *,
     title: str = "sticker-forge pack",
     author: str = "sticker-forge",
+    main_index: int = 0,
+    tab_index: int = 0,
     spec: LINEStickerSpec = LINE_STATIC_SPEC,
 ) -> Path:
-    """Export 8 sticker images plus main/tab previews into a LINE-style ZIP."""
-    if len(stickers) != spec.sticker_count:
-        raise ValueError(f"expected {spec.sticker_count} stickers, got {len(stickers)}")
+    """Export a LINE static sticker pack (8/16/24/32/40) plus main/tab previews."""
+    count = len(stickers)
+    if count not in LINE_PACK_SIZES:
+        allowed = " / ".join(str(size) for size in LINE_PACK_SIZES)
+        raise ValueError(f"LINE packs must have {allowed} stickers, got {count}")
 
     loaded = [_load_image(sticker) for sticker in stickers]
+    if not 0 <= main_index < count or not 0 <= tab_index < count:
+        raise ValueError("main_index and tab_index must point at a sticker in the pack")
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
 
     resized_stickers = [
         fit_to_canvas(sticker, spec.sticker_size, padding=spec.sticker_padding) for sticker in loaded
     ]
-    main_image = fit_to_canvas(loaded[0], spec.main_size, padding=spec.main_padding)
-    tab_image = fit_to_canvas(loaded[0], spec.tab_size, padding=spec.tab_padding)
+    main_image = fit_to_canvas(loaded[main_index], spec.main_size, padding=spec.main_padding)
+    tab_image = fit_to_canvas(loaded[tab_index], spec.tab_size, padding=spec.tab_padding)
 
     readme = (
         f"{title}\n"
         f"Author: {author}\n\n"
         "This ZIP was generated locally by sticker-forge.\n"
-        "It contains 8 static sticker images, main.png, and tab.png.\n"
+        f"It contains {count} static sticker images, main.png, and tab.png.\n"
         "Manual LINE Creators Market submission:\n"
         "1. Sign in at https://creator.line.me/zh-hant/.\n"
         "2. Create a new Sticker item.\n"
         "3. Fill sticker description, image edit, and sales information tabs.\n"
-        "4. Upload this ZIP, or upload main.png, tab.png, and 01.png-08.png manually.\n"
+        f"4. Upload this ZIP, or upload main.png, tab.png, and 01.png-{count:02d}.png manually.\n"
         "5. Click the sales application button manually after all fields are complete.\n"
         "Review current LINE Creators Market rules before submission.\n"
     )
@@ -193,14 +204,20 @@ def validate_line_zip(
     *,
     spec: LINEStickerSpec = LINE_STATIC_SPEC,
 ) -> list[str]:
-    """Return validation errors for a LINE static sticker ZIP."""
-    required = {"main.png", "tab.png", "README.txt"} | {
-        f"{index:02d}.png" for index in range(1, spec.sticker_count + 1)
-    }
+    """Return validation errors for a LINE static sticker ZIP (any valid pack size)."""
     errors: list[str] = []
 
     with ZipFile(zip_path) as archive:
         names = set(archive.namelist())
+        sticker_names = sorted(name for name in names if re.fullmatch(r"\d{2}\.png", name))
+        count = len(sticker_names)
+        if count not in LINE_PACK_SIZES:
+            allowed = ", ".join(str(size) for size in LINE_PACK_SIZES)
+            errors.append(f"sticker count is {count}, expected one of {allowed}")
+            count = max(count, spec.sticker_count)
+
+        numbered = {f"{index:02d}.png" for index in range(1, count + 1)}
+        required = {"main.png", "tab.png", "README.txt"} | numbered
         missing = sorted(required - names)
         if missing:
             errors.append(f"missing files: {', '.join(missing)}")
@@ -214,10 +231,7 @@ def validate_line_zip(
         expected_sizes = {
             "main.png": spec.main_size,
             "tab.png": spec.tab_size,
-            **{
-                f"{index:02d}.png": spec.sticker_size
-                for index in range(1, spec.sticker_count + 1)
-            },
+            **{name: spec.sticker_size for name in numbered},
         }
         for name, size in expected_sizes.items():
             if name not in names:

@@ -81,9 +81,12 @@ def _selection_errors(
     total: int,
     spec: LINEStickerSpec,
 ) -> list[str]:
+    from .exporter import LINE_PACK_SIZES
+
     errors: list[str] = []
-    if len(selected) != spec.sticker_count:
-        errors.append(f"expected {spec.sticker_count} selected stickers, got {len(selected)}")
+    if len(selected) not in LINE_PACK_SIZES:
+        allowed = ", ".join(str(size) for size in LINE_PACK_SIZES)
+        errors.append(f"selected {len(selected)} stickers, expected one of {allowed}")
     if len(set(selected)) != len(selected):
         errors.append("selected stickers must not repeat")
     invalid = [index for index in selected if index < 1 or index > total]

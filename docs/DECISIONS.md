@@ -132,3 +132,14 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 - **多平台匯出**：`exporter.PLATFORM_SPECS` + `export_platform_zip()`，支援 Telegram（512 PNG）、WhatsApp（512 WebP＋96 tray）、Discord（320 PNG）、Signal（512 PNG）。CLI `platform --target`、`webapi.Api.export_platform`、GUI 平台下拉＋按鈕。全部 contain-fit 到目標尺寸、保留透明。
 - 驗證：核心 unit test（4 平台檔名/尺寸/格式/tray）＋CLI test＋webapi bridge test＋live pywebview（按鈕收集 included tiles 呼叫 bridge）。41 passed。
 - 候選未做（留路線圖）：更大 LINE 套組（多 grid）、自選 main/tab、貼圖排序/命名、更多 prompt 模板、Signal manifest、ML 去背（rembg 相依重）、grid 歷史（與 private_mode 不寫持久資料衝突）。
+
+## 2026-07-07：LINE 套組組合（v0.8.0）
+
+修正 README 第一段與 GitHub About（原只寫 LINE，已改為「LINE 及多平台」）。再從候選清單挑「值得做」的一批實作（pack composition）：
+
+- **可變 LINE 套組 8/16/24/32/40**：`exporter.LINE_PACK_SIZES`；`export_line_zip` 接受這些張數並可指定 `main_index`/`tab_index`；`validate_line_zip` 依實際 NN.png 數自動判斷套組大小。
+- **多張 grid 累積**：GUI「加入 grid」把每張 3×3 的 9 格 append 進貼圖池；CLI `export` 改 `nargs='+'` 多檔輸入，`--select` 編號跨 grid 連續累加。
+- **自選 main/tab**：CLI `--main`/`--tab`（1-based，指向選取中的第幾張）；GUI 兩個下拉；bridge `mainIndex`/`tabIndex`。
+- **貼圖排序**：GUI 每張 ▲▼；輸出順序＝貼圖列表順序中的 included 子集。
+- 驗證：核心/CLI/webapi unit test（含 16 張套組、main/tab、多 grid）＋ live pywebview（import→9、加 grid→18、選 16、main/tab 下拉、▲▼、清空、export 帶 main/tab）。43 passed。
+- 「值得做就全做」的判斷：**做**了 pack composition（上述）；**傾向不做並記錄理由**——ML 去背（首次下載模型破壞離線＋相依重）、grid 歷史（需持久儲存，與 private_mode 衝突）、animated（超出靜態範圍）；**留候選**——更多 prompt 模板（LINE emoji，需模板選擇機制，另開一次做）、Signal manifest。

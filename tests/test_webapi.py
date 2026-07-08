@@ -65,6 +65,6 @@ def test_write_line_zip_is_valid(tmp_path) -> None:
     api = Api()
     tiles = api.split(_grid_data_url(), {"keyName": "green", "cleanup": True})
     selected = [_decode(url) for url in tiles[:8]]
-    output = api._write_line_zip(selected, tmp_path / "pack.zip", {"padding": 10})
+    output = api._write_line_zip(selected, tmp_path / "pack.zip", {"padding": 10, "mainIndex": 2, "tabIndex": 3})
     assert ZipFile(output).namelist()
     assert validate_line_zip(output) == []

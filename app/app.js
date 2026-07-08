@@ -15,6 +15,13 @@ const UI = {
     withText: "有字版",
     background: "背景色",
     importGrid: "匯入 3x3",
+    addGrid: "加入 grid",
+    clearTiles: "清空",
+    mainLabel: "主圖",
+    tabLabel: "聊天標籤",
+    moveUp: "上移",
+    moveDown: "下移",
+    needPackSize: (count) => `LINE 套組需 8／16／24／32／40 張，目前 ${count} 張`,
     dropHint: "把 3x3 圖拖放到這裡，或用上方「匯入 3x3」",
     split: "切圖",
     cleanup: "去背",
@@ -53,7 +60,7 @@ const UI = {
     exportCancelled: "已取消",
     saved: (path) => `已儲存：${path}`,
     noTilesExport: "沒有可匯出的貼圖",
-    selectedSummary: (count) => `${count} / 8 已選`,
+    selectedSummary: (count) => `已選 ${count}`,
     previewPlaceholder: "匯入 3x3 圖後會列出 01.png 到 08.png、main.png、tab.png。",
     previewSticker: (index, included) => `${String(index).padStart(2, "0")}.png：370 x 320${included ? "" : "（未選）"}`,
     previewMain: "main.png：240 x 240",
@@ -73,6 +80,13 @@ const UI = {
     withText: "Text version",
     background: "Background",
     importGrid: "Import 3x3",
+    addGrid: "Add grid",
+    clearTiles: "Clear",
+    mainLabel: "Main",
+    tabLabel: "Tab",
+    moveUp: "Move up",
+    moveDown: "Move down",
+    needPackSize: (count) => `LINE packs need 8/16/24/32/40 stickers; ${count} selected`,
     dropHint: "Drag a 3x3 image here, or use Import 3x3 above",
     split: "Split",
     cleanup: "Clean up",
@@ -111,7 +125,7 @@ const UI = {
     exportCancelled: "Cancelled",
     saved: (path) => `Saved: ${path}`,
     noTilesExport: "No stickers to export",
-    selectedSummary: (count) => `${count} / 8 selected`,
+    selectedSummary: (count) => `${count} selected`,
     previewPlaceholder: "Import a 3x3 image to list 01.png to 08.png, main.png, and tab.png.",
     previewSticker: (index, included) => `${String(index).padStart(2, "0")}.png: 370 x 320${included ? "" : " (not selected)"}`,
     previewMain: "main.png: 240 x 240",
@@ -121,6 +135,8 @@ const UI = {
 };
 
 const PACK_SIZE = 8;
+const LINE_PACK_SIZES = [8, 16, 24, 32, 40];
+const isPackSize = (n) => LINE_PACK_SIZES.includes(n);
 const state = {
   locale: UI[localStorage.getItem("stickerForgeLocale")] ? localStorage.getItem("stickerForgeLocale") : "zh-Hant",
   sourceDataUrl: null,
@@ -252,13 +268,13 @@ function options() {
   };
 }
 
-function loadGrid(file) {
+function loadGrid(file, append = false) {
   const reader = new FileReader();
   reader.onload = () => {
     state.sourceDataUrl = reader.result;
     drawSourcePreview(reader.result);
     setStatus(ui().imported(file.name));
-    splitGrid();
+    splitGrid(append);
   };
   reader.readAsDataURL(file);
 }
@@ -277,20 +293,44 @@ function drawSourcePreview(dataUrl) {
   img.src = dataUrl;
 }
 
-async function splitGrid() {
+async function splitGrid(append = false) {
   const bridge = api();
   if (!bridge) return setStatus(ui().bridgeMissing, true);
   if (!state.sourceDataUrl) return setStatus(ui().needGrid, true);
   setStatus(ui().splitting);
   try {
     const urls = await bridge.split(state.sourceDataUrl, { ...options(), cleanup: false });
-    state.tiles = urls.map((url, i) => ({ raw: url, url, included: i < PACK_SIZE }));
+    const newTiles = urls.map((url) => ({ raw: url, url, included: false }));
+    if (append) {
+      state.tiles.push(...newTiles);
+    } else {
+      newTiles.forEach((tile, i) => {
+        tile.included = i < PACK_SIZE;
+      });
+      state.tiles = newTiles;
+    }
     renderTiles();
     updatePreview();
     setStatus(ui().splitDone);
   } catch (err) {
     setStatus(String(err), true);
   }
+}
+
+function moveTile(index, delta) {
+  const target = index + delta;
+  if (target < 0 || target >= state.tiles.length) return;
+  const tiles = state.tiles;
+  [tiles[index], tiles[target]] = [tiles[target], tiles[index]];
+  renderTiles();
+  updatePreview();
+}
+
+function clearTiles() {
+  state.tiles = [];
+  renderTiles();
+  updatePreview();
+  setStatus(ui().statusReady);
 }
 
 function renderTiles() {
@@ -319,11 +359,24 @@ function renderTiles() {
       setStatus(ui().selectedCount(includedTiles().length));
     });
     label.append(checkbox, ` ${String(i + 1).padStart(2, "0")}`);
+    const move = document.createElement("div");
+    move.className = "tile-move";
+    const up = document.createElement("button");
+    up.type = "button";
+    up.textContent = "▲";
+    up.title = ui().moveUp;
+    up.addEventListener("click", () => moveTile(i, -1));
+    const down = document.createElement("button");
+    down.type = "button";
+    down.textContent = "▼";
+    down.title = ui().moveDown;
+    down.addEventListener("click", () => moveTile(i, 1));
+    move.append(up, down);
     const button = document.createElement("button");
     button.type = "button";
     button.textContent = "PNG";
     button.addEventListener("click", () => savePng(tile.url, `sticker-${String(i + 1).padStart(2, "0")}.png`));
-    footer.append(label, button);
+    footer.append(label, move, button);
     item.appendChild(footer);
     grid.appendChild(item);
   });
@@ -402,10 +455,12 @@ async function exportZip() {
   const bridge = api();
   if (!bridge) return setStatus(ui().bridgeMissing, true);
   const selected = includedTiles();
-  if (selected.length !== PACK_SIZE) return setStatus(ui().needEight(selected.length), true);
+  if (!isPackSize(selected.length)) return setStatus(ui().needPackSize(selected.length), true);
   setStatus(ui().exporting);
   try {
-    const result = await bridge.export_line(selected.map((t) => t.url), options());
+    const mainIndex = Math.max(0, (parseInt($("main-index").value, 10) || 1) - 1);
+    const tabIndex = Math.max(0, (parseInt($("tab-index").value, 10) || 1) - 1);
+    const result = await bridge.export_line(selected.map((t) => t.url), { ...options(), mainIndex, tabIndex });
     reportExport(result);
   } catch (err) {
     setStatus(String(err), true);
@@ -466,12 +521,13 @@ function updatePreview() {
     const item = document.createElement("li");
     item.textContent = data.previewPlaceholder;
     errors.appendChild(item);
-  } else if (selected.length !== PACK_SIZE) {
+  } else if (!isPackSize(selected.length)) {
     const item = document.createElement("li");
-    item.textContent = data.needEight(selected.length);
+    item.textContent = data.needPackSize(selected.length);
     errors.appendChild(item);
   }
-  $("export-zip").disabled = selected.length !== PACK_SIZE;
+  $("export-zip").disabled = !isPackSize(selected.length);
+  populateMainTab(selected.length);
   const files = $("preview-files");
   files.innerHTML = "";
   if (!state.tiles.length) return;
@@ -487,6 +543,22 @@ function updatePreview() {
     item.textContent = text;
     files.appendChild(item);
   }
+}
+
+function populateMainTab(count) {
+  ["main-index", "tab-index"].forEach((id) => {
+    const select = $(id);
+    const previous = parseInt(select.value, 10) || 1;
+    select.innerHTML = "";
+    for (let i = 1; i <= count; i++) {
+      const option = document.createElement("option");
+      option.value = String(i);
+      option.textContent = String(i);
+      select.appendChild(option);
+    }
+    select.value = String(Math.min(previous, count || 1));
+    select.disabled = count === 0;
+  });
 }
 
 function setupDropzone() {
@@ -526,10 +598,16 @@ function bindEvents() {
     const file = event.target.files?.[0];
     if (file) loadGrid(file);
   });
+  $("add-grid-file").addEventListener("change", (event) => {
+    const file = event.target.files?.[0];
+    if (file) loadGrid(file, true);
+    event.target.value = "";
+  });
   setupDropzone();
-  $("split-grid").addEventListener("click", splitGrid);
+  $("split-grid").addEventListener("click", () => splitGrid(false));
   $("cleanup-all").addEventListener("click", cleanupAll);
   $("select-first-eight").addEventListener("click", selectFirstEight);
+  $("clear-tiles").addEventListener("click", clearTiles);
   $("export-stickers").addEventListener("click", exportStickersOnly);
   $("export-zip").addEventListener("click", exportZip);
   $("export-platform").addEventListener("click", exportPlatform);

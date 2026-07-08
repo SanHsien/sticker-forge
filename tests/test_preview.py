@@ -27,6 +27,6 @@ def test_build_pack_preview_reports_invalid_selection() -> None:
 
     preview = build_pack_preview(stickers, selected=[1, 1, 4])
 
-    assert "expected 8 selected stickers, got 3" in preview.errors
+    assert "selected 3 stickers, expected one of 8, 16, 24, 32, 40" in preview.errors
     assert "selected stickers must not repeat" in preview.errors
     assert "selected stickers out of range: 4" in preview.errors

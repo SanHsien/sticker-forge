@@ -68,13 +68,23 @@ def test_export_line_zip_writes_expected_structure(tmp_path) -> None:
     assert validate_line_zip(output) == []
 
 
-def test_export_line_zip_requires_eight_stickers(tmp_path) -> None:
+def test_export_line_zip_rejects_invalid_pack_size(tmp_path) -> None:
     try:
         export_line_zip(_stickers()[:7], tmp_path / "pack.zip")
     except ValueError as exc:
-        assert "expected 8 stickers" in str(exc)
+        assert "8 / 16 / 24 / 32 / 40" in str(exc)
     else:
-        raise AssertionError("export_line_zip should require exactly 8 stickers")
+        raise AssertionError("export_line_zip should reject invalid pack sizes")
+
+
+def test_export_line_zip_supports_larger_pack_and_main_tab(tmp_path) -> None:
+    stickers = _stickers() + _stickers()  # 16
+    output = export_line_zip(stickers, tmp_path / "pack.zip", main_index=2, tab_index=3)
+    with ZipFile(output) as archive:
+        names = set(archive.namelist())
+        assert "16.png" in names and "09.png" in names
+        assert "17.png" not in names
+    assert validate_line_zip(output) == []
 
 
 def test_export_stickers_zip_writes_png_only_pack(tmp_path) -> None:

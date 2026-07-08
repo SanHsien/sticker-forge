@@ -3,6 +3,7 @@
 from .app_launcher import app_path
 from .cleanup import parse_hex_color, remove_chroma_background
 from .exporter import (
+    LINE_PACK_SIZES,
     LINEStickerSpec,
     PLATFORM_SPECS,
     export_line_zip,
@@ -16,6 +17,7 @@ from .preview import PackPreview, StickerPreview, build_pack_preview
 from .splitter import split_grid, split_grid_file, split_grid_to_stickers
 
 __all__ = [
+    "LINE_PACK_SIZES",
     "LINEStickerSpec",
     "PLATFORM_SPECS",
     "PackPreview",

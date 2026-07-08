@@ -64,10 +64,16 @@
     <section class="panel work-panel">
       <div class="section-head">
         <h2>Grid</h2>
-        <label class="file-button">
-          <span data-i18n="importGrid">匯入 3x3</span>
-          <input id="grid-file" type="file" accept="image/*">
-        </label>
+        <div class="grid-imports">
+          <label class="file-button">
+            <span data-i18n="importGrid">匯入 3x3</span>
+            <input id="grid-file" type="file" accept="image/*">
+          </label>
+          <label class="file-button ghost">
+            <span data-i18n="addGrid">加入 grid</span>
+            <input id="add-grid-file" type="file" accept="image/*">
+          </label>
+        </div>
       </div>
 
       <div class="stage" id="dropzone">
@@ -79,8 +85,18 @@
         <button id="split-grid" type="button" data-i18n="split">切圖</button>
         <button id="cleanup-all" type="button" data-i18n="cleanup">去背</button>
         <button id="select-first-eight" type="button" data-i18n="selectFirstEight">選前 8 張</button>
+        <button id="clear-tiles" type="button" data-i18n="clearTiles">清空</button>
         <button id="export-stickers" type="button" data-i18n="exportPng">匯出 9 張 PNG</button>
         <button id="export-zip" type="button" class="primary" data-i18n="exportZip">匯出 ZIP</button>
+      </div>
+
+      <div class="export-controls">
+        <label><span data-i18n="mainLabel">主圖</span>
+          <select id="main-index"></select>
+        </label>
+        <label><span data-i18n="tabLabel">聊天標籤</span>
+          <select id="tab-index"></select>
+        </label>
       </div>
 
       <div class="export-controls">
