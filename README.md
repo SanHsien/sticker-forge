@@ -78,7 +78,8 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 - 圖片處理核心：3x3 切圖、去背、尺寸／padding、main/tab image、預覽 metadata 與選圖檢查。
 - 匯出：LINE ZIP、9 張 PNG-only ZIP、`validate` 與 `preview` 指令、上架說明。
 - 桌面 GUI（pywebview HTML）與 CLI 共用 Python core（`--lang` 中英）。
-- PyInstaller Windows 打包，已發行 `v0.1.0`、`v0.2.0`，含 SHA256 checksum。
+- PyInstaller Windows 打包與發行，已發行到 `v0.8.0`（正式 GitHub Release，含 SHA256 checksum）。
+- 桌面拖放匯入（webview 的 HTML dropzone 內建）；WebView2 用 `private_mode` 臨時 profile，不寫持久隱藏資料。
 - 中英文 README。
 
 ### 🔧 2026-07-07 一致性修正
@@ -135,7 +136,6 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 ### ⏳ 已定案
 
 - **已決定不做**（見 [`docs/DECISIONS.md`](docs/DECISIONS.md)）：自動更新（需更新伺服器，違反 local-first）、installer（下載 zip 解壓即用，portable 比安裝流程更符合 local-first）。
-- **已隨架構解決**：桌面拖放匯入（webview 的 HTML dropzone 已內建，原 tkinter 拖放需求消失）；使用者資料／暫存（WebView2 用 `private_mode` 臨時 profile，不寫持久隱藏資料）。
 
 ## 維護文件
 
@@ -148,19 +148,19 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 
 ## 其他可參考專案
 
-這些服務與專案只作產品、格式、打包或 UI 流程參考，不是 `sticker-forge` 的執行依賴。
+這些服務與專案只作概念、格式或流程參考，不是 `sticker-forge` 的執行依賴。**除了 fork 來源 `yazelin/line-sticker-studio`（MIT，程式碼在 `reference/upstream-line-sticker-studio/`）外，本專案沒有複製其中任何一個的程式碼**——GPL／無授權的專案無法併入 MIT repo，只作概念參考。完整 credit 見 [`NOTICE.md`](NOTICE.md)。
 
-| 名稱 | 類型 | 可參考點 |
+| 名稱 | 授權 | 可參考點 |
 | --- | --- | --- |
-| [LINE Creators Market](https://creator.line.me/) | 官方平台 | LINE 官方的貼圖、表情貼與主題建立/販售入口。 |
-| [LINE Sticker Maker](https://creator.line.me/en/stickermaker/) | 官方手機 app | 可在手機製作貼圖並送審；本專案保留手動送審說明，但不代送審。 |
-| [yazelin/line-sticker-studio](https://github.com/yazelin/line-sticker-studio) | upstream fork 來源 | 3x3 grid、chroma-key、ZIP 結構、上架說明與 UI 流程的主要參考來源。 |
-| [laggykiller/sticker-convert](https://github.com/laggykiller/sticker-convert) | 跨平台貼圖轉換工具 | GUI + CLI、跨平台打包與貼圖格式轉換；LINE 目前以下載支援為主。 |
-| [suchipi/line-sticker-downloader](https://github.com/suchipi/line-sticker-downloader) | LINE 素材下載工具 | 從 LINE Store 下載 stickers / emojis 的 CLI 流程與檔案輸出方式。 |
-| [curegit/line-sticker-downloader](https://github.com/curegit/line-sticker-downloader) | LINE 素材下載工具 | PHP browser / CLI 雙模式與 ZIP 輸出方式。 |
-| [MarvNC/StampNyaa](https://github.com/MarvNC/StampNyaa) | LINE 貼圖桌面工具 | 跨平台桌面 app 介面與「下載後轉用到其他平台」流程。 |
-| [ittner/signal-sticker-tool](https://github.com/ittner/signal-sticker-tool) | Signal 貼圖 CLI | 以資料夾、metadata 與命令列包裝貼圖包的設計可作 CLI 架構參考。 |
+| [LINE Creators Market](https://creator.line.me/) | 官方平台 | LINE 貼圖規格、套組張數、透明背景與送審流程。 |
+| [LINE Sticker Maker](https://creator.line.me/en/stickermaker/) | 官方手機 app | 手機製作與送審流程；本專案只保留手動送審說明，不代送審。 |
+| [yazelin/line-sticker-studio](https://github.com/yazelin/line-sticker-studio) | MIT（**fork 來源**） | 3x3 grid、chroma-key、ZIP 結構、上架說明與 UI 流程；程式碼保留在 `reference/`。 |
+| [laggykiller/sticker-convert](https://github.com/laggykiller/sticker-convert) | GPL-2.0 | 「一組貼圖匯出到多平台」的概念；本專案多平台匯出照公開規格自行實作。 |
+| [MarvNC/StampNyaa](https://github.com/MarvNC/StampNyaa) | 未宣告 | 「LINE 貼圖轉用到其他平台」的桌面流程。 |
+| [ittner/signal-sticker-tool](https://github.com/ittner/signal-sticker-tool) | GPL-3.0 | Signal 貼圖包打包（未來功能參考）。 |
+| [suchipi/line-sticker-downloader](https://github.com/suchipi/line-sticker-downloader) | MIT | 從 LINE Store 下載既有貼圖（未來匯入功能參考）。 |
+| [curegit/line-sticker-downloader](https://github.com/curegit/line-sticker-downloader) | WTFPL | browser / CLI 下載與 ZIP 輸出方式。 |
 
 ## 授權
 
-本專案保留原始 fork 的 MIT License。授權與 attribution 見 [`LICENSE`](LICENSE) 與 [`NOTICE.md`](NOTICE.md)。
+本專案保留原始 fork 的 MIT License。授權與完整 attribution／credit 見 [`LICENSE`](LICENSE) 與 [`NOTICE.md`](NOTICE.md)。

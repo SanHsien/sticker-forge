@@ -93,7 +93,8 @@ Version **v0.8.0**: local-first sticker-pack toolkit (LINE and other platforms).
 - Prompt templates (Chinese/English, text/no-text, green/magenta, risk reminders).
 - Image core: 3x3 split, cleanup, resize/padding, main/tab image, preview metadata.
 - Export: LINE ZIP, PNG-only ZIP, `validate` and `preview` commands.
-- Three entry points and PyInstaller packaging; released `v0.1.0` and `v0.2.0`.
+- PyInstaller Windows packaging and releases through `v0.8.0` (GitHub Releases with SHA256 checksums).
+- Desktop drag-and-drop import (the webview's HTML dropzone); WebView2 runs with `private_mode`, an ephemeral profile, so nothing persistent is written.
 
 ### 🔧 2026-07-07 consistency fixes
 
@@ -149,9 +150,20 @@ Drawn from the fork source ([yazelin/line-sticker-studio](https://github.com/yaz
 ### ⏳ Decided
 
 - **Decided against** (see [`docs/DECISIONS.md`](docs/DECISIONS.md)): auto-update (needs an update server, conflicts with local-first) and an installer (the portable unzip-and-run zip fits local-first better than an install flow).
-- **Resolved by the architecture**: desktop drag-and-drop (the webview's HTML dropzone already handles it, so the old tkinter drag-drop need is gone); user-data/temp (WebView2 runs with `private_mode`, an ephemeral profile, so nothing persistent is written).
-- Decide user data and temporary file locations.
-- Remove no-longer-needed `reference/.../worker/` and upstream hosted config.
+
+## Credits
+
+These projects informed the design as references only, not runtime dependencies. **Apart from the fork source `yazelin/line-sticker-studio` (MIT, whose code lives in `reference/upstream-line-sticker-studio/`), no source code from any of them is included** — GPL / unlicensed projects can't be merged into an MIT repo, so they are credited for concepts only. Full credits in [`NOTICE.md`](NOTICE.md).
+
+| Project | License | What it informed |
+| --- | --- | --- |
+| [LINE Creators Market](https://creator.line.me/) / [LINE Sticker Maker](https://creator.line.me/en/stickermaker/) | Official | Static sticker specs, pack sizes, transparency, submission flow. |
+| [yazelin/line-sticker-studio](https://github.com/yazelin/line-sticker-studio) | MIT (**fork source**) | 3x3 grid, chroma-key, ZIP structure, submission notes, UI flow; code kept in `reference/`. |
+| [laggykiller/sticker-convert](https://github.com/laggykiller/sticker-convert) | GPL-2.0 | The multi-platform export concept; implemented independently from public specs. |
+| [MarvNC/StampNyaa](https://github.com/MarvNC/StampNyaa) | Unlicensed | The "use LINE stickers on other platforms" desktop workflow. |
+| [ittner/signal-sticker-tool](https://github.com/ittner/signal-sticker-tool) | GPL-3.0 | Signal sticker-pack packaging (possible future feature). |
+| [suchipi/line-sticker-downloader](https://github.com/suchipi/line-sticker-downloader) | MIT | Fetching existing LINE packs (possible future import feature). |
+| [curegit/line-sticker-downloader](https://github.com/curegit/line-sticker-downloader) | WTFPL | Browser/CLI download and ZIP output patterns. |
 
 ## License
 
