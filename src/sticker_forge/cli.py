@@ -16,7 +16,7 @@ from .exporter import (
     export_stickers_zip,
     validate_line_zip,
 )
-from .prompts import DEFAULT_FIELDS, normalize_locale, render_line_static_prompt
+from .prompts import PROMPT_PRESETS, normalize_locale, render_line_static_prompt
 from .preview import build_pack_preview
 from .spec import LINE_STATIC_SPEC
 from .spec import resolve_chroma_key
@@ -27,6 +27,7 @@ MESSAGES = {
         "description": "本機 LINE 靜態貼圖包工具。",
         "lang_help": "介面語言。預設：zh-Hant",
         "prompt_help": "輸出 3x3 LINE 靜態貼圖 prompt",
+        "preset_help": "套用主題預設包（填入角色／主題／語氣／文字等，可再用其他參數覆寫）",
         "split_help": "將 3x3 grid 切成 PNG cells",
         "cleanup_help": "用 chroma-key 移除單色背景",
         "export_help": "從 3x3 grid 匯出 LINE 靜態貼圖 ZIP",
@@ -51,6 +52,7 @@ MESSAGES = {
         "description": "Local LINE static sticker pack toolkit.",
         "lang_help": "Interface language. Default: zh-Hant",
         "prompt_help": "print the 3x3 LINE static sticker prompt",
+        "preset_help": "apply a themed starter preset (fills character/theme/tone/texts; other flags still override)",
         "split_help": "split a 3x3 grid into PNG cells",
         "cleanup_help": "remove a solid background with chroma-key",
         "export_help": "export a LINE static sticker ZIP from a 3x3 grid",
@@ -109,7 +111,6 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     locale = normalize_locale(locale)
     text = MESSAGES[locale]
     language_parent = _language_parent(locale)
-    defaults = DEFAULT_FIELDS[locale]
     parser = argparse.ArgumentParser(
         prog="sticker-forge",
         description=text["description"],
@@ -119,11 +120,12 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
 
     prompt = subparsers.add_parser("prompt", parents=[language_parent], help=text["prompt_help"])
     prompt.add_argument("--no-text", action="store_true")
-    prompt.add_argument("--character", default=defaults["character"])
-    prompt.add_argument("--theme", default=defaults["theme"])
-    prompt.add_argument("--tone", default=defaults["tone"])
-    prompt.add_argument("--style", default=defaults["style"])
-    prompt.add_argument("--language", default=defaults["language"])
+    prompt.add_argument("--preset", choices=sorted(PROMPT_PRESETS["zh-Hant"]), help=text["preset_help"])
+    prompt.add_argument("--character")
+    prompt.add_argument("--theme")
+    prompt.add_argument("--tone")
+    prompt.add_argument("--style")
+    prompt.add_argument("--language")
     prompt.add_argument("--text", action="append", dest="texts", help=text["text_help"])
     prompt.add_argument("--action", action="append", dest="actions", help=text["action_help"])
     prompt.add_argument("--chroma-key", choices=["green", "magenta"], default="green")
@@ -204,16 +206,17 @@ def main(argv: list[str] | None = None) -> int:
     text = MESSAGES[locale]
 
     if args.command == "prompt":
+        preset = PROMPT_PRESETS[locale].get(args.preset, {}) if args.preset else {}
         prompt_text = render_line_static_prompt(
             with_text=not args.no_text,
             locale=locale,
-            character=args.character,
-            theme=args.theme,
-            tone=args.tone,
-            style=args.style,
-            language=args.language,
-            texts=args.texts,
-            actions=args.actions,
+            character=args.character or preset.get("character"),
+            theme=args.theme or preset.get("theme"),
+            tone=args.tone or preset.get("tone"),
+            style=args.style or preset.get("style"),
+            language=args.language or preset.get("language"),
+            texts=args.texts or preset.get("texts"),
+            actions=args.actions or preset.get("actions"),
             chroma_key=args.chroma_key,
         )
         if args.output:

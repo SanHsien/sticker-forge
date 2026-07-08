@@ -76,6 +76,96 @@ SUGGESTIONS = {
 }
 
 
+# Full-field starter packs: pick one to fill character/theme/tone/style plus the
+# 8 texts and 8 actions with a coherent set, then tweak.
+PROMPT_PRESETS = {
+    "zh-Hant": {
+        "healing-bear": {
+            "label": "療癒白熊",
+            "character": "療癒白熊",
+            "theme": "溫暖療癒日常",
+            "tone": "溫暖、療癒、安心",
+            "style": "圓潤線條、柔和粉彩、適合聊天縮圖閱讀",
+            "language": "繁體中文",
+            "texts": ["早安", "晚安", "抱抱", "辛苦了", "沒關係", "謝謝你", "加油", "愛你"],
+            "actions": ["張開雙手討抱", "蓋棉被睡覺", "遞上熱茶", "拍拍肩膀", "雙手比愛心", "揮手道別", "豎起大拇指", "臉紅害羞"],
+        },
+        "office-cat": {
+            "label": "上班族貓",
+            "character": "上班族貓",
+            "theme": "辦公室日常",
+            "tone": "幽默、無奈、有活力",
+            "style": "粗黑線、扁平上色、表情誇張",
+            "language": "繁體中文",
+            "texts": ["收到", "開會中", "已讀", "加班中", "下班囉", "再一下", "交給我", "喝杯咖啡"],
+            "actions": ["猛敲鍵盤", "癱在桌上", "舉手發問", "比 OK 手勢", "翻白眼", "伸懶腰", "端著咖啡", "歡呼下班"],
+        },
+        "couple-bears": {
+            "label": "情侶小熊",
+            "character": "情侶小熊",
+            "theme": "情侶對話",
+            "tone": "甜蜜、俏皮、撒嬌",
+            "style": "柔和色彩、圓潤可愛",
+            "language": "繁體中文",
+            "texts": ["想你了", "在幹嘛", "晚安啾", "今天好嗎", "等你喔", "吃飯沒", "愛你喔", "抱一個"],
+            "actions": ["飛吻", "雙手比心", "撒嬌拉衣角", "害羞摀臉", "開心揮手", "托腮想念", "張手討抱", "親一下"],
+        },
+        "festive": {
+            "label": "節慶祝福",
+            "character": "節慶小福",
+            "theme": "節慶祝福",
+            "tone": "喜氣、熱情、祝福",
+            "style": "鮮明色彩、喜氣元素、粗線條",
+            "language": "繁體中文",
+            "texts": ["新年快樂", "恭喜發財", "生日快樂", "聖誕快樂", "節日愉快", "平安喜樂", "萬事如意", "謝謝招待"],
+            "actions": ["放鞭炮", "舉杯慶祝", "灑花瓣", "捧著禮物", "比讚祝福", "開心跳躍", "鞠躬拜年", "揮手祝福"],
+        },
+    },
+    "en": {
+        "healing-bear": {
+            "label": "Healing bear",
+            "character": "a healing white bear",
+            "theme": "warm everyday comfort",
+            "tone": "warm, healing, reassuring",
+            "style": "rounded lines, soft pastels, readable at chat thumbnail size",
+            "language": "English",
+            "texts": ["Good morning", "Good night", "Hugs", "Nice work", "It's okay", "Thank you", "You can do it", "Love you"],
+            "actions": ["arms open for a hug", "sleeping under a blanket", "offering hot tea", "patting a shoulder", "making a heart with both hands", "waving goodbye", "thumbs up", "blushing shyly"],
+        },
+        "office-cat": {
+            "label": "Office cat",
+            "character": "an office-worker cat",
+            "theme": "office life",
+            "tone": "funny, weary, energetic",
+            "style": "bold outlines, flat colors, exaggerated expressions",
+            "language": "English",
+            "texts": ["Got it", "In a meeting", "Seen", "Working late", "Off work!", "One moment", "Leave it to me", "Coffee break"],
+            "actions": ["typing furiously", "slumped on the desk", "raising a hand to ask", "an OK sign", "rolling eyes", "stretching", "carrying coffee", "cheering after work"],
+        },
+        "couple-bears": {
+            "label": "Couple bears",
+            "character": "a couple of little bears",
+            "theme": "couple chat",
+            "tone": "sweet, playful, affectionate",
+            "style": "soft colors, round and cute",
+            "language": "English",
+            "texts": ["Miss you", "What's up", "Night kiss", "How was your day", "Waiting for you", "Have you eaten", "Love you", "Hug me"],
+            "actions": ["blowing a kiss", "making a heart", "tugging a sleeve cutely", "hiding face shyly", "waving happily", "resting chin missing you", "arms open for a hug", "a little kiss"],
+        },
+        "festive": {
+            "label": "Festive",
+            "character": "a lucky festive mascot",
+            "theme": "holiday greetings",
+            "tone": "festive, warm, celebratory",
+            "style": "bright colors, festive motifs, bold lines",
+            "language": "English",
+            "texts": ["Happy New Year", "Best wishes", "Happy Birthday", "Merry Christmas", "Happy Holidays", "Peace and joy", "All the best", "Thanks for having me"],
+            "actions": ["lighting firecrackers", "toasting", "throwing confetti", "holding a gift", "thumbs up blessing", "jumping happily", "bowing in greeting", "waving a blessing"],
+        },
+    },
+}
+
+
 def normalize_locale(locale: str | None) -> str:
     if locale in SUPPORTED_LOCALES:
         return str(locale)

@@ -69,7 +69,7 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 
 ## 專案狀態與路線圖
 
-目前版本 **v0.8.0**：local-first 貼圖包工具（LINE 及多平台），桌面 GUI（pywebview 載入 HTML）與 CLI 共用同一套 Python core，`python -m pytest` 全數通過。
+目前版本 **v0.9.0**：local-first 貼圖包工具（LINE 及多平台），桌面 GUI（pywebview 載入 HTML）與 CLI 共用同一套 Python core，`python -m pytest` 全數通過。
 
 ### ✅ 已完成
 
@@ -92,6 +92,11 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 - **validate 檢查透明背景**：`validate` 新增透明度檢查，完全不透明（背景未去）的貼圖會被標記，擋下 LINE 第一大退件原因。
 
 細節見 [`REVIEW.md`](REVIEW.md) 與 [`docs/DECISIONS.md`](docs/DECISIONS.md)。
+
+### 🚀 v0.9.0 新增
+
+- **主題預設包**：一鍵套用「療癒白熊／上班族貓／情侶小熊／節慶祝福」等主題，自動填入角色／主題／語氣／風格與 8 句文字＋8 動作，再自行微調。GUI 下拉選單；CLI `sticker-forge prompt --preset office-cat`。
+- **套組標題／作者（GUI）**：GUI 可填 LINE 套組的標題與作者，寫進 ZIP 內的 README（CLI 原本就有 `--title` / `--author`）。
 
 ### 🚀 v0.8.0 新增
 
@@ -127,8 +132,7 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 
 看 fork 來源（[yazelin/line-sticker-studio](https://github.com/yazelin/line-sticker-studio)）與其他參考專案（sticker-convert、StampNyaa、signal-sticker-tool、LINE Creators Market）整理的候選：
 
-- **更多 prompt 模板**：LINE emoji（不同尺寸／數量）、訊息貼圖、其他主題模板。
-- **貼圖命名**：匯出前為單張命名／備註。
+- **LINE emoji／訊息貼圖模板**：LINE emoji 有自己的尺寸（180×180）與送審規格，需先查證正確規格再做另一條匯出流程（不憑記憶捏規格）。（「其他主題模板」已於 v0.9.0 以主題預設包提供。）
 - **更多平台格式**：Signal 完整 pack（含 manifest）、animated（超出目前靜態範圍）。
 - **ML 去背**：非綠幕來源用 rembg 之類。**傾向不做**：首次執行需下載模型（破壞離線）＋相依重，違反 local-first 輕量原則。
 - **grid 歷史**：保留匯入過的 grid 可重用。**傾向不做**：需持久儲存，與現行 `private_mode` 不寫持久資料的決策衝突。

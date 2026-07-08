@@ -27,6 +27,21 @@ def test_bootstrap_exposes_localised_data() -> None:
     assert set(zh["chromaKeys"]) == {"green", "magenta"}
 
 
+def test_bootstrap_includes_presets() -> None:
+    api = Api()
+    presets = api.bootstrap("zh-Hant")["presets"]
+    assert "office-cat" in presets
+    assert len(presets["office-cat"]["texts"]) == 8
+
+
+def test_write_line_zip_embeds_title_author(tmp_path) -> None:
+    api = Api()
+    tiles = [_decode(url) for url in api.split(_grid_data_url(), {"keyName": "green", "cleanup": True})][:8]
+    output = api._write_line_zip(tiles, tmp_path / "p.zip", {"title": "My Pack", "author": "Me"})
+    readme = ZipFile(output).read("README.txt").decode("utf-8")
+    assert "My Pack" in readme and "Me" in readme
+
+
 def test_render_prompt_matches_core() -> None:
     api = Api()
     text = api.render_prompt({"locale": "zh-Hant", "withText": True})

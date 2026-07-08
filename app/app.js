@@ -7,6 +7,11 @@ const UI = {
     languageLabel: "語言",
     statusReady: "等待素材",
     copy: "複製",
+    presetLabel: "主題預設",
+    presetNone: "—（自訂）",
+    presetApplied: (label) => `已套用主題：${label}`,
+    packTitle: "套組標題",
+    packAuthor: "作者",
     character: "角色",
     theme: "主題",
     tone: "語氣",
@@ -72,6 +77,11 @@ const UI = {
     languageLabel: "Language",
     statusReady: "Waiting for artwork",
     copy: "Copy",
+    presetLabel: "Theme preset",
+    presetNone: "— (custom)",
+    presetApplied: (label) => `Applied preset: ${label}`,
+    packTitle: "Pack title",
+    packAuthor: "Author",
     character: "Character",
     theme: "Theme",
     tone: "Tone",
@@ -182,9 +192,44 @@ function applyLocale(previousLocale = state.locale) {
     if (!input.value || prev.actions.includes(input.value)) input.value = cur.actions[i];
   });
   populateDatalists();
+  populatePresets();
   $("ui-language").value = state.locale;
   setStatus(data.statusReady);
   renderPrompt();
+}
+
+function populatePresets() {
+  const select = $("preset-select");
+  if (!select) return;
+  const presets = boot().presets || {};
+  select.innerHTML = "";
+  const none = document.createElement("option");
+  none.value = "";
+  none.textContent = ui().presetNone;
+  select.appendChild(none);
+  Object.entries(presets).forEach(([key, preset]) => {
+    const option = document.createElement("option");
+    option.value = key;
+    option.textContent = preset.label || key;
+    select.appendChild(option);
+  });
+  select.value = "";
+}
+
+function applyPreset(key) {
+  const preset = (boot().presets || {})[key];
+  if (!preset) return;
+  ["character", "theme", "tone", "style", "language"].forEach((field) => {
+    if (preset[field] != null) $(field).value = preset[field];
+  });
+  document.querySelectorAll(".slot-text").forEach((input, i) => {
+    if (preset.texts && preset.texts[i] != null) input.value = preset.texts[i];
+  });
+  document.querySelectorAll(".slot-action").forEach((input, i) => {
+    if (preset.actions && preset.actions[i] != null) input.value = preset.actions[i];
+  });
+  renderPrompt();
+  setStatus(ui().presetApplied(preset.label || key));
 }
 
 function populateDatalists() {
@@ -460,7 +505,13 @@ async function exportZip() {
   try {
     const mainIndex = Math.max(0, (parseInt($("main-index").value, 10) || 1) - 1);
     const tabIndex = Math.max(0, (parseInt($("tab-index").value, 10) || 1) - 1);
-    const result = await bridge.export_line(selected.map((t) => t.url), { ...options(), mainIndex, tabIndex });
+    const result = await bridge.export_line(selected.map((t) => t.url), {
+      ...options(),
+      mainIndex,
+      tabIndex,
+      title: $("pack-title").value,
+      author: $("pack-author").value,
+    });
     reportExport(result);
   } catch (err) {
     setStatus(String(err), true);
@@ -594,6 +645,9 @@ function bindEvents() {
   $("cleanup-tune").addEventListener("change", updatePreview);
   $("ui-language").addEventListener("change", (event) => setLocale(event.target.value));
   $("copy-prompt").addEventListener("click", copyPrompt);
+  $("preset-select").addEventListener("change", (event) => {
+    if (event.target.value) applyPreset(event.target.value);
+  });
   $("grid-file").addEventListener("change", (event) => {
     const file = event.target.files?.[0];
     if (file) loadGrid(file);

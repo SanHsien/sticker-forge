@@ -143,3 +143,12 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 - **貼圖排序**：GUI 每張 ▲▼；輸出順序＝貼圖列表順序中的 included 子集。
 - 驗證：核心/CLI/webapi unit test（含 16 張套組、main/tab、多 grid）＋ live pywebview（import→9、加 grid→18、選 16、main/tab 下拉、▲▼、清空、export 帶 main/tab）。43 passed。
 - 「值得做就全做」的判斷：**做**了 pack composition（上述）；**傾向不做並記錄理由**——ML 去背（首次下載模型破壞離線＋相依重）、grid 歷史（需持久儲存，與 private_mode 衝突）、animated（超出靜態範圍）；**留候選**——更多 prompt 模板（LINE emoji，需模板選擇機制，另開一次做）、Signal manifest。
+
+## 2026-07-07：主題預設包＋套組標題／作者（v0.9.0）
+
+繼續清「可做但還沒完成」的候選：
+
+- **主題預設包（其他主題模板）**：`prompts.PROMPT_PRESETS`（中英各 4 組：healing-bear／office-cat／couple-bears／festive），一鍵填入角色／主題／語氣／風格／語言＋8 文字＋8 動作。CLI `prompt --preset <key>`（其他旗標仍可覆寫，欄位預設改 None 讓 preset 生效）；webapi bootstrap 帶 presets；GUI 下拉套用。
+- **套組標題／作者（GUI）**：GUI 補 title/author 輸入，經 bridge 傳進 `export_line_zip`（CLI 早有 `--title/--author`）。這是「命名」候選的可行部分；**單張命名不做**——LINE 檔名固定 01..NN，對輸出無效果。
+- 驗證：unit（preset 結構、CLI --preset、bootstrap presets、title/author 寫入 README）＋live pywebview（下拉套用填欄位/prompt、export 帶 title/author）。47 passed。
+- **LINE emoji／訊息貼圖仍留候選**：需先查證 LINE emoji 正確 ZIP/尺寸規格（180×180、獨立送審）再實作，不憑記憶捏規格（不模擬原則）。

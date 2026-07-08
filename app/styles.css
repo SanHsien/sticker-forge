@@ -413,6 +413,14 @@ textarea {
   flex-wrap: wrap;
 }
 
+.preset-row {
+  margin-bottom: 8px;
+}
+
+.preset-row select {
+  min-width: 160px;
+}
+
 .tile-move {
   display: inline-flex;
   gap: 2px;

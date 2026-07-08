@@ -26,6 +26,13 @@ def test_cli_prompt_prints_english_template(capsys) -> None:
     assert "Good morning" in output
 
 
+def test_cli_prompt_preset_fills_fields(capsys) -> None:
+    assert main(["prompt", "--preset", "office-cat"]) == 0
+    output = capsys.readouterr().out
+    assert "上班族貓" in output  # preset character
+    assert "收到" in output  # preset text
+
+
 def test_cli_prompt_writes_utf8_file(tmp_path) -> None:
     output_path = tmp_path / "prompt.md"
 

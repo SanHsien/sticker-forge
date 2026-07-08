@@ -22,6 +22,7 @@ from .prompts import (
     DEFAULT_ACTIONS,
     DEFAULT_FIELDS,
     DEFAULT_TEXTS,
+    PROMPT_PRESETS,
     SUGGESTIONS,
     normalize_locale,
     render_line_static_prompt,
@@ -63,6 +64,7 @@ class Api:
             "texts": DEFAULT_TEXTS[loc],
             "actions": DEFAULT_ACTIONS[loc],
             "suggestions": SUGGESTIONS[loc],
+            "presets": PROMPT_PRESETS[loc],
             "spec": {
                 "stickerW": LINE_STATIC_SPEC.sticker_size[0],
                 "stickerH": LINE_STATIC_SPEC.sticker_size[1],
@@ -159,8 +161,16 @@ class Api:
             main_index = 0
         if not 0 <= tab_index < count:
             tab_index = 0
+        title = (options.get("title") or "").strip() or "sticker-forge pack"
+        author = (options.get("author") or "").strip() or "sticker-forge"
         return export_line_zip(
-            tiles, path, spec=_spec_for(options), main_index=main_index, tab_index=tab_index
+            tiles,
+            path,
+            title=title,
+            author=author,
+            spec=_spec_for(options),
+            main_index=main_index,
+            tab_index=tab_index,
         )
 
     def _write_stickers_zip(self, tiles: list[Image.Image], path: str | Path, options: dict) -> Path:

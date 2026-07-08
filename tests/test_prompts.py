@@ -1,6 +1,19 @@
 from __future__ import annotations
 
-from sticker_forge.prompts import render_line_static_prompt
+from sticker_forge.prompts import PROMPT_PRESETS, render_line_static_prompt
+
+
+def test_prompt_presets_are_well_formed() -> None:
+    for locale in ("zh-Hant", "en"):
+        assert PROMPT_PRESETS[locale], f"no presets for {locale}"
+        for key, preset in PROMPT_PRESETS[locale].items():
+            assert preset["label"], key
+            for field in ("character", "theme", "tone", "style", "language"):
+                assert preset[field], f"{key}.{field}"
+            assert len(preset["texts"]) == 8, key
+            assert len(preset["actions"]) == 8, key
+    # both locales expose the same preset keys
+    assert set(PROMPT_PRESETS["zh-Hant"]) == set(PROMPT_PRESETS["en"])
 
 
 def test_render_line_static_prompt_fills_text_version() -> None:

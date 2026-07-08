@@ -31,6 +31,12 @@
         <button id="copy-prompt" type="button" data-i18n="copy">複製</button>
       </div>
 
+      <div class="preset-row">
+        <label><span data-i18n="presetLabel">主題預設</span>
+          <select id="preset-select"></select>
+        </label>
+      </div>
+
       <div class="field-grid">
         <label><span data-i18n="character">角色</span><input id="character" list="dl-character" value="原創可愛角色"></label>
         <label><span data-i18n="theme">主題</span><input id="theme" list="dl-theme" value="日常聊天貼圖"></label>
@@ -96,6 +102,15 @@
         </label>
         <label><span data-i18n="tabLabel">聊天標籤</span>
           <select id="tab-index"></select>
+        </label>
+      </div>
+
+      <div class="export-controls">
+        <label><span data-i18n="packTitle">套組標題</span>
+          <input id="pack-title" placeholder="sticker-forge pack">
+        </label>
+        <label><span data-i18n="packAuthor">作者</span>
+          <input id="pack-author" placeholder="sticker-forge">
         </label>
       </div>
 
