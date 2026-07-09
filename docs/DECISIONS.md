@@ -152,3 +152,12 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 - **套組標題／作者（GUI）**：GUI 補 title/author 輸入，經 bridge 傳進 `export_line_zip`（CLI 早有 `--title/--author`）。這是「命名」候選的可行部分；**單張命名不做**——LINE 檔名固定 01..NN，對輸出無效果。
 - 驗證：unit（preset 結構、CLI --preset、bootstrap presets、title/author 寫入 README）＋live pywebview（下拉套用填欄位/prompt、export 帶 title/author）。47 passed。
 - **LINE emoji／訊息貼圖仍留候選**：需先查證 LINE emoji 正確 ZIP/尺寸規格（180×180、獨立送審）再實作，不憑記憶捏規格（不模擬原則）。
+
+## 2026-07-07：LINE 原創貼圖 emoji（v0.10.0）
+
+先用 firecrawl 查證官方規格（creator.line.me/en/guideline/emoji/ 與 /detail/）再實作，不捏規格：
+
+- **Regular Emoji：8–40 張、180×180 PNG 透明、檔名 `001.png`…`0NN.png`（3 位數）、Chat Thumbnail Icon 96×74（另欄上傳）、ZIP <20MB。**
+- 實作：`exporter.export_emoji_zip`（001..0NN.png 180×180 ＋ `chat-thumbnail.png` 96×74 ＋ README 說明手動上架）、`validate_emoji_zip`（數量 8–40、3 位數連號、尺寸、透明）。CLI `emoji`（多 grid、`--select` 8–40、`--thumb`）、`validate --emoji`；webapi `Api.export_emoji`；GUI「匯出 LINE emoji」按鈕（主圖下拉當縮圖、8–40 gating）。
+- 驗證：unit（結構/尺寸/縮圖/validate/拒絕<8）＋CLI（emoji＋validate --emoji）＋live pywebview（按鈕呼叫 bridge、7 張被擋）。51 passed。chat thumbnail 放進 ZIP 但 README 明說於「聊天縮圖」欄另傳（emoji ZIP 官方檔名表只列 001..NN，不含縮圖檔名，故不假設縮圖在同一 ZIP 上傳）。
+- 仍留候選：訊息貼圖（editable-text，需另一套版位規格）。

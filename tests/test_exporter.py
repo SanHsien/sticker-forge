@@ -6,10 +6,12 @@ from zipfile import ZipFile
 from PIL import Image
 
 from sticker_forge.exporter import (
+    export_emoji_zip,
     export_line_zip,
     export_platform_zip,
     export_stickers_zip,
     fit_to_canvas,
+    validate_emoji_zip,
     validate_line_zip,
 )
 
@@ -132,6 +134,29 @@ def test_export_platform_zip_rejects_unknown_platform(tmp_path) -> None:
         assert "unknown platform" in str(exc)
     else:
         raise AssertionError("export_platform_zip should reject unknown platforms")
+
+
+def test_export_emoji_zip_structure_and_validate(tmp_path) -> None:
+    output = export_emoji_zip(_stickers(), tmp_path / "e.zip", thumb_index=1)  # 8 emoji
+    with ZipFile(output) as archive:
+        names = set(archive.namelist())
+        assert "001.png" in names and "008.png" in names
+        assert "chat-thumbnail.png" in names and "README.txt" in names
+        assert "009.png" not in names
+        emoji = Image.open(BytesIO(archive.read("001.png")))
+        assert emoji.size == (180, 180)
+        thumb = Image.open(BytesIO(archive.read("chat-thumbnail.png")))
+        assert thumb.size == (96, 74)
+    assert validate_emoji_zip(output) == []
+
+
+def test_export_emoji_zip_rejects_out_of_range(tmp_path) -> None:
+    try:
+        export_emoji_zip(_stickers()[:7], tmp_path / "e.zip")
+    except ValueError as exc:
+        assert "8-40" in str(exc)
+    else:
+        raise AssertionError("export_emoji_zip should reject fewer than 8 images")
 
 
 def test_validate_line_zip_flags_opaque_stickers(tmp_path) -> None:

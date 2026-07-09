@@ -6,10 +6,12 @@ from .exporter import (
     LINE_PACK_SIZES,
     LINEStickerSpec,
     PLATFORM_SPECS,
+    export_emoji_zip,
     export_line_zip,
     export_platform_zip,
     export_stickers_zip,
     fit_to_canvas,
+    validate_emoji_zip,
     validate_line_zip,
 )
 from .prompts import render_line_static_prompt
@@ -24,6 +26,7 @@ __all__ = [
     "StickerPreview",
     "app_path",
     "build_pack_preview",
+    "export_emoji_zip",
     "export_line_zip",
     "export_platform_zip",
     "export_stickers_zip",
@@ -34,5 +37,6 @@ __all__ = [
     "split_grid",
     "split_grid_file",
     "split_grid_to_stickers",
+    "validate_emoji_zip",
     "validate_line_zip",
 ]

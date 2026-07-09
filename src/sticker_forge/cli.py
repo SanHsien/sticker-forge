@@ -9,11 +9,15 @@ from PIL import Image
 
 from .cleanup import parse_hex_color, remove_chroma_background
 from .exporter import (
+    LINE_EMOJI_MAX,
+    LINE_EMOJI_MIN,
     LINE_PACK_SIZES,
     PLATFORM_SPECS,
+    export_emoji_zip,
     export_line_zip,
     export_platform_zip,
     export_stickers_zip,
+    validate_emoji_zip,
     validate_line_zip,
 )
 from .prompts import PROMPT_PRESETS, normalize_locale, render_line_static_prompt
@@ -33,6 +37,9 @@ MESSAGES = {
         "export_help": "從 3x3 grid 匯出 LINE 靜態貼圖 ZIP",
         "stickers_help": "匯出 9 張 PNG-only 貼圖 ZIP",
         "platform_help": "匯出其他平台尺寸的貼圖 ZIP（Telegram/WhatsApp/Discord/Signal）",
+        "emoji_help": "匯出 LINE 原創貼圖 emoji ZIP（8-40 張 × 180x180 ＋ 聊天縮圖）",
+        "thumb_help": "聊天縮圖用選取中的第幾張（1-based）。預設：1",
+        "emoji_validate_help": "以 LINE emoji 規格檢查 ZIP（而非貼圖）",
         "target_help": "目標平台",
         "preview_help": "預覽 3x3 grid 匯出狀態",
         "validate_help": "檢查 LINE 靜態貼圖 ZIP",
@@ -59,6 +66,9 @@ MESSAGES = {
         "stickers_help": "export all 9 stickers as a PNG-only ZIP",
         "platform_help": "export a sticker ZIP sized for another platform (Telegram/WhatsApp/Discord/Signal)",
         "target_help": "target platform",
+        "emoji_help": "export a LINE custom emoji ZIP (8-40 x 180x180 + chat thumbnail)",
+        "thumb_help": "which selected emoji is the chat thumbnail (1-based). Default: 1",
+        "emoji_validate_help": "validate the ZIP as a LINE emoji set instead of stickers",
         "preview_help": "preview export readiness for a 3x3 grid",
         "validate_help": "validate a LINE static sticker ZIP",
         "text_help": "repeat exactly 8 times",
@@ -85,6 +95,22 @@ def _parse_selection(value: str) -> list[int]:
     if len(selected) not in LINE_PACK_SIZES:
         allowed = " / ".join(str(size) for size in LINE_PACK_SIZES)
         raise argparse.ArgumentTypeError(f"selection must contain {allowed} cells")
+    if any(index < 1 for index in selected):
+        raise argparse.ArgumentTypeError("selection values must be 1 or greater")
+    if len(set(selected)) != len(selected):
+        raise argparse.ArgumentTypeError("selection values must not repeat")
+
+    return selected
+
+
+def _parse_emoji_selection(value: str) -> list[int]:
+    try:
+        selected = [int(item.strip()) for item in value.split(",") if item.strip()]
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("selection must be comma-separated numbers") from exc
+
+    if not LINE_EMOJI_MIN <= len(selected) <= LINE_EMOJI_MAX:
+        raise argparse.ArgumentTypeError(f"emoji selection must contain {LINE_EMOJI_MIN}-{LINE_EMOJI_MAX} cells")
     if any(index < 1 for index in selected):
         raise argparse.ArgumentTypeError("selection values must be 1 or greater")
     if len(set(selected)) != len(selected):
@@ -179,6 +205,22 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     platform.add_argument("--key-name", choices=["green", "magenta"], default="green")
     platform.add_argument("--tune", choices=["safe", "balanced", "aggressive"], default="balanced")
 
+    emoji = subparsers.add_parser("emoji", parents=[language_parent], help=text["emoji_help"])
+    emoji.add_argument("input", type=Path, nargs="+")
+    emoji.add_argument("-o", "--output", type=Path, required=True)
+    emoji.add_argument(
+        "--select",
+        type=_parse_emoji_selection,
+        default=_parse_emoji_selection("1,2,3,4,5,6,7,8"),
+        help=text["select_help"],
+    )
+    emoji.add_argument("--thumb", type=int, default=1, help=text["thumb_help"])
+    emoji.add_argument("--keep-background", action="store_true", help=text["keep_background_help"])
+    emoji.add_argument("--key-name", choices=["green", "magenta"], default="green")
+    emoji.add_argument("--tune", choices=["safe", "balanced", "aggressive"], default="balanced")
+    emoji.add_argument("--title", default="sticker-forge emoji")
+    emoji.add_argument("--author", default="sticker-forge")
+
     preview = subparsers.add_parser("preview", parents=[language_parent], help=text["preview_help"])
     preview.add_argument("input", type=Path)
     preview.add_argument(
@@ -194,6 +236,7 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
 
     validate = subparsers.add_parser("validate", parents=[language_parent], help=text["validate_help"])
     validate.add_argument("zip", type=Path)
+    validate.add_argument("--emoji", action="store_true", help=text["emoji_validate_help"])
 
     return parser
 
@@ -315,6 +358,31 @@ def main(argv: list[str] | None = None) -> int:
         print(output)
         return 0
 
+    if args.command == "emoji":
+        key = resolve_chroma_key(args.key_name)
+        pool: list[Image.Image] = []
+        for grid_path in args.input:
+            with Image.open(grid_path) as image:
+                pool.extend(split_grid_to_stickers(image, background=(*key.rgb, 255)))
+        if any(index > len(pool) for index in args.select):
+            parser.error(
+                f"--select values must be between 1 and {len(pool)} "
+                f"({len(args.input)} grid(s) = {len(pool)} cells)"
+            )
+        selected = [pool[index - 1] for index in args.select]
+        if not args.keep_background:
+            selected = [
+                remove_chroma_background(sticker, key_name=args.key_name, tune=args.tune)
+                for sticker in selected
+            ]
+        if not 1 <= args.thumb <= len(selected):
+            parser.error(f"--thumb must be between 1 and {len(selected)}")
+        output = export_emoji_zip(
+            selected, args.output, thumb_index=args.thumb - 1, title=args.title, author=args.author
+        )
+        print(output)
+        return 0
+
     if args.command == "preview":
         spec = replace(LINE_STATIC_SPEC, sticker_padding=args.padding)
         with Image.open(args.input) as image:
@@ -346,7 +414,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "validate":
-        errors = validate_line_zip(args.zip)
+        errors = validate_emoji_zip(args.zip) if args.emoji else validate_line_zip(args.zip)
         if errors:
             for error in errors:
                 print(error)

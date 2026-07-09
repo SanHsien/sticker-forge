@@ -17,7 +17,13 @@ from PIL import Image
 
 from .app_launcher import app_path
 from .cleanup import remove_chroma_background
-from .exporter import PLATFORM_SPECS, export_line_zip, export_platform_zip, export_stickers_zip
+from .exporter import (
+    PLATFORM_SPECS,
+    export_emoji_zip,
+    export_line_zip,
+    export_platform_zip,
+    export_stickers_zip,
+)
 from .prompts import (
     DEFAULT_ACTIONS,
     DEFAULT_FIELDS,
@@ -143,6 +149,27 @@ class Api:
         if not path:
             return {"cancelled": True}
         export_platform_zip([_decode(url) for url in tile_data_urls], path, platform=platform)
+        return {"saved": str(path)}
+
+    def export_emoji(self, tile_data_urls: list[str], options: dict) -> dict:
+        options = options or {}
+        path = self._ask_save_path("line-emoji.zip")
+        if not path:
+            return {"cancelled": True}
+        tiles = [_decode(url) for url in tile_data_urls]
+        thumb = int(options.get("thumbIndex", 0))
+        if not 0 <= thumb < len(tiles):
+            thumb = 0
+        try:
+            export_emoji_zip(
+                tiles,
+                path,
+                thumb_index=thumb,
+                title=(options.get("title") or "").strip() or "sticker-forge emoji",
+                author=(options.get("author") or "").strip() or "sticker-forge",
+            )
+        except ValueError as exc:
+            return {"error": str(exc)}
         return {"saved": str(path)}
 
     def save_png(self, data_url: str, default_name: str = "sticker.png") -> dict:

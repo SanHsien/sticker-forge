@@ -85,7 +85,7 @@ python -m sticker_forge validate outputs\line-stickers.zip
 
 ## Roadmap
 
-Version **v0.9.0**: local-first sticker-pack toolkit (LINE and other platforms). The desktop GUI (a pywebview window rendering the HTML) and the CLI share one Python core. `python -m pytest` passes.
+Version **v0.10.0**: local-first sticker-pack toolkit (LINE stickers/emoji and other platforms). The desktop GUI (a pywebview window rendering the HTML) and the CLI share one Python core. `python -m pytest` passes.
 
 ### ✅ Done
 
@@ -106,6 +106,10 @@ Version **v0.9.0**: local-first sticker-pack toolkit (LINE and other platforms).
 - **`validate` checks transparency**: `validate` now flags fully opaque stickers (background not removed), catching the most common LINE rejection reason.
 
 See [`REVIEW.md`](REVIEW.md) and [`docs/DECISIONS.md`](docs/DECISIONS.md).
+
+### 🚀 New in v0.10.0
+
+- **LINE custom emoji export**: export the tile pool as a LINE emoji set — **8–40 images, 180×180 transparent PNG, filenames `001.png…` plus a 96×74 chat thumbnail** — following the official spec ([creator.line.me/en/guideline/emoji](https://creator.line.me/en/guideline/emoji/)). GUI "Export LINE emoji" button; CLI `sticker-forge emoji <grid…> -o out.zip --thumb 1` and `validate --emoji`.
 
 ### 🚀 New in v0.9.0
 
@@ -146,7 +150,7 @@ See [`REVIEW.md`](REVIEW.md) and [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
 Drawn from the fork source ([yazelin/line-sticker-studio](https://github.com/yazelin/line-sticker-studio)) and the other reference projects (sticker-convert, StampNyaa, signal-sticker-tool, LINE Creators Market):
 
-- **LINE emoji / message-sticker templates**: LINE emoji have their own size (180×180) and submission rules — this needs the correct specs verified first and a separate export pipeline (no guessing specs). ("More themes" shipped in v0.9.0 as theme presets.)
+- **Message stickers**: LINE's editable-text stickers need their own template and layout spec. (LINE emoji shipped in v0.10.0; "more themes" shipped in v0.9.0 as theme presets.)
 - **More platform formats**: a full Signal pack (with manifest), animated stickers (beyond the current static scope).
 - **ML background removal**: for non-chroma-key sources (e.g. rembg). **Leaning no**: first run downloads a model (breaks offline use) and the dependency is heavy — against the lightweight local-first principle.
 - **Grid history**: keep imported grids for reuse. **Leaning no**: needs persistent storage, which conflicts with the current `private_mode` "no persistent data" decision.

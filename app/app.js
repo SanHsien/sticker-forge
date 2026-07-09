@@ -37,6 +37,8 @@ const UI = {
     selectFirstEight: "選前 8 張",
     exportPng: "匯出 9 張 PNG",
     exportZip: "匯出 ZIP",
+    exportEmoji: "匯出 LINE emoji",
+    needEmoji: (count) => `LINE emoji 需 8–40 張，目前 ${count} 張`,
     platformLabel: "其他平台",
     exportPlatform: "匯出到平台",
     cleanupTune: "去背強度",
@@ -107,6 +109,8 @@ const UI = {
     selectFirstEight: "Select first 8",
     exportPng: "Export 9 PNG",
     exportZip: "Export ZIP",
+    exportEmoji: "Export LINE emoji",
+    needEmoji: (count) => `LINE emoji needs 8–40 images; ${count} selected`,
     platformLabel: "Other platform",
     exportPlatform: "Export for platform",
     cleanupTune: "Cleanup strength",
@@ -531,6 +535,25 @@ async function exportStickersOnly() {
   }
 }
 
+async function exportEmoji() {
+  const bridge = api();
+  if (!bridge) return setStatus(ui().bridgeMissing, true);
+  const selected = includedTiles();
+  if (selected.length < 8 || selected.length > 40) return setStatus(ui().needEmoji(selected.length), true);
+  setStatus(ui().exporting);
+  try {
+    const thumbIndex = Math.max(0, (parseInt($("main-index").value, 10) || 1) - 1);
+    const result = await bridge.export_emoji(selected.map((t) => t.url), {
+      thumbIndex,
+      title: $("pack-title").value,
+      author: $("pack-author").value,
+    });
+    reportExport(result);
+  } catch (err) {
+    setStatus(String(err), true);
+  }
+}
+
 async function exportPlatform() {
   const bridge = api();
   if (!bridge) return setStatus(ui().bridgeMissing, true);
@@ -663,6 +686,7 @@ function bindEvents() {
   $("select-first-eight").addEventListener("click", selectFirstEight);
   $("clear-tiles").addEventListener("click", clearTiles);
   $("export-stickers").addEventListener("click", exportStickersOnly);
+  $("export-emoji").addEventListener("click", exportEmoji);
   $("export-zip").addEventListener("click", exportZip);
   $("export-platform").addEventListener("click", exportPlatform);
   $("zoom-close").addEventListener("click", closeZoom);

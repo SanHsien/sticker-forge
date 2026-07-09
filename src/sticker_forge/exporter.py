@@ -190,6 +190,61 @@ def export_platform_zip(
     return output
 
 
+# LINE custom emoji (Regular Emoji) spec, verified from
+# https://creator.line.me/en/guideline/emoji/ and .../emoji/detail/ :
+# 8-40 images at 180x180 PNG (transparent), filenames 001.png..0NN.png, plus a
+# 96x74 chat thumbnail icon (uploaded separately in the LINE UI), ZIP < 20 MB.
+LINE_EMOJI_SIZE = (180, 180)
+LINE_EMOJI_THUMB_SIZE = (96, 74)
+LINE_EMOJI_MIN = 8
+LINE_EMOJI_MAX = 40
+
+
+def export_emoji_zip(
+    images: Sequence[ImageSource],
+    output_path: str | Path,
+    *,
+    thumb_index: int = 0,
+    title: str = "sticker-forge emoji",
+    author: str = "sticker-forge",
+) -> Path:
+    """Export a LINE custom emoji set (8-40 x 180x180) plus a chat thumbnail."""
+    count = len(images)
+    if not LINE_EMOJI_MIN <= count <= LINE_EMOJI_MAX:
+        raise ValueError(f"LINE emoji sets need {LINE_EMOJI_MIN}-{LINE_EMOJI_MAX} images, got {count}")
+
+    loaded = [_load_image(image) for image in images]
+    if not 0 <= thumb_index < count:
+        raise ValueError("thumb_index must point at an emoji in the set")
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+
+    resized = [fit_to_canvas(image, LINE_EMOJI_SIZE) for image in loaded]
+    thumbnail = fit_to_canvas(loaded[thumb_index], LINE_EMOJI_THUMB_SIZE)
+
+    readme = (
+        f"{title}\n"
+        f"Author: {author}\n\n"
+        "This ZIP was generated locally by sticker-forge (LINE custom emoji).\n"
+        f"It contains {count} emoji images (001.png-{count:03d}.png, 180x180) and\n"
+        "chat-thumbnail.png (96x74).\n"
+        "Manual LINE Creators Market submission:\n"
+        "1. Sign in at https://creator.line.me/ and create a new Emoji item.\n"
+        "2. Upload the numbered 001.png-... emoji images (as a ZIP of just those, or one by one).\n"
+        "3. Upload chat-thumbnail.png in the Chat Thumbnail Icon field.\n"
+        "4. Fill in the required text fields and apply for sale.\n"
+        "Review current LINE Creators Market emoji rules before submission.\n"
+    )
+
+    with ZipFile(output, "w", compression=ZIP_DEFLATED) as archive:
+        for index, image in enumerate(resized, start=1):
+            archive.writestr(f"{index:03d}.png", _png_bytes(image))
+        archive.writestr("chat-thumbnail.png", _png_bytes(thumbnail))
+        archive.writestr("README.txt", readme)
+
+    return output
+
+
 def _is_fully_opaque(image: Image.Image) -> bool:
     """True if the image has no transparent pixels (a solid background)."""
     if image.mode == "P":
@@ -244,5 +299,34 @@ def validate_line_zip(
                     errors.append(f"{name} is not PNG")
                 if _is_fully_opaque(image):
                     errors.append(f"{name} has no transparent background; LINE requires transparent stickers")
+
+    return errors
+
+
+def validate_emoji_zip(zip_path: str | Path) -> list[str]:
+    """Return validation errors for a LINE custom emoji ZIP."""
+    errors: list[str] = []
+
+    with ZipFile(zip_path) as archive:
+        names = set(archive.namelist())
+        emoji_names = sorted(name for name in names if re.fullmatch(r"\d{3}\.png", name))
+        count = len(emoji_names)
+        if not LINE_EMOJI_MIN <= count <= LINE_EMOJI_MAX:
+            errors.append(f"emoji count is {count}, expected {LINE_EMOJI_MIN}-{LINE_EMOJI_MAX}")
+
+        numbered = {f"{index:03d}.png" for index in range(1, count + 1)}
+        missing = sorted(numbered - names)
+        if missing:
+            errors.append(f"missing emoji files: {', '.join(missing)}")
+
+        for name in sorted(numbered & names):
+            with archive.open(name) as file:
+                image = Image.open(file)
+                if image.size != LINE_EMOJI_SIZE:
+                    errors.append(f"{name} size is {image.size[0]}x{image.size[1]}, expected 180x180")
+                if image.format != "PNG":
+                    errors.append(f"{name} is not PNG")
+                if _is_fully_opaque(image):
+                    errors.append(f"{name} has no transparent background; LINE requires transparent emoji")
 
     return errors
