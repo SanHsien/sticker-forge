@@ -8,6 +8,7 @@ from PIL import Image
 from sticker_forge.exporter import (
     export_emoji_zip,
     export_line_zip,
+    export_message_zip,
     export_platform_zip,
     export_stickers_zip,
     fit_to_canvas,
@@ -134,6 +135,25 @@ def test_export_platform_zip_rejects_unknown_platform(tmp_path) -> None:
         assert "unknown platform" in str(exc)
     else:
         raise AssertionError("export_platform_zip should reject unknown platforms")
+
+
+def test_export_message_zip_structure(tmp_path) -> None:
+    output = export_message_zip(_stickers(), tmp_path / "m.zip")  # 8
+    with ZipFile(output) as archive:
+        names = set(archive.namelist())
+        assert {"main.png", "tab.png", "01.png", "08.png", "README.txt"} <= names
+        assert "09.png" not in names
+        assert "message" in archive.read("README.txt").decode("utf-8").lower()
+    assert validate_line_zip(output) == []
+
+
+def test_export_message_zip_rejects_pack_size(tmp_path) -> None:
+    try:
+        export_message_zip(_stickers() * 4, tmp_path / "m.zip")  # 32 not allowed for message
+    except ValueError as exc:
+        assert "8 / 16 / 24" in str(exc)
+    else:
+        raise AssertionError("message packs cap at 24")
 
 
 def test_export_emoji_zip_structure_and_validate(tmp_path) -> None:

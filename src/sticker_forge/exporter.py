@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from dataclasses import replace
 from io import BytesIO
 from pathlib import Path
 from typing import Sequence
@@ -57,6 +58,8 @@ def _png_bytes(image: Image.Image) -> bytes:
 
 # Static-sticker pack sizes allowed by LINE Creators Market.
 LINE_PACK_SIZES = (8, 16, 24, 32, 40)
+# Message stickers accept fewer sizes and want no margin (LINE adds one).
+LINE_MESSAGE_PACK_SIZES = (8, 16, 24)
 
 
 def export_line_zip(
@@ -68,11 +71,13 @@ def export_line_zip(
     main_index: int = 0,
     tab_index: int = 0,
     spec: LINEStickerSpec = LINE_STATIC_SPEC,
+    pack_sizes: tuple[int, ...] = LINE_PACK_SIZES,
+    readme: str | None = None,
 ) -> Path:
     """Export a LINE static sticker pack (8/16/24/32/40) plus main/tab previews."""
     count = len(stickers)
-    if count not in LINE_PACK_SIZES:
-        allowed = " / ".join(str(size) for size in LINE_PACK_SIZES)
+    if count not in pack_sizes:
+        allowed = " / ".join(str(size) for size in pack_sizes)
         raise ValueError(f"LINE packs must have {allowed} stickers, got {count}")
 
     loaded = [_load_image(sticker) for sticker in stickers]
@@ -87,19 +92,20 @@ def export_line_zip(
     main_image = fit_to_canvas(loaded[main_index], spec.main_size, padding=spec.main_padding)
     tab_image = fit_to_canvas(loaded[tab_index], spec.tab_size, padding=spec.tab_padding)
 
-    readme = (
-        f"{title}\n"
-        f"Author: {author}\n\n"
-        "This ZIP was generated locally by sticker-forge.\n"
-        f"It contains {count} static sticker images, main.png, and tab.png.\n"
-        "Manual LINE Creators Market submission:\n"
-        "1. Sign in at https://creator.line.me/zh-hant/.\n"
-        "2. Create a new Sticker item.\n"
-        "3. Fill sticker description, image edit, and sales information tabs.\n"
-        f"4. Upload this ZIP, or upload main.png, tab.png, and 01.png-{count:02d}.png manually.\n"
-        "5. Click the sales application button manually after all fields are complete.\n"
-        "Review current LINE Creators Market rules before submission.\n"
-    )
+    if readme is None:
+        readme = (
+            f"{title}\n"
+            f"Author: {author}\n\n"
+            "This ZIP was generated locally by sticker-forge.\n"
+            f"It contains {count} static sticker images, main.png, and tab.png.\n"
+            "Manual LINE Creators Market submission:\n"
+            "1. Sign in at https://creator.line.me/zh-hant/.\n"
+            "2. Create a new Sticker item.\n"
+            "3. Fill sticker description, image edit, and sales information tabs.\n"
+            f"4. Upload this ZIP, or upload main.png, tab.png, and 01.png-{count:02d}.png manually.\n"
+            "5. Click the sales application button manually after all fields are complete.\n"
+            "Review current LINE Creators Market rules before submission.\n"
+        )
 
     with ZipFile(output, "w", compression=ZIP_DEFLATED) as archive:
         archive.writestr("main.png", _png_bytes(main_image))
@@ -109,6 +115,45 @@ def export_line_zip(
         archive.writestr("README.txt", readme)
 
     return output
+
+
+def export_message_zip(
+    images: Sequence[ImageSource],
+    output_path: str | Path,
+    *,
+    title: str = "sticker-forge message pack",
+    author: str = "sticker-forge",
+    main_index: int = 0,
+    tab_index: int = 0,
+) -> Path:
+    """Export a LINE message sticker pack (8/16/24, no baked-in margin)."""
+    count = len(images)
+    spec = replace(LINE_STATIC_SPEC, sticker_padding=0)
+    readme = (
+        f"{title}\n"
+        f"Author: {author}\n\n"
+        "This ZIP was generated locally by sticker-forge (LINE message stickers).\n"
+        f"It contains {count} message-sticker images (370x320 max), main.png (240x240),\n"
+        "and tab.png (96x74). Message stickers let the sender type a short message onto\n"
+        "the sticker; the text position and font are set in LINE's editor, not here.\n"
+        "Manual LINE Creators Market submission:\n"
+        "1. Sign in and create a new Message Sticker item.\n"
+        "2. Choose 8, 16, or 24 stickers on the Manage Stickers page.\n"
+        "3. Upload the images; LINE adds margins automatically, so none is baked in.\n"
+        "4. Set the text position, font, and default message per sticker in LINE's editor.\n"
+        "Review current LINE Creators Market message-sticker rules before submission.\n"
+    )
+    return export_line_zip(
+        images,
+        output_path,
+        title=title,
+        author=author,
+        main_index=main_index,
+        tab_index=tab_index,
+        spec=spec,
+        pack_sizes=LINE_MESSAGE_PACK_SIZES,
+        readme=readme,
+    )
 
 
 def export_stickers_zip(

@@ -69,7 +69,7 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 
 ## 專案狀態與路線圖
 
-目前版本 **v0.10.0**：local-first 貼圖包工具（LINE 貼圖／emoji 及多平台），桌面 GUI（pywebview 載入 HTML）與 CLI 共用同一套 Python core，`python -m pytest` 全數通過。
+目前版本 **v0.11.0**：local-first 貼圖包工具（LINE 貼圖／emoji／訊息貼圖 及多平台），桌面 GUI（pywebview 載入 HTML）與 CLI 共用同一套 Python core，`python -m pytest` 全數通過。
 
 ### ✅ 已完成
 
@@ -92,6 +92,10 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 - **validate 檢查透明背景**：`validate` 新增透明度檢查，完全不透明（背景未去）的貼圖會被標記，擋下 LINE 第一大退件原因。
 
 細節見 [`REVIEW.md`](REVIEW.md) 與 [`docs/DECISIONS.md`](docs/DECISIONS.md)。
+
+### 🚀 v0.11.0 新增
+
+- **LINE 訊息貼圖匯出**：訊息貼圖（發送者可在貼圖上打字）——**8／16／24 張、貼圖 max 370×320、不需留邊（LINE 自動加邊）、main 240×240＋tab 96×74**，依官方規格（[creator.line.me/en/guideline/messagesticker](https://creator.line.me/en/guideline/messagesticker/)）。GUI「匯出訊息貼圖」按鈕；CLI `sticker-forge message <grid…> -o out.zip`。文字位置／字型於 LINE 編輯器設定。
 
 ### 🚀 v0.10.0 新增
 
@@ -136,8 +140,9 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 
 看 fork 來源（[yazelin/line-sticker-studio](https://github.com/yazelin/line-sticker-studio)）與其他參考專案（sticker-convert、StampNyaa、signal-sticker-tool、LINE Creators Market）整理的候選：
 
-- **訊息貼圖（message stickers）**：LINE 的可編輯文字貼圖，需另一套模板與版位規格。（LINE emoji 已於 v0.10.0 完成；「其他主題模板」已於 v0.9.0 以主題預設包提供。）
-- **更多平台格式**：Signal 完整 pack（含 manifest）、animated（超出目前靜態範圍）。
+- **動態貼圖（animated stickers）**：官方最小 8 張（條件成立），但**每張是 APNG、5–20 影格、≤320×270**；我們產的是靜態圖，需「程序化動畫」（給靜圖套內建效果生成影格）。待確認動畫方向再做（見 [`docs/DECISIONS.md`](docs/DECISIONS.md)）。
+- **更多平台格式**：Signal 完整 pack（含 manifest）。
+- **big stickers／pop-up／effect**：LINE 其他貼圖類型，各有規格，可依需求逐一查證後加。
 - **ML 去背**：非綠幕來源用 rembg 之類。**傾向不做**：首次執行需下載模型（破壞離線）＋相依重，違反 local-first 輕量原則。
 - **grid 歷史**：保留匯入過的 grid 可重用。**傾向不做**：需持久儲存，與現行 `private_mode` 不寫持久資料的決策衝突。
 

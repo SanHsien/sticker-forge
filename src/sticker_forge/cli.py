@@ -11,10 +11,12 @@ from .cleanup import parse_hex_color, remove_chroma_background
 from .exporter import (
     LINE_EMOJI_MAX,
     LINE_EMOJI_MIN,
+    LINE_MESSAGE_PACK_SIZES,
     LINE_PACK_SIZES,
     PLATFORM_SPECS,
     export_emoji_zip,
     export_line_zip,
+    export_message_zip,
     export_platform_zip,
     export_stickers_zip,
     validate_emoji_zip,
@@ -40,6 +42,7 @@ MESSAGES = {
         "emoji_help": "匯出 LINE 原創貼圖 emoji ZIP（8-40 張 × 180x180 ＋ 聊天縮圖）",
         "thumb_help": "聊天縮圖用選取中的第幾張（1-based）。預設：1",
         "emoji_validate_help": "以 LINE emoji 規格檢查 ZIP（而非貼圖）",
+        "message_help": "匯出 LINE 訊息貼圖 ZIP（8/16/24 張，文字由發送者輸入）",
         "target_help": "目標平台",
         "preview_help": "預覽 3x3 grid 匯出狀態",
         "validate_help": "檢查 LINE 靜態貼圖 ZIP",
@@ -69,6 +72,7 @@ MESSAGES = {
         "emoji_help": "export a LINE custom emoji ZIP (8-40 x 180x180 + chat thumbnail)",
         "thumb_help": "which selected emoji is the chat thumbnail (1-based). Default: 1",
         "emoji_validate_help": "validate the ZIP as a LINE emoji set instead of stickers",
+        "message_help": "export a LINE message sticker ZIP (8/16/24, the sender types the text)",
         "preview_help": "preview export readiness for a 3x3 grid",
         "validate_help": "validate a LINE static sticker ZIP",
         "text_help": "repeat exactly 8 times",
@@ -95,6 +99,23 @@ def _parse_selection(value: str) -> list[int]:
     if len(selected) not in LINE_PACK_SIZES:
         allowed = " / ".join(str(size) for size in LINE_PACK_SIZES)
         raise argparse.ArgumentTypeError(f"selection must contain {allowed} cells")
+    if any(index < 1 for index in selected):
+        raise argparse.ArgumentTypeError("selection values must be 1 or greater")
+    if len(set(selected)) != len(selected):
+        raise argparse.ArgumentTypeError("selection values must not repeat")
+
+    return selected
+
+
+def _parse_message_selection(value: str) -> list[int]:
+    try:
+        selected = [int(item.strip()) for item in value.split(",") if item.strip()]
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("selection must be comma-separated numbers") from exc
+
+    if len(selected) not in LINE_MESSAGE_PACK_SIZES:
+        allowed = " / ".join(str(size) for size in LINE_MESSAGE_PACK_SIZES)
+        raise argparse.ArgumentTypeError(f"message selection must contain {allowed} cells")
     if any(index < 1 for index in selected):
         raise argparse.ArgumentTypeError("selection values must be 1 or greater")
     if len(set(selected)) != len(selected):
@@ -220,6 +241,23 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     emoji.add_argument("--tune", choices=["safe", "balanced", "aggressive"], default="balanced")
     emoji.add_argument("--title", default="sticker-forge emoji")
     emoji.add_argument("--author", default="sticker-forge")
+
+    message = subparsers.add_parser("message", parents=[language_parent], help=text["message_help"])
+    message.add_argument("input", type=Path, nargs="+")
+    message.add_argument("-o", "--output", type=Path, required=True)
+    message.add_argument(
+        "--select",
+        type=_parse_message_selection,
+        default=_parse_message_selection("1,2,3,4,5,6,7,8"),
+        help=text["select_help"],
+    )
+    message.add_argument("--main", type=int, default=1, help=text["main_help"])
+    message.add_argument("--tab", type=int, default=1, help=text["tab_help"])
+    message.add_argument("--keep-background", action="store_true", help=text["keep_background_help"])
+    message.add_argument("--key-name", choices=["green", "magenta"], default="green")
+    message.add_argument("--tune", choices=["safe", "balanced", "aggressive"], default="balanced")
+    message.add_argument("--title", default="sticker-forge message pack")
+    message.add_argument("--author", default="sticker-forge")
 
     preview = subparsers.add_parser("preview", parents=[language_parent], help=text["preview_help"])
     preview.add_argument("input", type=Path)
@@ -379,6 +417,36 @@ def main(argv: list[str] | None = None) -> int:
             parser.error(f"--thumb must be between 1 and {len(selected)}")
         output = export_emoji_zip(
             selected, args.output, thumb_index=args.thumb - 1, title=args.title, author=args.author
+        )
+        print(output)
+        return 0
+
+    if args.command == "message":
+        key = resolve_chroma_key(args.key_name)
+        pool: list[Image.Image] = []
+        for grid_path in args.input:
+            with Image.open(grid_path) as image:
+                pool.extend(split_grid_to_stickers(image, background=(*key.rgb, 255)))
+        if any(index > len(pool) for index in args.select):
+            parser.error(
+                f"--select values must be between 1 and {len(pool)} "
+                f"({len(args.input)} grid(s) = {len(pool)} cells)"
+            )
+        selected = [pool[index - 1] for index in args.select]
+        if not args.keep_background:
+            selected = [
+                remove_chroma_background(sticker, key_name=args.key_name, tune=args.tune)
+                for sticker in selected
+            ]
+        if not 1 <= args.main <= len(selected) or not 1 <= args.tab <= len(selected):
+            parser.error(f"--main/--tab must be between 1 and {len(selected)}")
+        output = export_message_zip(
+            selected,
+            args.output,
+            title=args.title,
+            author=args.author,
+            main_index=args.main - 1,
+            tab_index=args.tab - 1,
         )
         print(output)
         return 0

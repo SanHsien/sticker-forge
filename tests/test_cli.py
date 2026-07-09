@@ -142,6 +142,20 @@ def test_cli_emoji_creates_and_validates_zip(tmp_path) -> None:
     assert main(["validate", str(output_path), "--emoji"]) == 0
 
 
+def test_cli_message_creates_and_validates_zip(tmp_path) -> None:
+    grid = Image.new("RGBA", (300, 300), (0, 255, 0, 255))
+    grid_path = tmp_path / "grid.png"
+    grid.save(grid_path)
+    output_path = tmp_path / "message.zip"
+
+    assert main(["message", str(grid_path), "-o", str(output_path), "--select", "1,2,3,4,5,6,7,8"]) == 0
+
+    with ZipFile(output_path) as archive:
+        names = archive.namelist()
+        assert "main.png" in names and "08.png" in names
+    assert main(["validate", str(output_path)]) == 0
+
+
 def test_cli_platform_creates_zip(tmp_path) -> None:
     grid = Image.new("RGBA", (300, 300), (0, 255, 0, 255))
     grid_path = tmp_path / "grid.png"

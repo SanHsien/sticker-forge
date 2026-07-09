@@ -161,3 +161,11 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 - 實作：`exporter.export_emoji_zip`（001..0NN.png 180×180 ＋ `chat-thumbnail.png` 96×74 ＋ README 說明手動上架）、`validate_emoji_zip`（數量 8–40、3 位數連號、尺寸、透明）。CLI `emoji`（多 grid、`--select` 8–40、`--thumb`）、`validate --emoji`；webapi `Api.export_emoji`；GUI「匯出 LINE emoji」按鈕（主圖下拉當縮圖、8–40 gating）。
 - 驗證：unit（結構/尺寸/縮圖/validate/拒絕<8）＋CLI（emoji＋validate --emoji）＋live pywebview（按鈕呼叫 bridge、7 張被擋）。51 passed。chat thumbnail 放進 ZIP 但 README 明說於「聊天縮圖」欄另傳（emoji ZIP 官方檔名表只列 001..NN，不含縮圖檔名，故不假設縮圖在同一 ZIP 上傳）。
 - 仍留候選：訊息貼圖（editable-text，需另一套版位規格）。
+
+## 2026-07-07：LINE 訊息貼圖（v0.11.0）＋動態貼圖規格查證
+
+先查證官方規格再做：
+
+- **訊息貼圖**（creator.line.me/en/guideline/messagesticker/）：**8／16／24 張**、貼圖 max 370×320、main 240×240、tab 96×74、PNG 透明、**不需留邊（LINE 自動加邊）→ padding 0**。結構同一般貼圖（main/tab/NN），差別是張數 8/16/24＋padding 0＋送審類型。實作把 `export_line_zip` 參數化（`pack_sizes`、`readme`），`export_message_zip` 復用它（padding 0 spec、訊息貼圖 README）。CLI `message`（多 grid、`--select` 8/16/24、`--main/--tab`）、webapi `Api.export_message`、GUI「匯出訊息貼圖」按鈕。文字位置/字型於 LINE 編輯器設定，不在 ZIP。驗證：unit（結構/validate/拒絕 32）＋CLI＋live pywebview（8 張呼叫、7 張被擋）。55 passed。
+
+- **動態貼圖再評估**（creator.line.me/en/guideline/animationsticker/，主人問「最小 8 張是否可申請」）：查證結果 quantity 最小 **8（成立）**，但每張是 **APNG、5–20 影格、≤320×270、loop 4000ms**。→ **「最小 8 張」不是卡點；卡點是每張需 5–20 影格動畫，而本工具產靜態圖。** 要做動態貼圖必須「程序化動畫」（給靜圖套內建循環效果生成影格，Pillow 可寫 APNG）或改支援動畫來源匯入。這是設計取捨（canned 效果可能是 gimmick），待與主人確認方向再做，不硬上。DECISIONS 依主人指示可改，但實作卡在「動畫內容從何來」。

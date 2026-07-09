@@ -85,7 +85,7 @@ python -m sticker_forge validate outputs\line-stickers.zip
 
 ## Roadmap
 
-Version **v0.10.0**: local-first sticker-pack toolkit (LINE stickers/emoji and other platforms). The desktop GUI (a pywebview window rendering the HTML) and the CLI share one Python core. `python -m pytest` passes.
+Version **v0.11.0**: local-first sticker-pack toolkit (LINE stickers/emoji/message stickers and other platforms). The desktop GUI (a pywebview window rendering the HTML) and the CLI share one Python core. `python -m pytest` passes.
 
 ### ✅ Done
 
@@ -106,6 +106,10 @@ Version **v0.10.0**: local-first sticker-pack toolkit (LINE stickers/emoji and o
 - **`validate` checks transparency**: `validate` now flags fully opaque stickers (background not removed), catching the most common LINE rejection reason.
 
 See [`REVIEW.md`](REVIEW.md) and [`docs/DECISIONS.md`](docs/DECISIONS.md).
+
+### 🚀 New in v0.11.0
+
+- **LINE message sticker export**: message stickers (the sender types a short message onto the sticker) — **8/16/24 images, up to 370×320, no baked-in margin (LINE adds one), main 240×240 + tab 96×74** — following the official spec ([creator.line.me/en/guideline/messagesticker](https://creator.line.me/en/guideline/messagesticker/)). GUI "Export message stickers" button; CLI `sticker-forge message <grid…> -o out.zip`. Text position/font are set in LINE's editor.
 
 ### 🚀 New in v0.10.0
 
@@ -150,8 +154,9 @@ See [`REVIEW.md`](REVIEW.md) and [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
 Drawn from the fork source ([yazelin/line-sticker-studio](https://github.com/yazelin/line-sticker-studio)) and the other reference projects (sticker-convert, StampNyaa, signal-sticker-tool, LINE Creators Market):
 
-- **Message stickers**: LINE's editable-text stickers need their own template and layout spec. (LINE emoji shipped in v0.10.0; "more themes" shipped in v0.9.0 as theme presets.)
-- **More platform formats**: a full Signal pack (with manifest), animated stickers (beyond the current static scope).
+- **Animated stickers**: the official minimum is 8 (condition met), but each is an **APNG of 5–20 frames at ≤320×270** — we produce static images, so this needs procedural animation (applying a built-in looping effect to a static image). To be decided (see [`docs/DECISIONS.md`](docs/DECISIONS.md)).
+- **More platform formats**: a full Signal pack (with manifest).
+- **Big / pop-up / effect stickers**: other LINE sticker types, each with its own spec — can be added after verifying each one.
 - **ML background removal**: for non-chroma-key sources (e.g. rembg). **Leaning no**: first run downloads a model (breaks offline use) and the dependency is heavy — against the lightweight local-first principle.
 - **Grid history**: keep imported grids for reuse. **Leaning no**: needs persistent storage, which conflicts with the current `private_mode` "no persistent data" decision.
 

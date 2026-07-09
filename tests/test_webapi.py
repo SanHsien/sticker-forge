@@ -67,6 +67,12 @@ def test_cleanup_endpoint_removes_key_colour() -> None:
     assert _decode(out[0]).getpixel((0, 0))[3] == 0
 
 
+def test_export_message_bridge_cancels_without_window() -> None:
+    api = Api()
+    tile = _encode(Image.new("RGBA", (370, 320), (10, 20, 30, 255)))
+    assert api.export_message([tile] * 8, {}) == {"cancelled": True}
+
+
 def test_export_emoji_bridge_cancels_without_window() -> None:
     api = Api()
     tile = _encode(Image.new("RGBA", (370, 320), (10, 20, 30, 255)))

@@ -21,6 +21,7 @@ from .exporter import (
     PLATFORM_SPECS,
     export_emoji_zip,
     export_line_zip,
+    export_message_zip,
     export_platform_zip,
     export_stickers_zip,
 )
@@ -149,6 +150,31 @@ class Api:
         if not path:
             return {"cancelled": True}
         export_platform_zip([_decode(url) for url in tile_data_urls], path, platform=platform)
+        return {"saved": str(path)}
+
+    def export_message(self, tile_data_urls: list[str], options: dict) -> dict:
+        options = options or {}
+        path = self._ask_save_path("line-message-stickers.zip")
+        if not path:
+            return {"cancelled": True}
+        tiles = [_decode(url) for url in tile_data_urls]
+        main_index = int(options.get("mainIndex", 0))
+        tab_index = int(options.get("tabIndex", 0))
+        if not 0 <= main_index < len(tiles):
+            main_index = 0
+        if not 0 <= tab_index < len(tiles):
+            tab_index = 0
+        try:
+            export_message_zip(
+                tiles,
+                path,
+                main_index=main_index,
+                tab_index=tab_index,
+                title=(options.get("title") or "").strip() or "sticker-forge message pack",
+                author=(options.get("author") or "").strip() or "sticker-forge",
+            )
+        except ValueError as exc:
+            return {"error": str(exc)}
         return {"saved": str(path)}
 
     def export_emoji(self, tile_data_urls: list[str], options: dict) -> dict:

@@ -39,6 +39,8 @@ const UI = {
     exportZip: "匯出 ZIP",
     exportEmoji: "匯出 LINE emoji",
     needEmoji: (count) => `LINE emoji 需 8–40 張，目前 ${count} 張`,
+    exportMessage: "匯出訊息貼圖",
+    needMessage: (count) => `LINE 訊息貼圖需 8／16／24 張，目前 ${count} 張`,
     platformLabel: "其他平台",
     exportPlatform: "匯出到平台",
     cleanupTune: "去背強度",
@@ -111,6 +113,8 @@ const UI = {
     exportZip: "Export ZIP",
     exportEmoji: "Export LINE emoji",
     needEmoji: (count) => `LINE emoji needs 8–40 images; ${count} selected`,
+    exportMessage: "Export message stickers",
+    needMessage: (count) => `LINE message stickers need 8/16/24; ${count} selected`,
     platformLabel: "Other platform",
     exportPlatform: "Export for platform",
     cleanupTune: "Cleanup strength",
@@ -535,6 +539,27 @@ async function exportStickersOnly() {
   }
 }
 
+async function exportMessage() {
+  const bridge = api();
+  if (!bridge) return setStatus(ui().bridgeMissing, true);
+  const selected = includedTiles();
+  if (![8, 16, 24].includes(selected.length)) return setStatus(ui().needMessage(selected.length), true);
+  setStatus(ui().exporting);
+  try {
+    const mainIndex = Math.max(0, (parseInt($("main-index").value, 10) || 1) - 1);
+    const tabIndex = Math.max(0, (parseInt($("tab-index").value, 10) || 1) - 1);
+    const result = await bridge.export_message(selected.map((t) => t.url), {
+      mainIndex,
+      tabIndex,
+      title: $("pack-title").value,
+      author: $("pack-author").value,
+    });
+    reportExport(result);
+  } catch (err) {
+    setStatus(String(err), true);
+  }
+}
+
 async function exportEmoji() {
   const bridge = api();
   if (!bridge) return setStatus(ui().bridgeMissing, true);
@@ -687,6 +712,7 @@ function bindEvents() {
   $("clear-tiles").addEventListener("click", clearTiles);
   $("export-stickers").addEventListener("click", exportStickersOnly);
   $("export-emoji").addEventListener("click", exportEmoji);
+  $("export-message").addEventListener("click", exportMessage);
   $("export-zip").addEventListener("click", exportZip);
   $("export-platform").addEventListener("click", exportPlatform);
   $("zoom-close").addEventListener("click", closeZoom);
