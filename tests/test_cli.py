@@ -7,15 +7,12 @@ from PIL import Image, ImageDraw
 from sticker_forge.cli import main
 
 
-def _animated_grid(path, frames: int = 6) -> None:
+def _animated_gif(path, frames: int = 6) -> None:
     images = []
     for k in range(frames):
-        image = Image.new("RGBA", (300, 300), (0, 255, 0, 255))
+        image = Image.new("RGBA", (200, 200), (0, 255, 0, 255))
         draw = ImageDraw.Draw(image)
-        for r in range(3):
-            for c in range(3):
-                x = c * 100 + 20 + k * 8
-                draw.ellipse([x, r * 100 + 40, x + 30, r * 100 + 70], fill=(200, 30, 30, 255))
+        draw.ellipse([20 + k * 8, 40, 50 + k * 8, 70], fill=(200, 30, 30, 255))
         images.append(image)
     images[0].save(path, format="PNG", save_all=True, append_images=images[1:], duration=120, loop=0, disposal=2)
 
@@ -170,11 +167,14 @@ def test_cli_message_creates_and_validates_zip(tmp_path) -> None:
 
 
 def test_cli_animated_creates_zip(tmp_path) -> None:
-    grid_path = tmp_path / "anim.png"
-    _animated_grid(grid_path)
+    paths = []
+    for i in range(8):
+        p = tmp_path / f"s{i}.png"
+        _animated_gif(p)
+        paths.append(str(p))
     output_path = tmp_path / "anim.zip"
 
-    assert main(["animated", str(grid_path), "-o", str(output_path), "--select", "1,2,3,4,5,6,7,8"]) == 0
+    assert main(["animated", *paths, "-o", str(output_path), "--main", "2"]) == 0
 
     with ZipFile(output_path) as archive:
         from io import BytesIO

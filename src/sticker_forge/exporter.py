@@ -340,7 +340,7 @@ def export_animated_zip(
     tab_index: int = 0,
     title: str = "sticker-forge animated",
     author: str = "sticker-forge",
-    durations: Sequence[int] | None = None,
+    durations: Sequence[Sequence[int]] | None = None,
 ) -> Path:
     """Export a LINE animated sticker pack (8/16/24 APNG stickers + APNG main + PNG tab)."""
     count = len(sticker_frames)
@@ -358,9 +358,9 @@ def export_animated_zip(
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
 
-    def _durations_for(frames: Sequence[Image.Image]) -> list[int]:
-        if durations and len(durations) == len(frames):
-            return [max(20, int(d)) for d in durations]
+    def _durations_for(index: int, frames: Sequence[Image.Image]) -> list[int]:
+        if durations and index < len(durations) and durations[index] and len(durations[index]) == len(frames):
+            return [max(20, int(d)) for d in durations[index]]
         return [100] * len(frames)
 
     readme = (
@@ -378,11 +378,11 @@ def export_animated_zip(
     )
 
     with ZipFile(output, "w", compression=ZIP_DEFLATED) as archive:
-        for index, frames in enumerate(sticker_frames, start=1):
+        for index, frames in enumerate(sticker_frames):
             fitted = _fit_frames_within(list(frames), LINE_ANIM_MAX_SIZE)
-            archive.writestr(f"{index:02d}.png", _apng_bytes(fitted, _durations_for(frames)))
+            archive.writestr(f"{index + 1:02d}.png", _apng_bytes(fitted, _durations_for(index, frames)))
         main_frames = [fit_to_canvas(frame, LINE_ANIM_MAIN_SIZE) for frame in sticker_frames[main_index]]
-        archive.writestr("main.png", _apng_bytes(main_frames, _durations_for(sticker_frames[main_index])))
+        archive.writestr("main.png", _apng_bytes(main_frames, _durations_for(main_index, sticker_frames[main_index])))
         tab_image = fit_to_canvas(sticker_frames[tab_index][0], LINE_ANIM_TAB_SIZE)
         archive.writestr("tab.png", _png_bytes(tab_image))
         archive.writestr("README.txt", readme)

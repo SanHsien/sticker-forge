@@ -85,7 +85,7 @@ python -m sticker_forge validate outputs\line-stickers.zip
 
 ## Roadmap
 
-Version **v0.12.0**: local-first sticker-pack toolkit (LINE stickers/emoji/message/animated stickers and other platforms). The desktop GUI (a pywebview window rendering the HTML) and the CLI share one Python core. `python -m pytest` passes.
+Version **v0.13.0**: local-first sticker-pack toolkit (LINE stickers/emoji/message/animated stickers and other platforms). The desktop GUI (a pywebview window rendering the HTML) and the CLI share one Python core. `python -m pytest` passes.
 
 ### ✅ Done
 
@@ -107,9 +107,13 @@ Version **v0.12.0**: local-first sticker-pack toolkit (LINE stickers/emoji/messa
 
 See [`REVIEW.md`](REVIEW.md) and [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
+### 🚀 New in v0.13.0
+
+- **Animated stickers: "import multiple animated GIFs" model + GUI.** Corrects the v0.12.0 input shape — a non-professional user generating with AI ends up with **one animated GIF per sticker**, not an animated grid. Now you **import 8/16/24 animated GIF/APNG files (one per sticker)** → per-frame background cleanup, resize to ≤320×270 (one side ≥270), and **APNG (5–20 frames)**, plus an animated 240×240 main and a static 96×74 tab, following the official spec ([creator.line.me/en/guideline/animationsticker](https://creator.line.me/en/guideline/animationsticker/)). GUI "Import animated" (multi-file) + "Export animated" buttons (static exports are blocked in animated mode); CLI `sticker-forge animated a.gif b.gif … -o out.zip`. **16/24 just means importing more files** — no multi-grid needed.
+
 ### 🚀 New in v0.12.0
 
-- **LINE animated sticker export (CLI)**: import an **animated 3×3 grid** (GIF/APNG, each cell animates) → slice each frame into **8 animated stickers (APNG, ≤320×270, 5–20 frames each) + an animated 240×240 main + a static 96×74 tab**, cleaning the key colour per frame and preserving the source frame timing, following the official spec ([creator.line.me/en/guideline/animationsticker](https://creator.line.me/en/guideline/animationsticker/)). CLI `sticker-forge animated <animated-grid.gif> -o out.zip`. GUI animation preview and 16/24 (multi-grid) are the next increment.
+- **LINE animated sticker export (CLI, first cut)**: APNG animated sticker packs per the official spec (≤320×270, 5–20 frames, animated main + static tab). (v0.13.0 switched the input to "import multiple animated GIFs" and added the GUI.)
 
 ### 🚀 New in v0.11.0
 
@@ -158,7 +162,6 @@ See [`REVIEW.md`](REVIEW.md) and [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
 Drawn from the fork source ([yazelin/line-sticker-studio](https://github.com/yazelin/line-sticker-studio)) and the other reference projects (sticker-convert, StampNyaa, signal-sticker-tool, LINE Creators Market):
 
-- **Animated stickers GUI / multi-grid**: the animated CLI shipped in v0.12.0; the GUI animation import/preview and 16/24 (multi-grid) are next.
 - **More platform formats**: a full Signal pack (with manifest).
 - **Big / pop-up / effect stickers**: other LINE sticker types, each with its own spec — can be added after verifying each one.
 - **ML background removal**: for non-chroma-key sources (e.g. rembg). **Leaning no**: first run downloads a model (breaks offline use) and the dependency is heavy — against the lightweight local-first principle.

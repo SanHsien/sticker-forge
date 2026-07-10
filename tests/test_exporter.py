@@ -138,26 +138,28 @@ def test_export_platform_zip_rejects_unknown_platform(tmp_path) -> None:
         raise AssertionError("export_platform_zip should reject unknown platforms")
 
 
-def _animated_grid_path(tmp_path, frames: int = 6):
+def _animated_sticker_path(tmp_path, name, frames: int = 6):
     images = []
     for k in range(frames):
-        image = Image.new("RGBA", (300, 300), (0, 255, 0, 255))
+        image = Image.new("RGBA", (200, 200), (0, 255, 0, 255))
         draw = ImageDraw.Draw(image)
-        for r in range(3):
-            for c in range(3):
-                x = c * 100 + 20 + k * 8
-                draw.ellipse([x, r * 100 + 40, x + 30, r * 100 + 70], fill=(200, 30, 30, 255))
+        draw.ellipse([20 + k * 8, 40, 50 + k * 8, 70], fill=(200, 30, 30, 255))
         images.append(image)
-    path = tmp_path / "anim.png"
+    path = tmp_path / name
     images[0].save(path, format="PNG", save_all=True, append_images=images[1:], duration=120, loop=0, disposal=2)
     return path
 
 
 def test_export_animated_zip(tmp_path) -> None:
-    from sticker_forge.splitter import split_animated_grid
+    from sticker_forge.splitter import load_animated_frames
 
-    sticker_frames, durations = split_animated_grid(_animated_grid_path(tmp_path))
-    output = export_animated_zip(sticker_frames[:8], tmp_path / "a.zip", durations=durations)
+    sticker_frames = []
+    durations = []
+    for i in range(8):
+        frames, frame_durations = load_animated_frames(_animated_sticker_path(tmp_path, f"s{i}.png"))
+        sticker_frames.append(frames)
+        durations.append(frame_durations)
+    output = export_animated_zip(sticker_frames, tmp_path / "a.zip", durations=durations)
     with ZipFile(output) as archive:
         names = set(archive.namelist())
         assert {"main.png", "tab.png", "01.png", "08.png", "README.txt"} <= names

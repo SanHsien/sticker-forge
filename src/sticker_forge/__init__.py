@@ -18,7 +18,7 @@ from .exporter import (
 )
 from .prompts import render_line_static_prompt
 from .preview import PackPreview, StickerPreview, build_pack_preview
-from .splitter import split_animated_grid, split_grid, split_grid_file, split_grid_to_stickers
+from .splitter import load_animated_frames, split_grid, split_grid_file, split_grid_to_stickers
 
 __all__ = [
     "LINE_PACK_SIZES",
@@ -35,6 +35,7 @@ __all__ = [
     "export_platform_zip",
     "export_stickers_zip",
     "fit_to_canvas",
+    "load_animated_frames",
     "parse_hex_color",
     "remove_chroma_background",
     "render_line_static_prompt",

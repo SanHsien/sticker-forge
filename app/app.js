@@ -41,6 +41,12 @@ const UI = {
     needEmoji: (count) => `LINE emoji 需 8–40 張，目前 ${count} 張`,
     exportMessage: "匯出訊息貼圖",
     needMessage: (count) => `LINE 訊息貼圖需 8／16／24 張，目前 ${count} 張`,
+    importAnimated: "匯入動態貼圖",
+    exportAnimated: "匯出動態貼圖",
+    preparing: "處理動態貼圖中…",
+    needAnimated: (count) => `LINE 動態貼圖需 8／16／24 張，目前 ${count} 張`,
+    animatedModeHint: "目前是動態貼圖模式，請用「匯出動態貼圖」，或重新匯入靜態 3x3 grid",
+    staticModeHint: "請先匯入動態貼圖檔（GIF/APNG）",
     platformLabel: "其他平台",
     exportPlatform: "匯出到平台",
     cleanupTune: "去背強度",
@@ -115,6 +121,12 @@ const UI = {
     needEmoji: (count) => `LINE emoji needs 8–40 images; ${count} selected`,
     exportMessage: "Export message stickers",
     needMessage: (count) => `LINE message stickers need 8/16/24; ${count} selected`,
+    importAnimated: "Import animated",
+    exportAnimated: "Export animated",
+    preparing: "Preparing animated stickers…",
+    needAnimated: (count) => `LINE animated stickers need 8/16/24; ${count} selected`,
+    animatedModeHint: "Animated mode: use Export animated, or re-import a static 3x3 grid",
+    staticModeHint: "Import animated files (GIF/APNG) first",
     platformLabel: "Other platform",
     exportPlatform: "Export for platform",
     cleanupTune: "Cleanup strength",
@@ -160,6 +172,7 @@ const state = {
   sourceDataUrl: null,
   tiles: [],
   zoomIndex: -1,
+  mode: "static",
 };
 // bootstrap data (defaults, suggestions, spec) per locale, from Python
 const boots = {};
@@ -173,6 +186,14 @@ function setStatus(text, danger = false) {
   const status = $("status");
   status.textContent = text;
   status.style.color = danger ? "#fecaca" : "#e5e7eb";
+}
+
+function blockedInAnimated() {
+  if (state.mode === "animated") {
+    setStatus(ui().animatedModeHint, true);
+    return true;
+  }
+  return false;
 }
 
 function applyLocale(previousLocale = state.locale) {
@@ -350,6 +371,7 @@ async function splitGrid(append = false) {
   const bridge = api();
   if (!bridge) return setStatus(ui().bridgeMissing, true);
   if (!state.sourceDataUrl) return setStatus(ui().needGrid, true);
+  if (!append) state.mode = "static";
   setStatus(ui().splitting);
   try {
     const urls = await bridge.split(state.sourceDataUrl, { ...options(), cleanup: false });
@@ -381,6 +403,7 @@ function moveTile(index, delta) {
 
 function clearTiles() {
   state.tiles = [];
+  state.mode = "static";
   renderTiles();
   updatePreview();
   setStatus(ui().statusReady);
@@ -451,6 +474,7 @@ function selectFirstEight() {
 async function cleanupAll() {
   const bridge = api();
   if (!bridge) return setStatus(ui().bridgeMissing, true);
+  if (blockedInAnimated()) return;
   if (!state.tiles.length) return setStatus(ui().noTilesCleanup, true);
   setStatus(ui().cleaning);
   try {
@@ -470,7 +494,7 @@ async function cleanupAll() {
 
 async function cleanupOne(index) {
   const bridge = api();
-  if (!bridge || !state.tiles[index]) return;
+  if (!bridge || !state.tiles[index] || state.mode === "animated") return;
   try {
     const [url] = await bridge.cleanup([state.tiles[index].raw], options());
     state.tiles[index].url = url;
@@ -507,6 +531,7 @@ function closeZoom() {
 async function exportZip() {
   const bridge = api();
   if (!bridge) return setStatus(ui().bridgeMissing, true);
+  if (blockedInAnimated()) return;
   const selected = includedTiles();
   if (!isPackSize(selected.length)) return setStatus(ui().needPackSize(selected.length), true);
   setStatus(ui().exporting);
@@ -529,6 +554,7 @@ async function exportZip() {
 async function exportStickersOnly() {
   const bridge = api();
   if (!bridge) return setStatus(ui().bridgeMissing, true);
+  if (blockedInAnimated()) return;
   if (!state.tiles.length) return setStatus(ui().noTilesExport, true);
   setStatus(ui().exporting);
   try {
@@ -539,9 +565,63 @@ async function exportStickersOnly() {
   }
 }
 
+function readFileAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function loadAnimatedFiles(files) {
+  const bridge = api();
+  if (!bridge) return setStatus(ui().bridgeMissing, true);
+  const list = Array.from(files).filter((f) => f.type.startsWith("image/") || /\.(gif|apng|png)$/i.test(f.name));
+  if (!list.length) return;
+  setStatus(ui().preparing);
+  try {
+    const dataUrls = await Promise.all(list.map(readFileAsDataURL));
+    const previews = await bridge.prepare_animated(dataUrls, {
+      keyName: $("chroma-key").value,
+      tune: $("cleanup-tune").value,
+    });
+    state.mode = "animated";
+    state.tiles = previews.map((url) => ({ raw: url, url, included: true }));
+    renderTiles();
+    updatePreview();
+    setStatus(ui().splitDone);
+  } catch (err) {
+    setStatus(String(err), true);
+  }
+}
+
+async function exportAnimated() {
+  const bridge = api();
+  if (!bridge) return setStatus(ui().bridgeMissing, true);
+  if (state.mode !== "animated") return setStatus(ui().staticModeHint, true);
+  const selected = includedTiles();
+  if (![8, 16, 24].includes(selected.length)) return setStatus(ui().needAnimated(selected.length), true);
+  setStatus(ui().exporting);
+  try {
+    const mainIndex = Math.max(0, (parseInt($("main-index").value, 10) || 1) - 1);
+    const tabIndex = Math.max(0, (parseInt($("tab-index").value, 10) || 1) - 1);
+    const result = await bridge.export_animated(selected.map((t) => t.url), {
+      mainIndex,
+      tabIndex,
+      title: $("pack-title").value,
+      author: $("pack-author").value,
+    });
+    reportExport(result);
+  } catch (err) {
+    setStatus(String(err), true);
+  }
+}
+
 async function exportMessage() {
   const bridge = api();
   if (!bridge) return setStatus(ui().bridgeMissing, true);
+  if (blockedInAnimated()) return;
   const selected = includedTiles();
   if (![8, 16, 24].includes(selected.length)) return setStatus(ui().needMessage(selected.length), true);
   setStatus(ui().exporting);
@@ -563,6 +643,7 @@ async function exportMessage() {
 async function exportEmoji() {
   const bridge = api();
   if (!bridge) return setStatus(ui().bridgeMissing, true);
+  if (blockedInAnimated()) return;
   const selected = includedTiles();
   if (selected.length < 8 || selected.length > 40) return setStatus(ui().needEmoji(selected.length), true);
   setStatus(ui().exporting);
@@ -582,6 +663,7 @@ async function exportEmoji() {
 async function exportPlatform() {
   const bridge = api();
   if (!bridge) return setStatus(ui().bridgeMissing, true);
+  if (blockedInAnimated()) return;
   const chosen = includedTiles();
   const tiles = chosen.length ? chosen : state.tiles;
   if (!tiles.length) return setStatus(ui().noTilesExport, true);
@@ -705,6 +787,11 @@ function bindEvents() {
     if (file) loadGrid(file, true);
     event.target.value = "";
   });
+  $("animated-files").addEventListener("change", (event) => {
+    const files = event.target.files;
+    if (files && files.length) loadAnimatedFiles(files);
+    event.target.value = "";
+  });
   setupDropzone();
   $("split-grid").addEventListener("click", () => splitGrid(false));
   $("cleanup-all").addEventListener("click", cleanupAll);
@@ -713,6 +800,7 @@ function bindEvents() {
   $("export-stickers").addEventListener("click", exportStickersOnly);
   $("export-emoji").addEventListener("click", exportEmoji);
   $("export-message").addEventListener("click", exportMessage);
+  $("export-animated").addEventListener("click", exportAnimated);
   $("export-zip").addEventListener("click", exportZip);
   $("export-platform").addEventListener("click", exportPlatform);
   $("zoom-close").addEventListener("click", closeZoom);

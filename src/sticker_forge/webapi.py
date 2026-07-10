@@ -18,7 +18,11 @@ from PIL import Image
 from .app_launcher import app_path
 from .cleanup import remove_chroma_background
 from .exporter import (
+    LINE_ANIM_MAX_SIZE,
     PLATFORM_SPECS,
+    _apng_bytes,
+    _fit_frames_within,
+    export_animated_zip,
     export_emoji_zip,
     export_line_zip,
     export_message_zip,
@@ -35,6 +39,7 @@ from .prompts import (
     render_line_static_prompt,
 )
 from .spec import CHROMA_KEYS, LINE_STATIC_SPEC, resolve_chroma_key
+from .splitter import load_animated_frames
 from .splitter import split_grid_to_stickers
 
 
@@ -48,6 +53,16 @@ def _encode(image: Image.Image) -> str:
     buffer = BytesIO()
     image.convert("RGBA").save(buffer, format="PNG")
     return "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode("ascii")
+
+
+def _decode_animated(data_url: str) -> tuple[list[Image.Image], list[int]]:
+    _, _, encoded = data_url.partition(",")
+    raw = base64.b64decode(encoded or data_url)
+    return load_animated_frames(BytesIO(raw))
+
+
+def _encode_apng(frames: list[Image.Image], durations: list[int]) -> str:
+    return "data:image/png;base64," + base64.b64encode(_apng_bytes(frames, durations)).decode("ascii")
 
 
 def _spec_for(options: dict) -> "LINE_STATIC_SPEC.__class__":
@@ -150,6 +165,57 @@ class Api:
         if not path:
             return {"cancelled": True}
         export_platform_zip([_decode(url) for url in tile_data_urls], path, platform=platform)
+        return {"saved": str(path)}
+
+    # --- animated stickers (one animated file per sticker) ------------------
+    def prepare_animated(self, data_urls: list[str], options: dict) -> list[str]:
+        """Load each animated file, clean per frame, resize, return APNG previews."""
+        options = options or {}
+        previews = []
+        for url in data_urls:
+            frames, durations = _decode_animated(url)
+            if not options.get("keepBackground", False):
+                frames = [
+                    remove_chroma_background(
+                        frame,
+                        key_name=options.get("keyName", "green"),
+                        tune=options.get("tune", "balanced"),
+                    )
+                    for frame in frames
+                ]
+            fitted = _fit_frames_within(frames, LINE_ANIM_MAX_SIZE)
+            previews.append(_encode_apng(fitted, [max(20, int(d)) for d in durations]))
+        return previews
+
+    def export_animated(self, apng_data_urls: list[str], options: dict) -> dict:
+        options = options or {}
+        path = self._ask_save_path("line-animated.zip")
+        if not path:
+            return {"cancelled": True}
+        sticker_frames = []
+        durations = []
+        for url in apng_data_urls:
+            frames, frame_durations = _decode_animated(url)
+            sticker_frames.append(frames)
+            durations.append(frame_durations)
+        main_index = int(options.get("mainIndex", 0))
+        tab_index = int(options.get("tabIndex", 0))
+        if not 0 <= main_index < len(sticker_frames):
+            main_index = 0
+        if not 0 <= tab_index < len(sticker_frames):
+            tab_index = 0
+        try:
+            export_animated_zip(
+                sticker_frames,
+                path,
+                main_index=main_index,
+                tab_index=tab_index,
+                title=(options.get("title") or "").strip() or "sticker-forge animated",
+                author=(options.get("author") or "").strip() or "sticker-forge",
+                durations=durations,
+            )
+        except ValueError as exc:
+            return {"error": str(exc)}
         return {"saved": str(path)}
 
     def export_message(self, tile_data_urls: list[str], options: dict) -> dict:

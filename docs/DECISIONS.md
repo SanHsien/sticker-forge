@@ -182,3 +182,13 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 - 驗證：unit（split→去背→APNG，`is_animated`/`n_frames`/尺寸一邊≥270≤320；拒絕 <5 影格）＋CLI＋小圖放大/大圖縮小尺寸實測。58 passed。
 
 **範圍**：v0.12.0 **CLI-only**。GUI 動畫匯入/預覽（APNG 在 webview 可動，但要避免和現有靜態 tile UI 糾纏，需獨立 flow）＋16/24（多 grid）為下一增量。若主人其實想要「多個 GIF 各一張」的輸入形狀，看成品再調整。
+
+## 2026-07-07：動態貼圖改「匯入多個 GIF」＋GUI（v0.13.0）
+
+**主人指正**：非專業使用者用 AI 生圖，結果是**每張一個動態 GIF**（一次生一個主體），不是「動態 3×3 grid」（那是專業/罕見產物）。v0.12.0 的 grid 輸入模型錯了。→ 改為**匯入多個動態 GIF/APNG（每個檔＝一張動態貼圖）**。這也順解 16/24（匯入更多檔即可，不用多 grid）。
+
+- `splitter.split_animated_grid` 換成 `load_animated_frames(source)`（讀單一動態檔→影格＋時間）。`export_animated_zip` 的 `durations` 改成每張各自的時間 list（不同檔可不同影格數）。
+- CLI `animated` 改 `nargs='+'`（8/16/24 個檔）、去 `--select`、`--main/--tab` 指向檔。
+- GUI：新增「匯入動態貼圖」（多檔 input）→ `Api.prepare_animated`（逐格去背＋resize＋轉 APNG 回傳預覽 dataURL）→ 動態 tile（webview 直接動）；「匯出動態貼圖」→ `Api.export_animated`（decode APNG→frames→export）。新增 `state.mode='static'|'animated'`：動態模式擋掉靜態匯出（ZIP/emoji/message/platform/PNG/去背），並在切一般 grid 時切回 static。
+- 驗證：unit（8 檔→APNG、拒絕 <5 影格）＋CLI（多檔）＋**live pywebview**（注入 8 個 APNG File→prepare→8 動態 tile、靜態匯出被擋、export_animated 帶 8＋main/tab）。58 passed。
+- 教訓：**輸入/輸出形狀要從「真實使用者手上有什麼」反推**，別預設專業產物。
