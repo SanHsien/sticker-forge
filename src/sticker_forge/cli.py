@@ -14,6 +14,7 @@ from .exporter import (
     LINE_MESSAGE_PACK_SIZES,
     LINE_PACK_SIZES,
     PLATFORM_SPECS,
+    export_animated_zip,
     export_emoji_zip,
     export_line_zip,
     export_message_zip,
@@ -26,7 +27,7 @@ from .prompts import PROMPT_PRESETS, normalize_locale, render_line_static_prompt
 from .preview import build_pack_preview
 from .spec import LINE_STATIC_SPEC
 from .spec import resolve_chroma_key
-from .splitter import split_grid_file, split_grid_to_stickers
+from .splitter import split_animated_grid, split_grid_file, split_grid_to_stickers
 
 MESSAGES = {
     "zh-Hant": {
@@ -43,6 +44,7 @@ MESSAGES = {
         "thumb_help": "聊天縮圖用選取中的第幾張（1-based）。預設：1",
         "emoji_validate_help": "以 LINE emoji 規格檢查 ZIP（而非貼圖）",
         "message_help": "匯出 LINE 訊息貼圖 ZIP（8/16/24 張，文字由發送者輸入）",
+        "animated_help": "匯出 LINE 動態貼圖 ZIP（8 張，需匯入動態 3x3 grid：GIF/APNG，每格 5-20 影格）",
         "target_help": "目標平台",
         "preview_help": "預覽 3x3 grid 匯出狀態",
         "validate_help": "檢查 LINE 靜態貼圖 ZIP",
@@ -73,6 +75,7 @@ MESSAGES = {
         "thumb_help": "which selected emoji is the chat thumbnail (1-based). Default: 1",
         "emoji_validate_help": "validate the ZIP as a LINE emoji set instead of stickers",
         "message_help": "export a LINE message sticker ZIP (8/16/24, the sender types the text)",
+        "animated_help": "export a LINE animated sticker ZIP (8, needs an animated 3x3 grid GIF/APNG, 5-20 frames/cell)",
         "preview_help": "preview export readiness for a 3x3 grid",
         "validate_help": "validate a LINE static sticker ZIP",
         "text_help": "repeat exactly 8 times",
@@ -116,6 +119,22 @@ def _parse_message_selection(value: str) -> list[int]:
     if len(selected) not in LINE_MESSAGE_PACK_SIZES:
         allowed = " / ".join(str(size) for size in LINE_MESSAGE_PACK_SIZES)
         raise argparse.ArgumentTypeError(f"message selection must contain {allowed} cells")
+    if any(index < 1 for index in selected):
+        raise argparse.ArgumentTypeError("selection values must be 1 or greater")
+    if len(set(selected)) != len(selected):
+        raise argparse.ArgumentTypeError("selection values must not repeat")
+
+    return selected
+
+
+def _parse_animated_selection(value: str) -> list[int]:
+    try:
+        selected = [int(item.strip()) for item in value.split(",") if item.strip()]
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("selection must be comma-separated numbers") from exc
+
+    if len(selected) != 8:
+        raise argparse.ArgumentTypeError("animated selection must contain exactly 8 cells (one 3x3 grid)")
     if any(index < 1 for index in selected):
         raise argparse.ArgumentTypeError("selection values must be 1 or greater")
     if len(set(selected)) != len(selected):
@@ -258,6 +277,23 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     message.add_argument("--tune", choices=["safe", "balanced", "aggressive"], default="balanced")
     message.add_argument("--title", default="sticker-forge message pack")
     message.add_argument("--author", default="sticker-forge")
+
+    animated = subparsers.add_parser("animated", parents=[language_parent], help=text["animated_help"])
+    animated.add_argument("input", type=Path)
+    animated.add_argument("-o", "--output", type=Path, required=True)
+    animated.add_argument(
+        "--select",
+        type=_parse_animated_selection,
+        default=_parse_animated_selection("1,2,3,4,5,6,7,8"),
+        help=text["select_help"],
+    )
+    animated.add_argument("--main", type=int, default=1, help=text["main_help"])
+    animated.add_argument("--tab", type=int, default=1, help=text["tab_help"])
+    animated.add_argument("--keep-background", action="store_true", help=text["keep_background_help"])
+    animated.add_argument("--key-name", choices=["green", "magenta"], default="green")
+    animated.add_argument("--tune", choices=["safe", "balanced", "aggressive"], default="balanced")
+    animated.add_argument("--title", default="sticker-forge animated")
+    animated.add_argument("--author", default="sticker-forge")
 
     preview = subparsers.add_parser("preview", parents=[language_parent], help=text["preview_help"])
     preview.add_argument("input", type=Path)
@@ -447,6 +483,30 @@ def main(argv: list[str] | None = None) -> int:
             author=args.author,
             main_index=args.main - 1,
             tab_index=args.tab - 1,
+        )
+        print(output)
+        return 0
+
+    if args.command == "animated":
+        sticker_frames, durations = split_animated_grid(args.input)
+        if any(index > len(sticker_frames) for index in args.select):
+            parser.error(f"--select values must be between 1 and {len(sticker_frames)}")
+        selected = [sticker_frames[index - 1] for index in args.select]
+        if not args.keep_background:
+            selected = [
+                [remove_chroma_background(frame, key_name=args.key_name, tune=args.tune) for frame in frames]
+                for frames in selected
+            ]
+        if not 1 <= args.main <= len(selected) or not 1 <= args.tab <= len(selected):
+            parser.error(f"--main/--tab must be between 1 and {len(selected)}")
+        output = export_animated_zip(
+            selected,
+            args.output,
+            main_index=args.main - 1,
+            tab_index=args.tab - 1,
+            title=args.title,
+            author=args.author,
+            durations=durations,
         )
         print(output)
         return 0

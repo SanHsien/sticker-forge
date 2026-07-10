@@ -2,9 +2,22 @@ from __future__ import annotations
 
 from zipfile import ZipFile
 
-from PIL import Image
+from PIL import Image, ImageDraw
 
 from sticker_forge.cli import main
+
+
+def _animated_grid(path, frames: int = 6) -> None:
+    images = []
+    for k in range(frames):
+        image = Image.new("RGBA", (300, 300), (0, 255, 0, 255))
+        draw = ImageDraw.Draw(image)
+        for r in range(3):
+            for c in range(3):
+                x = c * 100 + 20 + k * 8
+                draw.ellipse([x, r * 100 + 40, x + 30, r * 100 + 70], fill=(200, 30, 30, 255))
+        images.append(image)
+    images[0].save(path, format="PNG", save_all=True, append_images=images[1:], duration=120, loop=0, disposal=2)
 
 
 def test_cli_prompt_prints_template(capsys) -> None:
@@ -154,6 +167,20 @@ def test_cli_message_creates_and_validates_zip(tmp_path) -> None:
         names = archive.namelist()
         assert "main.png" in names and "08.png" in names
     assert main(["validate", str(output_path)]) == 0
+
+
+def test_cli_animated_creates_zip(tmp_path) -> None:
+    grid_path = tmp_path / "anim.png"
+    _animated_grid(grid_path)
+    output_path = tmp_path / "anim.zip"
+
+    assert main(["animated", str(grid_path), "-o", str(output_path), "--select", "1,2,3,4,5,6,7,8"]) == 0
+
+    with ZipFile(output_path) as archive:
+        from io import BytesIO
+
+        sticker = Image.open(BytesIO(archive.read("01.png")))
+        assert sticker.is_animated and "main.png" in archive.namelist()
 
 
 def test_cli_platform_creates_zip(tmp_path) -> None:

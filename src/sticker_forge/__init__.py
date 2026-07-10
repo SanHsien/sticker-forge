@@ -6,6 +6,7 @@ from .exporter import (
     LINE_PACK_SIZES,
     LINEStickerSpec,
     PLATFORM_SPECS,
+    export_animated_zip,
     export_emoji_zip,
     export_line_zip,
     export_message_zip,
@@ -17,7 +18,7 @@ from .exporter import (
 )
 from .prompts import render_line_static_prompt
 from .preview import PackPreview, StickerPreview, build_pack_preview
-from .splitter import split_grid, split_grid_file, split_grid_to_stickers
+from .splitter import split_animated_grid, split_grid, split_grid_file, split_grid_to_stickers
 
 __all__ = [
     "LINE_PACK_SIZES",
@@ -27,6 +28,7 @@ __all__ = [
     "StickerPreview",
     "app_path",
     "build_pack_preview",
+    "export_animated_zip",
     "export_emoji_zip",
     "export_line_zip",
     "export_message_zip",

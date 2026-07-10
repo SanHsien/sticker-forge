@@ -290,6 +290,106 @@ def export_emoji_zip(
     return output
 
 
+# LINE animated sticker spec, verified from
+# https://creator.line.me/en/guideline/animationsticker/ :
+# 8/16/24 stickers, up to 320x270 APNG (5-20 frames, one side >= 270), an animated
+# 240x240 APNG main image, a static 96x74 PNG tab, loops totalling <= 4 seconds.
+LINE_ANIM_MAX_SIZE = (320, 270)
+LINE_ANIM_MAIN_SIZE = (240, 240)
+LINE_ANIM_TAB_SIZE = (96, 74)
+LINE_ANIM_PACK_SIZES = (8, 16, 24)
+LINE_ANIM_MIN_FRAMES = 5
+LINE_ANIM_MAX_FRAMES = 20
+
+
+def _fit_frames_within(frames: list[Image.Image], box: tuple[int, int]) -> list[Image.Image]:
+    """Resize frames to a shared size filling box (keep aspect, up or down, no padding).
+
+    LINE animated stickers must have one side at least 270px, so this scales up
+    small cells as well as down, unlike ``thumbnail`` which only shrinks.
+    """
+    width, height = frames[0].size
+    box_w, box_h = box
+    scale = min(box_w / width, box_h / height)
+    size = (max(1, round(width * scale)), max(1, round(height * scale)))
+    return [frame.convert("RGBA").resize(size, Image.Resampling.LANCZOS) for frame in frames]
+
+
+def _apng_bytes(frames: list[Image.Image], durations: list[int]) -> bytes:
+    # LINE wants 1-4 loops totalling <= 4 s; pick a loop count that fits.
+    one_loop = max(1, sum(durations))
+    loops = max(1, min(4, 4000 // one_loop))
+    buffer = BytesIO()
+    frames[0].save(
+        buffer,
+        format="PNG",
+        save_all=True,
+        append_images=frames[1:],
+        duration=durations,
+        loop=loops,
+        disposal=2,
+    )
+    return buffer.getvalue()
+
+
+def export_animated_zip(
+    sticker_frames: Sequence[Sequence[Image.Image]],
+    output_path: str | Path,
+    *,
+    main_index: int = 0,
+    tab_index: int = 0,
+    title: str = "sticker-forge animated",
+    author: str = "sticker-forge",
+    durations: Sequence[int] | None = None,
+) -> Path:
+    """Export a LINE animated sticker pack (8/16/24 APNG stickers + APNG main + PNG tab)."""
+    count = len(sticker_frames)
+    if count not in LINE_ANIM_PACK_SIZES:
+        allowed = " / ".join(str(size) for size in LINE_ANIM_PACK_SIZES)
+        raise ValueError(f"LINE animated packs must have {allowed} stickers, got {count}")
+    for index, frames in enumerate(sticker_frames, start=1):
+        if not LINE_ANIM_MIN_FRAMES <= len(frames) <= LINE_ANIM_MAX_FRAMES:
+            raise ValueError(
+                f"sticker {index} has {len(frames)} frames, expected "
+                f"{LINE_ANIM_MIN_FRAMES}-{LINE_ANIM_MAX_FRAMES}"
+            )
+    if not 0 <= main_index < count or not 0 <= tab_index < count:
+        raise ValueError("main_index and tab_index must point at a sticker in the pack")
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+
+    def _durations_for(frames: Sequence[Image.Image]) -> list[int]:
+        if durations and len(durations) == len(frames):
+            return [max(20, int(d)) for d in durations]
+        return [100] * len(frames)
+
+    readme = (
+        f"{title}\n"
+        f"Author: {author}\n\n"
+        "This ZIP was generated locally by sticker-forge (LINE animated stickers).\n"
+        f"It contains {count} animated stickers (01.png-{count:02d}.png, APNG, up to 320x270),\n"
+        "an animated main.png (240x240), and a static tab.png (96x74).\n"
+        "Each APNG has 5-20 frames; LINE rejects APNGs whose frames are all identical.\n"
+        "Manual LINE Creators Market submission:\n"
+        "1. Sign in and create a new Animated Sticker item.\n"
+        "2. Choose 8, 16, or 24 stickers on the Manage Stickers page.\n"
+        "3. Upload the APNG images, main.png, and tab.png.\n"
+        "Review current LINE Creators Market animated-sticker rules before submission.\n"
+    )
+
+    with ZipFile(output, "w", compression=ZIP_DEFLATED) as archive:
+        for index, frames in enumerate(sticker_frames, start=1):
+            fitted = _fit_frames_within(list(frames), LINE_ANIM_MAX_SIZE)
+            archive.writestr(f"{index:02d}.png", _apng_bytes(fitted, _durations_for(frames)))
+        main_frames = [fit_to_canvas(frame, LINE_ANIM_MAIN_SIZE) for frame in sticker_frames[main_index]]
+        archive.writestr("main.png", _apng_bytes(main_frames, _durations_for(sticker_frames[main_index])))
+        tab_image = fit_to_canvas(sticker_frames[tab_index][0], LINE_ANIM_TAB_SIZE)
+        archive.writestr("tab.png", _png_bytes(tab_image))
+        archive.writestr("README.txt", readme)
+
+    return output
+
+
 def _is_fully_opaque(image: Image.Image) -> bool:
     """True if the image has no transparent pixels (a solid background)."""
     if image.mode == "P":

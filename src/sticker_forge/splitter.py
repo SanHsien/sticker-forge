@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageSequence
 
 from .spec import LINE_STATIC_SPEC, LINEStickerSpec, RGBAColor
 
@@ -72,6 +72,38 @@ def split_grid_to_stickers(
         fit_to_canvas(cell, spec.sticker_size, background=background)
         for cell in cells
     ]
+
+
+def split_animated_grid(
+    input_path: str | Path,
+    *,
+    rows: int = 3,
+    columns: int = 3,
+    inset_ratio: float = LINE_STATIC_SPEC.split_inset_ratio,
+) -> tuple[list[list[Image.Image]], list[int]]:
+    """Split an animated grid (GIF/APNG) into per-cell frame stacks + frame durations.
+
+    Returns (sticker_frames, durations) where sticker_frames[i] is the list of
+    frames for cell i (row-major), and durations[f] is frame f's duration in ms.
+    """
+    frames: list[Image.Image] = []
+    durations: list[int] = []
+    with Image.open(input_path) as image:
+        for frame in ImageSequence.Iterator(image):
+            durations.append(int(frame.info.get("duration", 100) or 100))
+            frames.append(frame.convert("RGBA").copy())
+    if not frames:
+        raise ValueError("no frames found in the animated source")
+
+    per_frame_cells = [
+        split_grid(frame, rows=rows, columns=columns, inset_ratio=inset_ratio) for frame in frames
+    ]
+    cell_count = rows * columns
+    sticker_frames = [
+        [per_frame_cells[frame_index][cell_index] for frame_index in range(len(frames))]
+        for cell_index in range(cell_count)
+    ]
+    return sticker_frames, durations
 
 
 def split_grid_file(

@@ -3,9 +3,10 @@ from __future__ import annotations
 from io import BytesIO
 from zipfile import ZipFile
 
-from PIL import Image
+from PIL import Image, ImageDraw
 
 from sticker_forge.exporter import (
+    export_animated_zip,
     export_emoji_zip,
     export_line_zip,
     export_message_zip,
@@ -135,6 +136,49 @@ def test_export_platform_zip_rejects_unknown_platform(tmp_path) -> None:
         assert "unknown platform" in str(exc)
     else:
         raise AssertionError("export_platform_zip should reject unknown platforms")
+
+
+def _animated_grid_path(tmp_path, frames: int = 6):
+    images = []
+    for k in range(frames):
+        image = Image.new("RGBA", (300, 300), (0, 255, 0, 255))
+        draw = ImageDraw.Draw(image)
+        for r in range(3):
+            for c in range(3):
+                x = c * 100 + 20 + k * 8
+                draw.ellipse([x, r * 100 + 40, x + 30, r * 100 + 70], fill=(200, 30, 30, 255))
+        images.append(image)
+    path = tmp_path / "anim.png"
+    images[0].save(path, format="PNG", save_all=True, append_images=images[1:], duration=120, loop=0, disposal=2)
+    return path
+
+
+def test_export_animated_zip(tmp_path) -> None:
+    from sticker_forge.splitter import split_animated_grid
+
+    sticker_frames, durations = split_animated_grid(_animated_grid_path(tmp_path))
+    output = export_animated_zip(sticker_frames[:8], tmp_path / "a.zip", durations=durations)
+    with ZipFile(output) as archive:
+        names = set(archive.namelist())
+        assert {"main.png", "tab.png", "01.png", "08.png", "README.txt"} <= names
+        sticker = Image.open(BytesIO(archive.read("01.png")))
+        assert sticker.is_animated and sticker.n_frames == 6
+        w, h = sticker.size
+        assert w <= 320 and h <= 270 and (w >= 270 or h >= 270)
+        main = Image.open(BytesIO(archive.read("main.png")))
+        assert main.is_animated and main.size == (240, 240)
+        tab = Image.open(BytesIO(archive.read("tab.png")))
+        assert tab.size == (96, 74) and getattr(tab, "n_frames", 1) == 1
+
+
+def test_export_animated_zip_rejects_frame_count(tmp_path) -> None:
+    single_frame = [[Image.new("RGBA", (200, 200), (1, 2, 3, 255))] for _ in range(8)]
+    try:
+        export_animated_zip(single_frame, tmp_path / "a.zip")
+    except ValueError as exc:
+        assert "frames" in str(exc)
+    else:
+        raise AssertionError("animated export should require 5-20 frames")
 
 
 def test_export_message_zip_structure(tmp_path) -> None:

@@ -24,9 +24,9 @@ split → cleanup → resize → preview → export ZIP
 |------|------|
 | `spec` | LINE 尺寸、張數、chroma-key 與去背 tune profile 的單一來源 |
 | `prompts` | 提示詞欄位渲染（中英文模板、有字／無字）、`SUGGESTIONS` 下拉建議、`PROMPT_PRESETS` 主題預設包 |
-| `splitter` | 3x3 grid 切圖，3% inset；尺寸不整除時向下取整丟餘數 |
+| `splitter` | 3x3 grid 切圖，3% inset；尺寸不整除時向下取整丟餘數；`split_animated_grid` 把動態 grid（GIF/APNG）逐格切成 frame stacks |
 | `cleanup` | green / magenta chroma-key 去背 + despill |
-| `exporter` | LINE 貼圖 ZIP（`LINE_PACK_SIZES` 8/16/24/32/40、可選 main/tab index）、LINE 訊息貼圖 ZIP（`LINE_MESSAGE_PACK_SIZES` 8/16/24、padding 0）、LINE emoji ZIP（8–40×180×180＋96×74 縮圖）、PNG-only ZIP、多平台 ZIP（`PLATFORM_SPECS`：Telegram/WhatsApp/Discord/Signal）匯出與 ZIP 驗證（貼圖／emoji、含透明背景檢查）、尺寸整理與 padding |
+| `exporter` | LINE 貼圖 ZIP（`LINE_PACK_SIZES` 8/16/24/32/40、可選 main/tab index）、LINE 訊息貼圖 ZIP（`LINE_MESSAGE_PACK_SIZES` 8/16/24、padding 0）、LINE emoji ZIP（8–40×180×180＋96×74 縮圖）、LINE 動態貼圖 ZIP（`export_animated_zip`：8/16/24 APNG≤320×270＋動畫 main＋靜態 tab）、PNG-only ZIP、多平台 ZIP（`PLATFORM_SPECS`：Telegram/WhatsApp/Discord/Signal）匯出與 ZIP 驗證（貼圖／emoji、含透明背景檢查）、尺寸整理與 padding |
 | `preview` | 貼圖預覽 metadata 與選圖檢查 |
 | `cli` | 命令列入口（`python -m sticker_forge`） |
 | `webapi` | pywebview bridge：`Api`（JS 呼叫的 render_prompt/split/cleanup/export）＋ `run()` 開視窗 |
@@ -60,6 +60,7 @@ python -m sticker_forge stickers examples\grid.png -o outputs\transparent-sticke
 python -m sticker_forge platform examples\grid.png -o outputs\telegram.zip --target telegram
 python -m sticker_forge emoji examples\grid.png -o outputs\line-emoji.zip --thumb 1
 python -m sticker_forge message examples\grid.png -o outputs\line-message.zip
+python -m sticker_forge animated examples\animated-grid.gif -o outputs\line-animated.zip
 python -m sticker_forge validate outputs\line-stickers.zip
 python -m sticker_forge validate outputs\line-emoji.zip --emoji
 sticker-forge-gui --lang en          # or: python -m sticker_forge.gui  (opens the pywebview desktop app)
@@ -77,7 +78,7 @@ node --check app/app.js
 
 ## 測試涵蓋
 
-`python -m pytest`（目前 55 passed）。最小涵蓋：prompt CLI 輸出與渲染、中英文語系、3x3 inset 切圖（含 1024×1024 非整除尺寸）、選 8 張、green/magenta 去背、匯出預設去背與 `--keep-background`、main/tab image、ZIP 結構與 validator（含透明背景檢查）、PNG-only ZIP、padding、`webapi.Api` bridge（bootstrap/prompt/split/cleanup/export）。GUI 視窗本身需在 Windows 桌面實跑 `sticker-forge-gui` 或 exe 驗證。
+`python -m pytest`（目前 58 passed）。最小涵蓋：prompt CLI 輸出與渲染、中英文語系、3x3 inset 切圖（含 1024×1024 非整除尺寸）、選 8 張、green/magenta 去背、匯出預設去背與 `--keep-background`、main/tab image、ZIP 結構與 validator（含透明背景檢查）、PNG-only ZIP、padding、`webapi.Api` bridge（bootstrap/prompt/split/cleanup/export）。GUI 視窗本身需在 Windows 桌面實跑 `sticker-forge-gui` 或 exe 驗證。
 
 ## 打包與發行
 
@@ -109,7 +110,7 @@ sticker-forge-v{VERSION}-windows-x64.zip
 sticker-forge-v{VERSION}-windows-x64.zip.sha256
 ```
 
-已發行：`v0.1.0`…`v0.11.0`。exe 圖示為 `packaging/icon.ico`。
+已發行：`v0.1.0`…`v0.12.0`。exe 圖示為 `packaging/icon.ico`。
 
 ## Legacy 邊界
 
