@@ -1,6 +1,6 @@
 # Development
 
-維護者與 AI 接手用的單一開發文件：架構、本機指令、打包發行、legacy 邊界。使用者導向的說明在根目錄 [`README.md`](../README.md)；決策紀錄在 [`DECISIONS.md`](DECISIONS.md)；上架流程在 [`LINE_SUBMISSION.md`](LINE_SUBMISSION.md)；最新 review 在 [`../REVIEW.md`](../REVIEW.md)。
+維護者與 AI 接手用的單一開發文件：架構、本機指令、打包發行、legacy 邊界。一般使用流程在 [`USER_GUIDE.md`](USER_GUIDE.md)；使用者入口在根目錄 [`README.md`](../README.md)；決策紀錄在 [`DECISIONS.md`](DECISIONS.md)；上架流程在 [`LINE_SUBMISSION.md`](LINE_SUBMISSION.md)；最新 review 在 [`../REVIEW.md`](../REVIEW.md)。
 
 ## 架構
 
@@ -46,6 +46,7 @@ python -m pytest
 常用指令：
 
 ```powershell
+python examples\create_sample_assets.py
 python -m sticker_forge prompt
 python -m sticker_forge prompt --preset office-cat
 python -m sticker_forge --lang en prompt
@@ -100,7 +101,7 @@ node --check app/app.js
 
 - `python -m pytest` 通過、`git diff --check` 通過。
 - `sticker-forge.exe --smoke` 與 `sticker-forge-cli.exe --help` 通過。
-- 用範例 3x3 grid 匯出 ZIP 並 `validate`。
+- 用 `python examples\create_sample_assets.py` 產生範例 3x3 grid，匯出 ZIP 並 `validate`。
 - 確認沒有 API key、使用者圖片、生成 ZIP 或暫存檔進版控。
 
 ### Artifact 命名
@@ -110,7 +111,7 @@ sticker-forge-v{VERSION}-windows-x64.zip
 sticker-forge-v{VERSION}-windows-x64.zip.sha256
 ```
 
-已發行：`v0.1.0`…`v0.13.1`。exe 圖示為 `packaging/icon.ico`。
+已發行：`v0.1.0`…`v0.14.0`。exe 圖示為 `packaging/icon.ico`。
 
 ## Legacy 邊界
 

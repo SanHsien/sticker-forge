@@ -41,6 +41,8 @@ The current scope covers LINE static stickers, emoji, message stickers, animated
 | `sticker-forge.exe` | Desktop GUI: a pywebview window rendering the `app/` HTML UI; split/cleanup/export all run in the local Python core. No console. |
 | `sticker-forge-cli.exe` / `python -m sticker_forge` | Command line, `--lang zh-Hant\|en` |
 
+General usage is documented in [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md) (Traditional Chinese). Source install and packaging notes are in [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md).
+
 ## Install From Source
 
 ```powershell
@@ -80,12 +82,12 @@ python -m sticker_forge validate outputs\line-stickers.zip
 ├── packaging/              # Windows exe build scripts
 ├── tests/                  # Automated tests
 ├── examples/               # Input location, no infringing assets
-├── docs/                   # Maintainer docs (DEVELOPMENT / DECISIONS / LINE_SUBMISSION)
+├── docs/                   # User and maintainer docs (USER_GUIDE / DEVELOPMENT / DECISIONS / LINE_SUBMISSION)
 ```
 
 ## Roadmap
 
-Version **v0.13.1**: local-first sticker-pack toolkit (LINE stickers/emoji/message/animated stickers and other platforms). The desktop GUI (a pywebview window rendering the HTML) and the CLI share one Python core. `python -m pytest` passes.
+Version **v0.14.0**: local-first sticker-pack toolkit (LINE stickers/emoji/message/animated stickers and other platforms). The desktop GUI (a pywebview window rendering the HTML) and the CLI share one Python core. `python -m pytest` passes.
 
 ### ✅ Done
 
@@ -93,8 +95,15 @@ Version **v0.13.1**: local-first sticker-pack toolkit (LINE stickers/emoji/messa
 - Prompt templates (Chinese/English, text/no-text, green/magenta, risk reminders).
 - Image core: 3x3 split, cleanup, resize/padding, main/tab image, preview metadata.
 - Export: LINE static sticker, emoji, message sticker, animated sticker ZIPs, PNG-only ZIP, platform ZIPs, `validate` and `preview` commands.
-- PyInstaller Windows packaging and releases through `v0.13.1` (GitHub Releases with SHA256 checksums).
+- PyInstaller Windows packaging and releases through `v0.14.0` (GitHub Releases with SHA256 checksums).
 - Desktop drag-and-drop import (the webview's HTML dropzone); WebView2 runs with `private_mode`, an ephemeral profile, so nothing persistent is written.
+- User guide and reproducible local sample asset generator (generated images and ZIPs are not committed).
+
+### 🚀 New in v0.14.0
+
+- **User guide**: added [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md) covering exe startup, static stickers, emoji, message stickers, animated stickers, multi-platform export, troubleshooting, and the manual LINE submission boundary.
+- **Reproducible sample assets**: added [`examples/create_sample_assets.py`](examples/create_sample_assets.py) to generate a non-infringing 3x3 grid and 8 GIF files locally; `examples/generated/` and output ZIPs stay out of version control.
+- **Example CLI flows**: [`examples/README.md`](examples/README.md) now documents export, emoji, message, animated, and validate commands.
 
 ### 🔧 2026-07-07 consistency fixes
 

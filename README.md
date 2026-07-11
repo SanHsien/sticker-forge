@@ -44,7 +44,7 @@ Local-first toolkit for making chat sticker packs: prompt templates, image clean
 | `sticker-forge.exe` | 桌面 GUI：pywebview 原生視窗載入 `app/` 的 HTML 介面，切圖/去背/匯出全由本機 Python core 處理，無 console，雙擊即用 |
 | `sticker-forge-cli.exe` / `python -m sticker_forge` | 命令列，支援 `--lang zh-Hant\|en` |
 
-GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge 呼叫 Python）。從原始碼安裝與打包步驟見 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)。
+GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge 呼叫 Python）。一般使用流程見 [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md)，從原始碼安裝與打包步驟見 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)。
 
 ## 目前狀態
 
@@ -60,7 +60,7 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 ├── packaging/              # exe 打包設定與發行流程
 ├── tests/                  # 自動化測試
 ├── examples/               # 範例輸入位置，不放侵權素材
-├── docs/                   # 維護文件（DEVELOPMENT / DECISIONS / LINE_SUBMISSION）
+├── docs/                   # 使用與維護文件（USER_GUIDE / DEVELOPMENT / DECISIONS / LINE_SUBMISSION）
 ├── README.md / README.en.md / REVIEW.md
 ├── AGENTS.md / CLAUDE.md / SKILL.md          # AI 接手指引
 └── NOTICE.md / LICENSE
@@ -68,7 +68,7 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 
 ## 專案狀態與路線圖
 
-目前版本 **v0.13.1**：local-first 貼圖包工具（LINE 貼圖／emoji／訊息貼圖／動態貼圖 及多平台），桌面 GUI（pywebview 載入 HTML）與 CLI 共用同一套 Python core，`python -m pytest` 全數通過。
+目前版本 **v0.14.0**：local-first 貼圖包工具（LINE 貼圖／emoji／訊息貼圖／動態貼圖 及多平台），桌面 GUI（pywebview 載入 HTML）與 CLI 共用同一套 Python core，`python -m pytest` 全數通過。
 
 ### ✅ 已完成
 
@@ -77,9 +77,16 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 - 圖片處理核心：3x3 切圖、去背、尺寸／padding、main/tab image、預覽 metadata 與選圖檢查。
 - 匯出：LINE 靜態貼圖／emoji／訊息貼圖／動態貼圖 ZIP、9 張 PNG-only ZIP、多平台 ZIP、`validate` 與 `preview` 指令、上架說明。
 - 桌面 GUI（pywebview HTML）與 CLI 共用 Python core（`--lang` 中英）。
-- PyInstaller Windows 打包與發行，已發行到 `v0.13.1`（正式 GitHub Release，含 SHA256 checksum）。
+- PyInstaller Windows 打包與發行，已發行到 `v0.14.0`（正式 GitHub Release，含 SHA256 checksum）。
 - 桌面拖放匯入（webview 的 HTML dropzone 內建）；WebView2 用 `private_mode` 臨時 profile，不寫持久隱藏資料。
 - 中英文 README。
+- 使用者指南與本機範例素材產生器（不提交生成圖片或 ZIP）。
+
+### 🚀 v0.14.0 新增
+
+- **使用者指南**：新增 [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md)，把 exe 啟動、靜態貼圖、emoji、訊息貼圖、動態貼圖、多平台匯出、常見問題與 LINE 手動送審邊界整理成一般使用者可讀流程。
+- **可重現範例素材**：新增 [`examples/create_sample_assets.py`](examples/create_sample_assets.py)，本機產生非侵權 3x3 grid 與 8 個 GIF 測試素材；`examples/generated/` 與輸出 ZIP 不進版控。
+- **範例 CLI 流程**：[`examples/README.md`](examples/README.md) 補齊 export、emoji、message、animated 與 validate 指令。
 
 ### 🔧 2026-07-07 一致性修正
 
@@ -165,6 +172,7 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 ## 維護文件
 
 - [`REVIEW.md`](REVIEW.md)：最新專案 review（僅保留最新版）。
+- [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md)：一般使用者指南。
 - [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)：架構、本機指令、打包發行、legacy 邊界。
 - [`docs/DECISIONS.md`](docs/DECISIONS.md)：重要決策紀錄。
 - [`docs/LINE_SUBMISSION.md`](docs/LINE_SUBMISSION.md)：LINE Creators Market 手動上架與送審說明。
