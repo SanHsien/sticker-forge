@@ -110,7 +110,7 @@ sticker-forge-v{VERSION}-windows-x64.zip
 sticker-forge-v{VERSION}-windows-x64.zip.sha256
 ```
 
-已發行：`v0.1.0`…`v0.13.0`。exe 圖示為 `packaging/icon.ico`。
+已發行：`v0.1.0`…`v0.13.1`。exe 圖示為 `packaging/icon.ico`。
 
 ## Legacy 邊界
 

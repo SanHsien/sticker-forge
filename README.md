@@ -68,7 +68,7 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 
 ## 專案狀態與路線圖
 
-目前版本 **v0.13.0**：local-first 貼圖包工具（LINE 貼圖／emoji／訊息貼圖／動態貼圖 及多平台），桌面 GUI（pywebview 載入 HTML）與 CLI 共用同一套 Python core，`python -m pytest` 全數通過。
+目前版本 **v0.13.1**：local-first 貼圖包工具（LINE 貼圖／emoji／訊息貼圖／動態貼圖 及多平台），桌面 GUI（pywebview 載入 HTML）與 CLI 共用同一套 Python core，`python -m pytest` 全數通過。
 
 ### ✅ 已完成
 
@@ -77,7 +77,7 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 - 圖片處理核心：3x3 切圖、去背、尺寸／padding、main/tab image、預覽 metadata 與選圖檢查。
 - 匯出：LINE 靜態貼圖／emoji／訊息貼圖／動態貼圖 ZIP、9 張 PNG-only ZIP、多平台 ZIP、`validate` 與 `preview` 指令、上架說明。
 - 桌面 GUI（pywebview HTML）與 CLI 共用 Python core（`--lang` 中英）。
-- PyInstaller Windows 打包與發行，已發行到 `v0.13.0`（正式 GitHub Release，含 SHA256 checksum）。
+- PyInstaller Windows 打包與發行，已發行到 `v0.13.1`（正式 GitHub Release，含 SHA256 checksum）。
 - 桌面拖放匯入（webview 的 HTML dropzone 內建）；WebView2 用 `private_mode` 臨時 profile，不寫持久隱藏資料。
 - 中英文 README。
 
@@ -91,6 +91,12 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 - **validate 檢查透明背景**：`validate` 新增透明度檢查，完全不透明（背景未去）的貼圖會被標記，擋下 LINE 第一大退件原因。
 
 細節見 [`REVIEW.md`](REVIEW.md) 與 [`docs/DECISIONS.md`](docs/DECISIONS.md)。
+
+### 🔧 v0.13.1 修正
+
+- **GUI 匯出錯誤顯示**：pywebview bridge 回傳 `error` 時，HTML GUI 會顯示錯誤訊息，不再停在「匯出中」。
+- **文件同步**：README、README.en、NOTICE、DEVELOPMENT、REVIEW 與 agent 指引同步到 v0.13.1 現況。
+- **Source cleanup**：移除不再使用的 upstream vendored reference source；保留 MIT attribution、外部 fork 連結與 git history。
 
 ### 🚀 v0.13.0 新增
 

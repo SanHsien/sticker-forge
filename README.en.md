@@ -85,7 +85,7 @@ python -m sticker_forge validate outputs\line-stickers.zip
 
 ## Roadmap
 
-Version **v0.13.0**: local-first sticker-pack toolkit (LINE stickers/emoji/message/animated stickers and other platforms). The desktop GUI (a pywebview window rendering the HTML) and the CLI share one Python core. `python -m pytest` passes.
+Version **v0.13.1**: local-first sticker-pack toolkit (LINE stickers/emoji/message/animated stickers and other platforms). The desktop GUI (a pywebview window rendering the HTML) and the CLI share one Python core. `python -m pytest` passes.
 
 ### ✅ Done
 
@@ -93,7 +93,7 @@ Version **v0.13.0**: local-first sticker-pack toolkit (LINE stickers/emoji/messa
 - Prompt templates (Chinese/English, text/no-text, green/magenta, risk reminders).
 - Image core: 3x3 split, cleanup, resize/padding, main/tab image, preview metadata.
 - Export: LINE static sticker, emoji, message sticker, animated sticker ZIPs, PNG-only ZIP, platform ZIPs, `validate` and `preview` commands.
-- PyInstaller Windows packaging and releases through `v0.13.0` (GitHub Releases with SHA256 checksums).
+- PyInstaller Windows packaging and releases through `v0.13.1` (GitHub Releases with SHA256 checksums).
 - Desktop drag-and-drop import (the webview's HTML dropzone); WebView2 runs with `private_mode`, an ephemeral profile, so nothing persistent is written.
 
 ### 🔧 2026-07-07 consistency fixes
@@ -106,6 +106,12 @@ Version **v0.13.0**: local-first sticker-pack toolkit (LINE stickers/emoji/messa
 - **`validate` checks transparency**: `validate` now flags fully opaque stickers (background not removed), catching the most common LINE rejection reason.
 
 See [`REVIEW.md`](REVIEW.md) and [`docs/DECISIONS.md`](docs/DECISIONS.md).
+
+### 🔧 Fixed in v0.13.1
+
+- **GUI export error reporting**: when the pywebview bridge returns `error`, the HTML GUI shows the error instead of staying on "Exporting...".
+- **Documentation sync**: README, README.en, NOTICE, DEVELOPMENT, REVIEW, and agent instructions now match the v0.13.1 state.
+- **Source cleanup**: removed the unused upstream vendored reference source while keeping MIT attribution, external fork links, and git history.
 
 ### 🚀 New in v0.13.0
 

@@ -2,9 +2,9 @@
 
 ## 結論
 
-`sticker-forge` v0.13.0 是可用的 local-first 貼圖工具：CLI 與 pywebview 桌面 GUI 共用 Python core，支援 LINE 靜態貼圖、emoji、訊息貼圖、動態貼圖與多平台尺寸匯出。專案仍符合不架 server、不代管 AI API、不上傳使用者圖片、不自動送 LINE 審核的邊界。
+`sticker-forge` v0.13.1 是可用的 local-first 貼圖工具：CLI 與 pywebview 桌面 GUI 共用 Python core，支援 LINE 靜態貼圖、emoji、訊息貼圖、動態貼圖與多平台尺寸匯出。專案仍符合不架 server、不代管 AI API、不上傳使用者圖片、不自動送 LINE 審核的邊界。
 
-本輪覆核發現 3 個問題，其中 2 個是文件落後，1 個是 GUI 錯誤回報缺口；已全部修正。
+本輪覆核發現 3 個問題，其中 2 個是文件落後，1 個是 GUI 錯誤回報缺口；已全部修正並納入 v0.13.1 patch release。
 
 ## 已修正
 
@@ -12,16 +12,16 @@
 | --- | --- | --- |
 | GUI bridge error 被吞掉 | ✅ 已修 | `app/app.js` 的 `reportExport()` 會顯示 `result.error`，避免匯出失敗時停在「匯出中」。 |
 | 英文 README 保留已移除的 `app` 子命令 | ✅ 已修 | `README.en.md` 改成 `sticker-forge-gui --lang en`。 |
-| REVIEW.md 仍描述 v0.2.0 / Tkinter / 32 passed | ✅ 已修 | 本檔更新為 v0.13.0 現況、pywebview GUI 與 58 passed。 |
+| REVIEW.md 仍描述 v0.2.0 / Tkinter / 32 passed | ✅ 已修 | 本檔更新為 v0.13.1 現況、pywebview GUI 與 58 passed。 |
 
 ## 覆核證據
 
-- `main` / `origin/main` / `v0.13.0` 均指向 `21b3572`。
+- `v0.13.1` 是把 `v0.13.0` 後的 GUI 錯誤顯示修正與文件清理補發成 Windows exe 的 patch release。
 - `python -m pytest`：58 passed。
 - `.\packaging\build-windows.ps1`：通過。
 - `git diff --check`：無 whitespace error。
 - 打包後 GUI 實際啟動 5 秒仍存活，非立即閃退。
-- `v0.13.0` GitHub Release 存在，含 `sticker-forge-v0.13.0-windows-x64.zip` 與 `.sha256`。
+- `v0.13.1` GitHub Release 含 `sticker-forge-v0.13.1-windows-x64.zip` 與 `.sha256`。
 
 ## 目前風險
 
