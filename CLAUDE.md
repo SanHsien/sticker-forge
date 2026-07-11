@@ -25,9 +25,9 @@
 
 ## 目前 legacy
 
-- 原專案檔案已搬到 `reference/upstream-line-sticker-studio/`。
-- web frontend 參考：`reference/upstream-line-sticker-studio/app.js`、`index.html`、`styles.css`。
-- upstream Cloudflare `worker/` 與 campaign-checker CI 已於 v0.3.0 移除（不符合 local-first）；不要重建。
+- upstream web app / Worker 的 vendored reference source 已移除。
+- 保留 `yazelin/line-sticker-studio` 的 MIT attribution 與歷史決策紀錄。
+- upstream Cloudflare `worker/`、campaign-checker CI、Turnstile、quota、Gemini proxy 不符合 local-first；不要重建。
 
 ## 回覆要求
 

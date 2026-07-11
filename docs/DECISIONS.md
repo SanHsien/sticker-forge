@@ -92,7 +92,7 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 
 - **拖放匯入**：本機 HTML 工作台 `app/` 加原生拖放（zero-dep，已於瀏覽器實測）。**原生 tkinter GUI 不加拖放**——tkinter 需 `tkinterdnd2`/`windnd` 外部相依，違反 local-first 輕量原則；GUI 已有「匯入 3x3」按鈕，成本效益不划算。
 - **Windows icon**：以 PIL 產 `packaging/icon.ico`（多尺寸），接進 spec 兩個 EXE。
-- **Legacy 清理**：移除 `reference/.../worker/`（Cloudflare/Gemini/Turnstile/quota 後端，明確禁止項）與 campaign-checker（CI workflow＋script）。保留 upstream UI 參考（`app.js`/`index.html`/`styles.css`）與 assets 作 provenance 與邏輯參考。
+- **Legacy 清理**：移除當時保留的 legacy Worker（Cloudflare/Gemini/Turnstile/quota 後端，明確禁止項）與 campaign-checker（CI workflow＋script）。當時暫保留 upstream UI 與 assets 作 provenance 與邏輯參考；後續已於 2026-07-11 移除，不再 vendored。
 - **Installer / 自動更新**：**決定不做**。自動更新需要更新伺服器與版本 endpoint，與「不架 server」的 local-first 原則衝突；installer（Inno/NSIS）＋程式碼簽章屬額外發行基建，目前以「下載 zip、解壓即用」的 onedir 發行足夠。未來若有需求再評估 portable installer（不含線上更新）。
 - **使用者資料 / 暫存檔位置**：**決定不引入**。工具不寫隱藏使用者資料；所有輸出由使用者以 `-o`（CLI）或存檔對話框（GUI）指定路徑；打包用 onedir，`_MEIPASS` 為持久路徑，無 onefile 臨時檔問題。故無需額外的 user-data 目錄設計。
 
@@ -192,3 +192,19 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 - GUI：新增「匯入動態貼圖」（多檔 input）→ `Api.prepare_animated`（逐格去背＋resize＋轉 APNG 回傳預覽 dataURL）→ 動態 tile（webview 直接動）；「匯出動態貼圖」→ `Api.export_animated`（decode APNG→frames→export）。新增 `state.mode='static'|'animated'`：動態模式擋掉靜態匯出（ZIP/emoji/message/platform/PNG/去背），並在切一般 grid 時切回 static。
 - 驗證：unit（8 檔→APNG、拒絕 <5 影格）＋CLI（多檔）＋**live pywebview**（注入 8 個 APNG File→prepare→8 動態 tile、靜態匯出被擋、export_animated 帶 8＋main/tab）。58 passed。
 - 教訓：**輸入/輸出形狀要從「真實使用者手上有什麼」反推**，別預設專業產物。
+
+## 2026-07-11：移除 upstream vendored reference source
+
+確認 `src/`、`app/`、`packaging/`、`tests/` 與 `pyproject.toml` 都沒有引用 upstream reference 目錄後，決定刪除該目錄。
+
+理由：
+
+- 目前產品已收斂為 Python core + pywebview GUI，原 upstream web app / Worker 不再是可維護架構的一部分。
+- 後續若需要查原始來源，可看 git history 或外部 `yazelin/line-sticker-studio`，不需要在 repo 內保留一份會過期的舊碼。
+- 留下 stale upstream source 容易讓後續維護者或 agent 誤以為可直接沿用舊 web / Worker 方向，與 local-first 邊界衝突。
+
+保留：
+
+- 根目錄 MIT `LICENSE`。
+- `NOTICE.md` 的 `yazelin/line-sticker-studio` attribution。
+- README / docs 中對 fork 來源與設計啟發的外部連結。

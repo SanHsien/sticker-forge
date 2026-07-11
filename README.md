@@ -48,7 +48,7 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 
 ## 目前狀態
 
-本 repo 來自 [`yazelin/line-sticker-studio`](https://github.com/yazelin/line-sticker-studio) 的 MIT fork。原專案 web app 與 Worker 已集中搬到 `reference/upstream-line-sticker-studio/` 作為邏輯參考，不是新架構。
+本 repo 來自 [`yazelin/line-sticker-studio`](https://github.com/yazelin/line-sticker-studio) 的 MIT fork。原專案 web app / Worker 的 vendored reference source 已移除；後續維護以本 repo 的 Python core、pywebview GUI、文件決策與 git history 為準。
 
 ## 專案結構
 
@@ -61,7 +61,6 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 ├── tests/                  # 自動化測試
 ├── examples/               # 範例輸入位置，不放侵權素材
 ├── docs/                   # 維護文件（DEVELOPMENT / DECISIONS / LINE_SUBMISSION）
-├── reference/upstream-line-sticker-studio/   # upstream 參考，非目標架構
 ├── README.md / README.en.md / REVIEW.md
 ├── AGENTS.md / CLAUDE.md / SKILL.md          # AI 接手指引
 └── NOTICE.md / LICENSE
@@ -73,7 +72,7 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 
 ### ✅ 已完成
 
-- 產品方向固定為 local-first；從 upstream 抽出可重用邏輯（切圖 inset、chroma-key、ZIP spec、LINE 尺寸）。
+- 產品方向固定為 local-first；已把需要的 fork 來源概念收斂成本機 Python core、pywebview GUI 與規格文件。
 - prompt 模板：中英文、有字／無字、green/magenta 背景、高風險內容提醒。
 - 圖片處理核心：3x3 切圖、去背、尺寸／padding、main/tab image、預覽 metadata 與選圖檢查。
 - 匯出：LINE ZIP、9 張 PNG-only ZIP、`validate` 與 `preview` 指令、上架說明。
@@ -142,7 +141,7 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 
 - **拖放匯入**：本機 HTML 工作台可直接把 3x3 圖拖放進來（原生、zero-dep，已於瀏覽器實測）。
 - **Windows icon**：GUI / CLI exe 使用自製 `packaging/icon.ico`。
-- **Legacy 清理**：移除 `reference/.../worker/`（Cloudflare/Gemini 後端）與 campaign-checker CI；保留 upstream UI 參考作 provenance。
+- **Legacy 清理**：移除 legacy Cloudflare/Gemini 後端、campaign-checker CI，以及後續不再使用的 upstream vendored reference source；保留外部 fork 來源連結與 attribution。
 
 ### 💡 參考來源啟發的候選功能
 
@@ -168,13 +167,13 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 
 ## 其他可參考專案
 
-這些服務與專案只作概念、格式或流程參考，不是 `sticker-forge` 的執行依賴。**除了 fork 來源 `yazelin/line-sticker-studio`（MIT，程式碼在 `reference/upstream-line-sticker-studio/`）外，本專案沒有複製其中任何一個的程式碼**——GPL／無授權的專案無法併入 MIT repo，只作概念參考。完整 credit 見 [`NOTICE.md`](NOTICE.md)。
+這些服務與專案只作概念、格式或流程參考，不是 `sticker-forge` 的執行依賴。fork 來源 `yazelin/line-sticker-studio` 以 MIT attribution、外部連結與 git history 保留來源脈絡；本 repo 不再保留 upstream vendored source。GPL／無授權的專案無法併入 MIT repo，只作概念參考。完整 credit 見 [`NOTICE.md`](NOTICE.md)。
 
 | 名稱 | 授權 | 可參考點 |
 | --- | --- | --- |
 | [LINE Creators Market](https://creator.line.me/) | 官方平台 | LINE 貼圖規格、套組張數、透明背景與送審流程。 |
 | [LINE Sticker Maker](https://creator.line.me/en/stickermaker/) | 官方手機 app | 手機製作與送審流程；本專案只保留手動送審說明，不代送審。 |
-| [yazelin/line-sticker-studio](https://github.com/yazelin/line-sticker-studio) | MIT（**fork 來源**） | 3x3 grid、chroma-key、ZIP 結構、上架說明與 UI 流程；程式碼保留在 `reference/`。 |
+| [yazelin/line-sticker-studio](https://github.com/yazelin/line-sticker-studio) | MIT（**fork 來源**） | 3x3 grid、chroma-key、ZIP 結構、上架說明與 UI 流程；來源脈絡保留於 attribution 與 git history，不再 vendored。 |
 | [laggykiller/sticker-convert](https://github.com/laggykiller/sticker-convert) | GPL-2.0 | 「一組貼圖匯出到多平台」的概念；本專案多平台匯出照公開規格自行實作。 |
 | [MarvNC/StampNyaa](https://github.com/MarvNC/StampNyaa) | 未宣告 | 「LINE 貼圖轉用到其他平台」的桌面流程。 |
 | [ittner/signal-sticker-tool](https://github.com/ittner/signal-sticker-tool) | GPL-3.0 | Signal 貼圖包打包（未來功能參考）。 |

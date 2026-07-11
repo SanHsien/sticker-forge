@@ -33,7 +33,8 @@ description: 維護 SanHsien/sticker-forge。本專案目標是本機 LINE 貼�
 - `prompts/`：提示詞模板。
 - `docs/DEVELOPMENT.md`：架構、本機指令、打包發行。
 - `docs/DECISIONS.md`：決策紀錄。
-- `reference/upstream-line-sticker-studio/`：upstream legacy，保留目錄結構作參考。
+- `app/`：pywebview 載入的本機 HTML GUI。
+- `packaging/`：PyInstaller 打包與 release 腳本。
 
 ## 完成回報
 
@@ -42,4 +43,4 @@ description: 維護 SanHsien/sticker-forge。本專案目標是本機 LINE 貼�
 - 修改了哪些檔案。
 - 是否改到產品方向、prompt、圖片處理、ZIP 規格或打包流程。
 - 執行過哪些驗證。
-- 是否仍引用 legacy web/worker 內容。
+- 是否仍引用 legacy web/worker 內容或已重新引入 hosted backend 方向。

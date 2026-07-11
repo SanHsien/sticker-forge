@@ -80,7 +80,6 @@ python -m sticker_forge validate outputs\line-stickers.zip
 ├── tests/                  # Automated tests
 ├── examples/               # Input location, no infringing assets
 ├── docs/                   # Maintainer docs (DEVELOPMENT / DECISIONS / LINE_SUBMISSION)
-└── reference/upstream-line-sticker-studio/   # Upstream reference, not the target architecture
 ```
 
 ## Roadmap
@@ -89,7 +88,7 @@ Version **v0.13.0**: local-first sticker-pack toolkit (LINE stickers/emoji/messa
 
 ### ✅ Done
 
-- Local-first direction; reusable logic extracted from upstream (split inset, chroma-key, ZIP spec, LINE sizes).
+- Local-first direction; the needed fork-source concepts have been folded into the local Python core, pywebview GUI, and project docs.
 - Prompt templates (Chinese/English, text/no-text, green/magenta, risk reminders).
 - Image core: 3x3 split, cleanup, resize/padding, main/tab image, preview metadata.
 - Export: LINE ZIP, PNG-only ZIP, `validate` and `preview` commands.
@@ -156,7 +155,7 @@ See [`REVIEW.md`](REVIEW.md) and [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
 - **Drag-and-drop import** in the offline HTML workspace (native, zero-dep, browser-verified).
 - **Windows icon** for the GUI/CLI executables (`packaging/icon.ico`).
-- **Legacy cleanup**: removed `reference/.../worker/` (Cloudflare/Gemini backend) and the campaign-checker CI; kept the upstream UI reference for provenance.
+- **Legacy cleanup**: removed the legacy Cloudflare/Gemini backend, campaign-checker CI, and now-unused upstream vendored reference source; kept attribution and external fork links for provenance.
 
 ### 💡 Reference-inspired candidates
 
@@ -173,12 +172,12 @@ Drawn from the fork source ([yazelin/line-sticker-studio](https://github.com/yaz
 
 ## Credits
 
-These projects informed the design as references only, not runtime dependencies. **Apart from the fork source `yazelin/line-sticker-studio` (MIT, whose code lives in `reference/upstream-line-sticker-studio/`), no source code from any of them is included** — GPL / unlicensed projects can't be merged into an MIT repo, so they are credited for concepts only. Full credits in [`NOTICE.md`](NOTICE.md).
+These projects informed the design as references only, not runtime dependencies. The fork source `yazelin/line-sticker-studio` is preserved through MIT attribution, external links, and git history; this repo no longer vendors upstream reference source. GPL / unlicensed projects can't be merged into an MIT repo, so they are credited for concepts only. Full credits in [`NOTICE.md`](NOTICE.md).
 
 | Project | License | What it informed |
 | --- | --- | --- |
 | [LINE Creators Market](https://creator.line.me/) / [LINE Sticker Maker](https://creator.line.me/en/stickermaker/) | Official | Static sticker specs, pack sizes, transparency, submission flow. |
-| [yazelin/line-sticker-studio](https://github.com/yazelin/line-sticker-studio) | MIT (**fork source**) | 3x3 grid, chroma-key, ZIP structure, submission notes, UI flow; code kept in `reference/`. |
+| [yazelin/line-sticker-studio](https://github.com/yazelin/line-sticker-studio) | MIT (**fork source**) | 3x3 grid, chroma-key, ZIP structure, submission notes, UI flow; provenance kept through attribution and git history, no longer vendored. |
 | [laggykiller/sticker-convert](https://github.com/laggykiller/sticker-convert) | GPL-2.0 | The multi-platform export concept; implemented independently from public specs. |
 | [MarvNC/StampNyaa](https://github.com/MarvNC/StampNyaa) | Unlicensed | The "use LINE stickers on other platforms" desktop workflow. |
 | [ittner/signal-sticker-tool](https://github.com/ittner/signal-sticker-tool) | GPL-3.0 | Signal sticker-pack packaging (possible future feature). |

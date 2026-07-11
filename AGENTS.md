@@ -26,7 +26,7 @@
 
 ## 目前狀態
 
-本 repo 已把 upstream web app 與 Worker 搬到 `reference/upstream-line-sticker-studio/`。這些是參考資料，不是新方向。
+本 repo 已移除 upstream web app / Worker 的 vendored reference source。保留 `yazelin/line-sticker-studio` 的 MIT attribution 與歷史決策紀錄，但後續不再依賴 repo 內的 upstream reference 目錄。
 
 後續應往這個結構整理：
 
@@ -36,13 +36,12 @@
 - `tests/`：切圖、去背、ZIP 檢查等測試。
 - `examples/`：範例說明，不放侵權素材。
 - `docs/`：架構、規劃、交接文件。
-- `reference/upstream-line-sticker-studio/`：原專案保留參考，維持目錄結構。
 
 ## 開發原則
 
 - 先把產品路線改清楚，再搬功能。
 - 優先保留可本地化的能力：prompt、切圖、去背、尺寸整理、ZIP 匯出。
-- Worker、quota、Turnstile、線上 API proxy 僅作為 reference，不要當成新架構延伸。
+- Worker、quota、Turnstile、線上 API proxy 只作為歷史背景，不要當成新架構延伸。
 - 若選技術棧，優先考慮易打包 Windows exe 的方案。
 - 新增圖片處理邏輯時要補測試。
 - 使用繁體中文回覆與撰寫維護文件；程式命名維持英文。

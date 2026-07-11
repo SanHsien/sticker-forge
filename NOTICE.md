@@ -37,7 +37,7 @@ LINE static sticker requirements remain the primary validation target unless the
 
 ## Credits and Acknowledgments
 
-`sticker-forge` is a fork of `yazelin/line-sticker-studio` (MIT) — see the attribution above; that upstream code is kept under [`reference/upstream-line-sticker-studio/`](reference/upstream-line-sticker-studio/).
+`sticker-forge` is a fork of `yazelin/line-sticker-studio` (MIT). This repository keeps the required attribution above. The old upstream vendored reference source has been removed because the maintained application now lives in `src/sticker_forge/`, `app/`, and the project documentation; historical source context remains available through git history and the upstream repository link.
 
 Beyond the fork base, the projects below informed the design. **No source code from these projects is included in `sticker-forge`** — they are credited for concepts and publicly documented format specifications only, which were implemented independently. For the GPL / unlicensed projects, that license incompatibility with this repository's MIT license is an additional reason no code was copied.
 
@@ -50,7 +50,7 @@ Beyond the fork base, the projects below informed the design. **No source code f
 | [curegit/line-sticker-downloader](https://github.com/curegit/line-sticker-downloader) | WTFPL | Browser/CLI download and ZIP output patterns. |
 | [LINE Creators Market](https://creator.line.me/) / [LINE Sticker Maker](https://creator.line.me/en/stickermaker/) | Official platform | Static sticker specs: sizes, pack sizes, transparency, and the manual submission flow. |
 
-If a future version incorporates any third-party source code, that code together with its own license and attribution will be added here and kept in a clearly marked `reference/<project>/` subfolder — the same way the upstream fork base is vendored under `reference/upstream-line-sticker-studio/`. Copyleft-licensed code (GPL, etc.) will not be merged into `sticker-forge`'s own MIT-licensed modules.
+If a future version incorporates any third-party source code, that code together with its own license and attribution will be added here and kept in a clearly marked location. Copyleft-licensed code (GPL, etc.) will not be merged into `sticker-forge`'s own MIT-licensed modules.
 
 ## LINE And Third-Party Services
 

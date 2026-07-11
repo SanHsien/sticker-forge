@@ -114,4 +114,6 @@ sticker-forge-v{VERSION}-windows-x64.zip.sha256
 
 ## Legacy 邊界
 
-upstream web app 與 Worker 已集中在 `reference/upstream-line-sticker-studio/`，只作邏輯參考，不是目標架構。Worker、Turnstile、quota、Gemini proxy 一律視為待移除／封存，不要再往 server 方向投入。硬性禁令見 [`../CLAUDE.md`](../CLAUDE.md) 與 [`../AGENTS.md`](../AGENTS.md)。
+upstream web app / Worker 的 vendored reference source 已移除。後續維護以本 repo 的 Python core、pywebview GUI、測試與決策文件為準；若需要查原始 fork，可看 git history 或外部 [`yazelin/line-sticker-studio`](https://github.com/yazelin/line-sticker-studio)。
+
+Worker、Turnstile、quota、Gemini proxy 一律視為不符合 local-first 的 legacy 方向，不要重建，也不要再往 server 方向投入。硬性禁令見 [`../CLAUDE.md`](../CLAUDE.md) 與 [`../AGENTS.md`](../AGENTS.md)。
