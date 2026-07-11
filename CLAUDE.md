@@ -4,14 +4,14 @@
 
 ## 專案定位
 
-`sticker-forge` 要做成本機 LINE 貼圖製作工具，最好能打包成 Windows `.exe`。
+`sticker-forge` 要做成本機聊天貼圖包製作工具，支援 LINE 靜態貼圖、emoji、訊息貼圖、動態貼圖與多平台尺寸匯出，最好能打包成 Windows `.exe`。
 
 預期流程：
 
 1. 程式產生提示詞。
-2. 使用者自行用 ChatGPT / Gemini / 其他工具生圖。
+2. 使用者自行用 ChatGPT / Gemini / 其他工具生圖或動態 GIF/APNG。
 3. 使用者把圖匯回程式。
-4. 程式本機切圖、去背、整理尺寸、打包 ZIP。
+4. 程式本機切圖、去背、整理尺寸、打包 LINE 或其他平台 ZIP。
 
 不架 server，不代管 AI API，不做線上服務。
 

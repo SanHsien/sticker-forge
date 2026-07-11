@@ -55,11 +55,11 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 
 ## 2026-07-06：Windows exe 入口策略
 
-決定主程式改為原生 GUI，不再讓使用者雙擊 console CLI。
+決定主程式改為原生 GUI，不再讓使用者雙擊 console CLI。此節的 tkinter 實作已於 2026-07-07 的 v0.5.0 決策被 pywebview GUI 取代；保留本節作歷史脈絡。
 
 決策：
 
-- `sticker-forge.exe` 是無 console 的 tkinter GUI。
+- `sticker-forge.exe` 是無 console 的 GUI 主程式。
 - `sticker-forge-cli.exe` 是命令列工具，保留所有 CLI 指令。
 - `app/index.html` 保留為本機 HTML fallback，不再作為主要 exe 體驗。
 - build script 必須同時 smoke test GUI 與 CLI。

@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "sticker-forge"
 version = "0.13.0"
-description = "Local-first LINE static sticker pack toolkit."
+description = "Local-first chat sticker pack toolkit for LINE and other platforms."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"

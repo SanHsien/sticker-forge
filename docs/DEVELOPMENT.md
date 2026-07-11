@@ -78,7 +78,7 @@ node --check app/app.js
 
 ## 測試涵蓋
 
-`python -m pytest`（目前 58 passed）。最小涵蓋：prompt CLI 輸出與渲染、中英文語系、3x3 inset 切圖（含 1024×1024 非整除尺寸）、選 8 張、green/magenta 去背、匯出預設去背與 `--keep-background`、main/tab image、ZIP 結構與 validator（含透明背景檢查）、PNG-only ZIP、padding、`webapi.Api` bridge（bootstrap/prompt/split/cleanup/export）。GUI 視窗本身需在 Windows 桌面實跑 `sticker-forge-gui` 或 exe 驗證。
+`python -m pytest`（目前 58 passed）。最小涵蓋：prompt CLI 輸出與渲染、中英文語系、3x3 inset 切圖（含 1024×1024 非整除尺寸）、選圖／排序、green/magenta 去背、匯出預設去背與 `--keep-background`、main/tab image、LINE 靜態／emoji／訊息／動態 ZIP 結構與 validator（含透明背景檢查）、PNG-only ZIP、多平台 ZIP、padding、`webapi.Api` bridge（bootstrap/prompt/split/cleanup/export）。GUI 視窗本身需在 Windows 桌面實跑 `sticker-forge-gui` 或 exe 驗證。
 
 ## 打包與發行
 

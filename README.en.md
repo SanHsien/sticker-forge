@@ -3,33 +3,34 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
 [![Local-first](https://img.shields.io/badge/local--first-no_backend-brightgreen.svg)](docs/DEVELOPMENT.md)
-[![LINE static stickers](https://img.shields.io/badge/LINE-static_stickers-00B900.svg)](prompts/line-static-3x3.md)
+[![LINE sticker packs](https://img.shields.io/badge/LINE-sticker_packs-00B900.svg)](prompts/line-static-3x3.md)
 [![Tests: pytest](https://img.shields.io/badge/tests-pytest-blueviolet.svg)](tests)
 
 [繁體中文](README.md) | English
 
-`sticker-forge` is a local-first toolkit for making chat sticker packs. It focuses on LINE static stickers and can also export to Telegram, WhatsApp, Discord and Signal sizes/formats. It does not run an AI server, host API keys, upload user images, or automate submission. Users generate a 3x3 sticker grid with ChatGPT, Gemini, or another image tool, then import that image back into the local app for cleanup and export.
+`sticker-forge` is a local-first toolkit for making chat sticker packs. It supports LINE static stickers, emoji, message stickers, animated stickers, and exports for Telegram, WhatsApp, Discord and Signal sizes/formats. It does not run an AI server, host API keys, upload user images, or automate submission. Users generate sticker assets with ChatGPT, Gemini, or another image tool, then import them back into the local app for cleanup and export.
 
 ## Workflow
 
 1. Choose a sticker theme, character, tone, text, and output settings in `sticker-forge`.
 2. Copy the generated prompt.
-3. Generate a 3x3 sticker grid in an external AI image tool.
+3. Generate a 3x3 sticker grid, or multiple GIF/APNG files for animated stickers, in an external AI image tool.
 4. Import the generated image back into `sticker-forge`.
-5. Split, clean up, preview, and select 8 stickers locally.
-6. Export a ZIP for LINE Creators Market static stickers.
+5. Split, clean up, preview, select/reorder stickers, and prepare animated files locally.
+6. Export a ZIP for LINE Creators Market or another supported platform.
 
-The current scope is LINE static sticker packs. This project does not auto-submit to LINE and does not guarantee review approval.
+The current scope covers LINE static stickers, emoji, message stickers, animated stickers, and multi-platform size exports. This project does not auto-submit to LINE and does not guarantee review approval.
 
 ## Features
 
 - Traditional Chinese and English CLI/app language support.
-- 3x3 LINE static sticker prompt templates, with text and no-text variants.
+- 3x3 LINE sticker prompt templates, with text and no-text variants.
 - Local 3x3 grid splitting with 3% inset (handles non-divisible sizes like 1024×1024).
+- Multiple animated GIF/APNG import for LINE animated stickers.
 - Green or magenta chroma-key background cleanup with despill.
-- Selection of 8 stickers from a 9-cell grid.
-- LINE ZIP export with `01.png`–`08.png`, `main.png`, `tab.png`, and README.
-- 9 PNG-only ZIP export for non-LINE use.
+- Sticker selection, ordering, and main/tab image selection.
+- LINE static sticker, emoji, message sticker, animated sticker ZIP exports.
+- 9 PNG-only ZIP export and multi-platform ZIP exports for non-LINE use.
 - ZIP structure validation and pre-export preview metadata.
 - Native Windows desktop GUI (a pywebview window rendering the HTML UI, backed by the Python core) plus a separate CLI executable.
 
@@ -74,7 +75,7 @@ python -m sticker_forge validate outputs\line-stickers.zip
 ```text
 .
 ├── src/sticker_forge/      # Local toolkit core
-├── app/                    # Offline HTML workspace
+├── app/                    # HTML/CSS/JS frontend assets loaded by the pywebview GUI
 ├── prompts/                # Prompt templates
 ├── packaging/              # Windows exe build scripts
 ├── tests/                  # Automated tests
@@ -91,8 +92,8 @@ Version **v0.13.0**: local-first sticker-pack toolkit (LINE stickers/emoji/messa
 - Local-first direction; the needed fork-source concepts have been folded into the local Python core, pywebview GUI, and project docs.
 - Prompt templates (Chinese/English, text/no-text, green/magenta, risk reminders).
 - Image core: 3x3 split, cleanup, resize/padding, main/tab image, preview metadata.
-- Export: LINE ZIP, PNG-only ZIP, `validate` and `preview` commands.
-- PyInstaller Windows packaging and releases through `v0.8.0` (GitHub Releases with SHA256 checksums).
+- Export: LINE static sticker, emoji, message sticker, animated sticker ZIPs, PNG-only ZIP, platform ZIPs, `validate` and `preview` commands.
+- PyInstaller Windows packaging and releases through `v0.13.0` (GitHub Releases with SHA256 checksums).
 - Desktop drag-and-drop import (the webview's HTML dropzone); WebView2 runs with `private_mode`, an ephemeral profile, so nothing persistent is written.
 
 ### 🔧 2026-07-07 consistency fixes

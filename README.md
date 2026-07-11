@@ -3,25 +3,25 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
 [![Local-first](https://img.shields.io/badge/local--first-no_backend-brightgreen.svg)](docs/DEVELOPMENT.md)
-[![LINE static stickers](https://img.shields.io/badge/LINE-static_stickers-00B900.svg)](prompts/line-static-3x3.md)
+[![LINE sticker packs](https://img.shields.io/badge/LINE-sticker_packs-00B900.svg)](prompts/line-static-3x3.md)
 [![Tests: pytest](https://img.shields.io/badge/tests-pytest-blueviolet.svg)](tests)
 
 [繁體中文](README.md) | [English](README.en.md)
 
 Local-first toolkit for making chat sticker packs: prompt templates, image cleanup, slicing, and export for LINE, Telegram, WhatsApp, Discord and Signal.
 
-`sticker-forge` 是本機優先的貼圖包製作工具。以 LINE 靜態貼圖為主，也能一鍵匯出成 Telegram、WhatsApp、Discord、Signal 的尺寸與格式。它不架 AI server、不代管 API key，也不收集使用者圖片；使用者自行用 ChatGPT、Gemini 或其他生圖工具產圖，再把圖片匯回本機程式加工與匯出。
+`sticker-forge` 是本機優先的貼圖包製作工具。支援 LINE 靜態貼圖、emoji、訊息貼圖、動態貼圖，也能一鍵匯出成 Telegram、WhatsApp、Discord、Signal 的尺寸與格式。它不架 AI server、不代管 API key，也不收集使用者圖片；使用者自行用 ChatGPT、Gemini 或其他生圖工具產圖，再把圖片匯回本機程式加工與匯出。
 
 ## 目標流程
 
 1. 在 `sticker-forge` 選擇貼圖主題、語氣、角色設定、文字與輸出規格。
 2. 程式產生可複製的提示詞。
-3. 使用者自行到外部 AI 生圖工具產生 3x3 貼圖 grid。
+3. 使用者自行到外部 AI 生圖工具產生 3x3 貼圖 grid，或為動態貼圖產生多個 GIF/APNG。
 4. 使用者把生成好的圖片匯回 `sticker-forge`。
 5. 程式在本機切圖、去背、整理尺寸、預覽。
-6. 程式匯出符合 LINE Creators Market 靜態貼圖規格的 ZIP。
+6. 程式匯出符合 LINE Creators Market 或其他平台規格的 ZIP。
 
-現階段只鎖定 LINE 靜態貼圖包，不做 LINE 自動上架，也不保證審核通過。
+目前範圍涵蓋 LINE 靜態貼圖、emoji、訊息貼圖、動態貼圖與多平台尺寸匯出。不做 LINE 自動上架，也不保證審核通過。
 
 ## 產品原則
 
@@ -34,8 +34,8 @@ Local-first toolkit for making chat sticker packs: prompt templates, image clean
 ## 功能範圍
 
 - **提示詞**：依 LINE 規格產生 3x3 grid prompt，支援主題／角色／語氣／語言／8 句文字／8 個動作，有字與無字兩版，可複製微調。
-- **圖片加工**：匯入 3x3 grid、切 9 格選 8 張、green/magenta chroma-key 去背、尺寸與 padding 整理、main/tab image、逐張預覽。
-- **匯出**：LINE Creators Market 靜態貼圖 ZIP、9 張獨立 PNG 的一般貼圖 ZIP、尺寸／張數／檔名／結構檢查、簡短上架說明。
+- **圖片加工**：匯入 3x3 grid 或多個動態 GIF/APNG、切圖、選圖、排序、green/magenta chroma-key 去背、尺寸與 padding 整理、main/tab image、逐張預覽。
+- **匯出**：LINE 靜態貼圖、emoji、訊息貼圖、動態貼圖 ZIP，9 張獨立 PNG 的一般貼圖 ZIP，多平台尺寸 ZIP，尺寸／張數／檔名／結構檢查、簡短上架說明。
 
 ## 使用入口
 
@@ -55,7 +55,7 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 ```text
 .
 ├── src/sticker_forge/      # 本機工具主程式
-├── app/                    # 可直接開啟的本機 HTML 介面
+├── app/                    # pywebview GUI 載入的 HTML/CSS/JS 前端資源
 ├── prompts/                # 提示詞模板
 ├── packaging/              # exe 打包設定與發行流程
 ├── tests/                  # 自動化測試
@@ -75,9 +75,9 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 - 產品方向固定為 local-first；已把需要的 fork 來源概念收斂成本機 Python core、pywebview GUI 與規格文件。
 - prompt 模板：中英文、有字／無字、green/magenta 背景、高風險內容提醒。
 - 圖片處理核心：3x3 切圖、去背、尺寸／padding、main/tab image、預覽 metadata 與選圖檢查。
-- 匯出：LINE ZIP、9 張 PNG-only ZIP、`validate` 與 `preview` 指令、上架說明。
+- 匯出：LINE 靜態貼圖／emoji／訊息貼圖／動態貼圖 ZIP、9 張 PNG-only ZIP、多平台 ZIP、`validate` 與 `preview` 指令、上架說明。
 - 桌面 GUI（pywebview HTML）與 CLI 共用 Python core（`--lang` 中英）。
-- PyInstaller Windows 打包與發行，已發行到 `v0.8.0`（正式 GitHub Release，含 SHA256 checksum）。
+- PyInstaller Windows 打包與發行，已發行到 `v0.13.0`（正式 GitHub Release，含 SHA256 checksum）。
 - 桌面拖放匯入（webview 的 HTML dropzone 內建）；WebView2 用 `private_mode` 臨時 profile，不寫持久隱藏資料。
 - 中英文 README。
 

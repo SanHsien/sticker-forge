@@ -4,14 +4,14 @@
 
 ## 專案宗旨
 
-`sticker-forge` 是 local-first 的 LINE 貼圖製作工具。目標是做成使用者可下載的本機程式，例如 Windows `.exe`。
+`sticker-forge` 是 local-first 的聊天貼圖包製作工具，支援 LINE 靜態貼圖、emoji、訊息貼圖、動態貼圖與多平台尺寸匯出。目標是做成使用者可下載的本機程式，例如 Windows `.exe`。
 
 核心流程：
 
 1. 程式提供提示詞模板。
-2. 使用者自行到 ChatGPT / Gemini / 其他生圖工具產生 3x3 貼圖圖案。
+2. 使用者自行到 ChatGPT / Gemini / 其他生圖工具產生 3x3 貼圖 grid 或多個動態 GIF/APNG。
 3. 使用者把生成圖匯回本機程式。
-4. 程式在本機切圖、去背、整理尺寸、預覽、匯出 LINE sticker ZIP。
+4. 程式在本機切圖、去背、整理尺寸、預覽、匯出 LINE 或其他平台貼圖 ZIP。
 
 本專案不打算架 server、不代管 AI API、不處理使用者圖片上傳服務。
 

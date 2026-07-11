@@ -31,9 +31,12 @@ When redistributing this project or substantial parts of it:
 Current output targets:
 
 - LINE Creators Market static sticker packs (8/16/24/32/40).
+- LINE emoji packs (8-40).
+- LINE message sticker packs (8/16/24).
+- LINE animated sticker packs (8/16/24 APNG stickers).
 - Other chat platforms via resize/reformat: Telegram, WhatsApp, Discord, and Signal.
 
-LINE static sticker requirements remain the primary validation target unless the roadmap explicitly changes.
+LINE Creators Market requirements remain the primary validation target unless the roadmap explicitly changes.
 
 ## Credits and Acknowledgments
 
@@ -79,7 +82,7 @@ Before publishing sticker packs, users should review generated content for:
 
 ## Deployment Caution
 
-This fork is moving toward a local-only executable workflow. If any legacy hosted code is temporarily used, fork maintainers should replace all upstream-specific deployment values before operating a public instance:
+This fork is a local-only executable workflow. Legacy hosted code is not part of the maintained product. If someone resurrects old hosted code from history for private experimentation, they must replace all upstream-specific deployment values before operating a public instance:
 
 - Worker URL and `DEFAULT_API_URL`.
 - Cloudflare Worker name and KV namespace.
