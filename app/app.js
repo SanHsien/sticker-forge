@@ -689,6 +689,7 @@ async function savePng(dataUrl, defaultName) {
 function reportExport(result) {
   if (result && result.saved) setStatus(ui().saved(result.saved));
   else if (result && result.cancelled) setStatus(ui().exportCancelled);
+  else if (result && result.error) setStatus(result.error, true);
 }
 
 function updatePreview() {

@@ -46,7 +46,7 @@ The current scope is LINE static sticker packs. This project does not auto-submi
 python -m pip install -e ".[dev,packaging]"
 python -m pytest
 python -m sticker_forge --lang en prompt
-python -m sticker_forge --lang en app
+sticker-forge-gui --lang en
 ```
 
 ## Build Windows Executable
