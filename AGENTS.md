@@ -59,7 +59,8 @@ python -m pytest
 
 ## 文件入口
 
-- `README.md` / `README.en.md`：使用者入口、產品方向與路線圖（含最新狀態）。
+- `README.md` / `README.en.md`：使用者入口、產品方向與簡化路線圖。
+- `CHANGELOG.md`：版本變更紀錄。
 - `REVIEW.md`：最新專案 review。
 - `docs/DEVELOPMENT.md`：架構、本機指令、打包發行、legacy 邊界。
 - `docs/DECISIONS.md`：決策紀錄。

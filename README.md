@@ -61,7 +61,7 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 ├── tests/                  # 自動化測試
 ├── examples/               # 範例輸入位置，不放侵權素材
 ├── docs/                   # 使用與維護文件（USER_GUIDE / DEVELOPMENT / DECISIONS / LINE_SUBMISSION）
-├── README.md / README.en.md / REVIEW.md
+├── README.md / README.en.md / CHANGELOG.md / REVIEW.md
 ├── AGENTS.md / CLAUDE.md / SKILL.md          # AI 接手指引
 └── NOTICE.md / LICENSE
 ```
@@ -82,88 +82,13 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 - 中英文 README。
 - 使用者指南與本機範例素材產生器（不提交生成圖片或 ZIP）。
 
-### 🚀 v0.14.0 新增
+詳細版本紀錄見 [`CHANGELOG.md`](CHANGELOG.md)；設計決策見 [`docs/DECISIONS.md`](docs/DECISIONS.md)。
 
-- **使用者指南**：新增 [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md)，把 exe 啟動、靜態貼圖、emoji、訊息貼圖、動態貼圖、多平台匯出、常見問題與 LINE 手動送審邊界整理成一般使用者可讀流程。
-- **可重現範例素材**：新增 [`examples/create_sample_assets.py`](examples/create_sample_assets.py)，本機產生非侵權 3x3 grid 與 8 個 GIF 測試素材；`examples/generated/` 與輸出 ZIP 不進版控。
-- **範例 CLI 流程**：[`examples/README.md`](examples/README.md) 補齊 export、emoji、message、animated 與 validate 指令。
+### 下一步
 
-### 🔧 2026-07-07 一致性修正
-
-- **切圖尺寸**：`split_grid` 不再要求邊長可被 3 整除，改向下取整丟餘數（對齊 web `Math.floor`），最常見的 1024×1024 AI 生圖在 CLI / GUI / web 都能處理。
-- **`--key-color`**：從 `export` / `stickers` / `preview` 移除死參數（那條路徑固定走 green/magenta score-based 去背），保留在 `cleanup`。
-- **web 去背 despill**：`app/app.js` 對齊 Python 的 despill，三入口去背輸出一致（60/60 像素交叉比對）。
-- **打包驗證**：實測 PyInstaller build，GUI `--smoke`、CLI export/validate、bundle 資源皆通過；`python -m sticker_forge.cli` 補上 `__main__` guard。
-- **匯出預設去背**：`export` / `stickers` / `preview` 改為預設去背（LINE 強制要求透明背景，且切圖本就用 key 色填背景配對去背）。想保留實心底色改用 `--keep-background`。
-- **validate 檢查透明背景**：`validate` 新增透明度檢查，完全不透明（背景未去）的貼圖會被標記，擋下 LINE 第一大退件原因。
-
-細節見 [`REVIEW.md`](REVIEW.md) 與 [`docs/DECISIONS.md`](docs/DECISIONS.md)。
-
-### 🔧 v0.13.1 修正
-
-- **GUI 匯出錯誤顯示**：pywebview bridge 回傳 `error` 時，HTML GUI 會顯示錯誤訊息，不再停在「匯出中」。
-- **文件同步**：README、README.en、NOTICE、DEVELOPMENT、REVIEW 與 agent 指引同步到 v0.13.1 現況。
-- **Source cleanup**：移除不再使用的 upstream vendored reference source；保留 MIT attribution、外部 fork 連結與 git history。
-
-### 🚀 v0.13.0 新增
-
-- **動態貼圖：改用「匯入多個動態 GIF」＋GUI**。修正 v0.12.0 的輸入形狀——非專業使用者用 AI 生圖，拿到的是**每張一個動態 GIF**，不是動態 grid。現在**匯入 8／16／24 個動態 GIF/APNG（每個一張）** → 逐格去背、resize 到 ≤320×270（一邊 ≥270）、轉 **APNG（5–20 影格）**，外加動畫 main 240×240＋靜態 tab 96×74，依官方規格（[creator.line.me/en/guideline/animationsticker](https://creator.line.me/en/guideline/animationsticker/)）。GUI「匯入動態貼圖」（多檔）＋「匯出動態貼圖」按鈕（動態模式下靜態匯出會擋下）；CLI `sticker-forge animated a.gif b.gif … -o out.zip`。**16/24 靠匯入更多檔**，不需多 grid。
-
-### 🚀 v0.12.0 新增
-
-- **LINE 動態貼圖匯出（CLI，首版）**：依官方規格產出 APNG 動態貼圖包（≤320×270、5–20 影格、動畫 main＋靜態 tab）。（v0.13.0 把輸入改為「匯入多個動態 GIF」並加 GUI。）
-
-### 🚀 v0.11.0 新增
-
-- **LINE 訊息貼圖匯出**：訊息貼圖（發送者可在貼圖上打字）——**8／16／24 張、貼圖 max 370×320、不需留邊（LINE 自動加邊）、main 240×240＋tab 96×74**，依官方規格（[creator.line.me/en/guideline/messagesticker](https://creator.line.me/en/guideline/messagesticker/)）。GUI「匯出訊息貼圖」按鈕；CLI `sticker-forge message <grid…> -o out.zip`。文字位置／字型於 LINE 編輯器設定。
-
-### 🚀 v0.10.0 新增
-
-- **LINE 原創貼圖 emoji 匯出**：把貼圖池匯出成 LINE emoji 規格——**8–40 張、180×180 PNG 透明、檔名 `001.png…` 外加 96×74 聊天縮圖**，依官方規格（[creator.line.me/en/guideline/emoji](https://creator.line.me/en/guideline/emoji/)）實作。GUI「匯出 LINE emoji」按鈕；CLI `sticker-forge emoji <grid…> -o out.zip --thumb 1`、`validate --emoji` 檢查。
-
-### 🚀 v0.9.0 新增
-
-- **主題預設包**：一鍵套用「療癒白熊／上班族貓／情侶小熊／節慶祝福」等主題，自動填入角色／主題／語氣／風格與 8 句文字＋8 動作，再自行微調。GUI 下拉選單；CLI `sticker-forge prompt --preset office-cat`。
-- **套組標題／作者（GUI）**：GUI 可填 LINE 套組的標題與作者，寫進 ZIP 內的 README（CLI 原本就有 `--title` / `--author`）。
-
-### 🚀 v0.8.0 新增
-
-- **更大的 LINE 套組（8／16／24／32／40）**：用「加入 grid」把多張 3×3 累積成更大的貼圖池，勾選要出的張數，匯出對應大小的 LINE 套組。
-- **自選主圖／聊天標籤**：不再固定第 1 張，可指定哪張當 `main.png`、哪張當 `tab.png`。
-- **貼圖排序**：每張可 ▲▼ 調整順序（決定 `01…NN` 的輸出順序）。
-- CLI：`sticker-forge export grid1.png grid2.png -o out.zip --select 1,…,16 --main 2 --tab 3`。
-
-### 🚀 v0.7.0 新增
-
-- **多平台匯出**：除了 LINE，還能把貼圖匯出成 **Telegram（512 PNG）、WhatsApp（512 WebP＋96 tray）、Discord（320 PNG）、Signal（512 PNG）** 的尺寸與格式。GUI 選平台按「匯出到平台」；CLI 用 `sticker-forge platform <grid> -o out.zip --target telegram`。（靈感來自參考專案 sticker-convert、StampNyaa。）
-
-### 🚀 v0.6.0 新增
-
-- **單張放大檢視**：點任一張貼圖縮圖，跳出放大視窗（透明格背景），可看清去背結果。
-- **單張去背／還原**：放大視窗可只對這一張去背，或還原回原始切圖；「全部去背」與單張去背都從原始切圖計算，改去背強度重跑不會疊加髒邊。
-
-### 🚀 v0.5.0 新增
-
-- **UI 收斂成一套**：桌面 GUI 從 tkinter 改為 **pywebview 原生視窗載入 HTML 介面**，切圖/去背/匯出/prompt 全部由本機 Python core 處理（JS 只負責畫面）。原本 tkinter GUI 與 JavaScript 各一套的重複實作收斂成單一 core，parity 問題根除。相依：pywebview（Windows 用內建 WebView2）。
-
-### 🚀 v0.4.0 新增
-
-- **Prompt 下拉建議**：角色／主題／語氣／風格／語言與 8 句文字、8 個動作欄位都提供下拉建議，沒靈感可直接選、也能自己打字。原生 GUI 用可編輯下拉（Combobox）、HTML 用 `datalist`，建議會隨中/英語系切換。
-
-### 🚀 v0.3.0 新增
-
-- **拖放匯入**：本機 HTML 工作台可直接把 3x3 圖拖放進來（原生、zero-dep，已於瀏覽器實測）。
-- **Windows icon**：GUI / CLI exe 使用自製 `packaging/icon.ico`。
-- **Legacy 清理**：移除 legacy Cloudflare/Gemini 後端、campaign-checker CI，以及後續不再使用的 upstream vendored reference source；保留外部 fork 來源連結與 attribution。
-
-### 💡 參考來源啟發的候選功能
-
-看 fork 來源（[yazelin/line-sticker-studio](https://github.com/yazelin/line-sticker-studio)）與其他參考專案（sticker-convert、StampNyaa、signal-sticker-tool、LINE Creators Market）整理的候選：
-
-- **更多平台格式**：Signal 完整 pack（含 manifest）。
-- **big stickers／pop-up／effect**：LINE 其他貼圖類型，各有規格，可依需求逐一查證後加。
-- **ML 去背**：非綠幕來源用 rembg 之類。**傾向不做**：首次執行需下載模型（破壞離線）＋相依重，違反 local-first 輕量原則。
-- **grid 歷史**：保留匯入過的 grid 可重用。**傾向不做**：需持久儲存，與現行 `private_mode` 不寫持久資料的決策衝突。
+- 用非侵權素材做一次 LINE Creators Market 手動上傳抽驗，特別是動態貼圖 APNG。
+- 補更完整的 Signal pack（含 manifest）與必要驗證。
+- 逐一查證 LINE big stickers／pop-up／effect stickers 規格，再決定是否加入。
 
 ### ⏳ 已定案
 
@@ -172,6 +97,7 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 ## 維護文件
 
 - [`REVIEW.md`](REVIEW.md)：最新專案 review（僅保留最新版）。
+- [`CHANGELOG.md`](CHANGELOG.md)：版本變更紀錄。
 - [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md)：一般使用者指南。
 - [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)：架構、本機指令、打包發行、legacy 邊界。
 - [`docs/DECISIONS.md`](docs/DECISIONS.md)：重要決策紀錄。

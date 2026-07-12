@@ -1,6 +1,6 @@
 # Development
 
-維護者與 AI 接手用的單一開發文件：架構、本機指令、打包發行、legacy 邊界。一般使用流程在 [`USER_GUIDE.md`](USER_GUIDE.md)；使用者入口在根目錄 [`README.md`](../README.md)；決策紀錄在 [`DECISIONS.md`](DECISIONS.md)；上架流程在 [`LINE_SUBMISSION.md`](LINE_SUBMISSION.md)；最新 review 在 [`../REVIEW.md`](../REVIEW.md)。
+維護者與 AI 接手用的單一開發文件：架構、本機指令、打包發行、legacy 邊界。一般使用流程在 [`USER_GUIDE.md`](USER_GUIDE.md)；使用者入口在根目錄 [`README.md`](../README.md)；版本紀錄在 [`../CHANGELOG.md`](../CHANGELOG.md)；決策紀錄在 [`DECISIONS.md`](DECISIONS.md)；上架流程在 [`LINE_SUBMISSION.md`](LINE_SUBMISSION.md)；最新 review 在 [`../REVIEW.md`](../REVIEW.md)。
 
 ## 架構
 

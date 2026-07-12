@@ -25,7 +25,8 @@ description: 維護 SanHsien/sticker-forge。本專案目標是本機聊天貼�
 
 ## 快速定位
 
-- `README.md` / `README.en.md`：產品方向與路線圖（含最新狀態）。
+- `README.md` / `README.en.md`：產品方向與簡化路線圖。
+- `CHANGELOG.md`：版本變更紀錄。
 - `REVIEW.md`：最新專案 review。
 - `NOTICE.md`：fork 來源與授權聲明。
 - `AGENTS.md` / `CLAUDE.md`：AI 接手規則。

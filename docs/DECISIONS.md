@@ -127,11 +127,11 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 
 ## 2026-07-07：多平台匯出（v0.7.0）＋參考來源功能盤點
 
-參考 fork 來源與 README 列的其他專案（sticker-convert、StampNyaa、signal-sticker-tool、LINE Creators Market），把候選功能寫進 README 路線圖「參考來源啟發的候選功能」，並先實作最強、最 local-first 的一項：
+參考 fork 來源與文件列出的其他專案（sticker-convert、StampNyaa、signal-sticker-tool、LINE Creators Market），當時把候選功能寫進入口文件；後續版本細節已收斂到根目錄 `CHANGELOG.md`，README 只保留簡化路線圖。v0.7.0 先實作最強、最 local-first 的一項：
 
 - **多平台匯出**：`exporter.PLATFORM_SPECS` + `export_platform_zip()`，支援 Telegram（512 PNG）、WhatsApp（512 WebP＋96 tray）、Discord（320 PNG）、Signal（512 PNG）。CLI `platform --target`、`webapi.Api.export_platform`、GUI 平台下拉＋按鈕。全部 contain-fit 到目標尺寸、保留透明。
 - 驗證：核心 unit test（4 平台檔名/尺寸/格式/tray）＋CLI test＋webapi bridge test＋live pywebview（按鈕收集 included tiles 呼叫 bridge）。41 passed。
-- 候選未做（留路線圖）：更大 LINE 套組（多 grid）、自選 main/tab、貼圖排序/命名、更多 prompt 模板、Signal manifest、ML 去背（rembg 相依重）、grid 歷史（與 private_mode 不寫持久資料衝突）。
+- 候選未做（當時留待後續版本評估）：更大 LINE 套組（多 grid）、自選 main/tab、貼圖排序/命名、更多 prompt 模板、Signal manifest、ML 去背（rembg 相依重）、grid 歷史（與 private_mode 不寫持久資料衝突）。
 
 ## 2026-07-07：LINE 套組組合（v0.8.0）
 
@@ -159,7 +159,7 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 
 - **Regular Emoji：8–40 張、180×180 PNG 透明、檔名 `001.png`…`0NN.png`（3 位數）、Chat Thumbnail Icon 96×74（另欄上傳）、ZIP <20MB。**
 - 實作：`exporter.export_emoji_zip`（001..0NN.png 180×180 ＋ `chat-thumbnail.png` 96×74 ＋ README 說明手動上架）、`validate_emoji_zip`（數量 8–40、3 位數連號、尺寸、透明）。CLI `emoji`（多 grid、`--select` 8–40、`--thumb`）、`validate --emoji`；webapi `Api.export_emoji`；GUI「匯出 LINE emoji」按鈕（主圖下拉當縮圖、8–40 gating）。
-- 驗證：unit（結構/尺寸/縮圖/validate/拒絕<8）＋CLI（emoji＋validate --emoji）＋live pywebview（按鈕呼叫 bridge、7 張被擋）。51 passed。chat thumbnail 放進 ZIP 但 README 明說於「聊天縮圖」欄另傳（emoji ZIP 官方檔名表只列 001..NN，不含縮圖檔名，故不假設縮圖在同一 ZIP 上傳）。
+- 驗證：unit（結構/尺寸/縮圖/validate/拒絕<8）＋CLI（emoji＋validate --emoji）＋live pywebview（按鈕呼叫 bridge、7 張被擋）。51 passed。chat thumbnail 放進 ZIP 但 ZIP 內說明會標註於「聊天縮圖」欄另傳（emoji ZIP 官方檔名表只列 001..NN，不含縮圖檔名，故不假設縮圖在同一 ZIP 上傳）。
 - 仍留候選：訊息貼圖（editable-text，需另一套版位規格）。
 
 ## 2026-07-07：LINE 訊息貼圖（v0.11.0）＋動態貼圖規格查證

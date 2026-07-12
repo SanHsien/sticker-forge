@@ -83,6 +83,7 @@ python -m sticker_forge validate outputs\line-stickers.zip
 ├── tests/                  # Automated tests
 ├── examples/               # Input location, no infringing assets
 ├── docs/                   # User and maintainer docs (USER_GUIDE / DEVELOPMENT / DECISIONS / LINE_SUBMISSION)
+├── README.md / README.en.md / CHANGELOG.md / REVIEW.md
 ```
 
 ## Roadmap
@@ -99,88 +100,13 @@ Version **v0.14.0**: local-first sticker-pack toolkit (LINE stickers/emoji/messa
 - Desktop drag-and-drop import (the webview's HTML dropzone); WebView2 runs with `private_mode`, an ephemeral profile, so nothing persistent is written.
 - User guide and reproducible local sample asset generator (generated images and ZIPs are not committed).
 
-### 🚀 New in v0.14.0
+Detailed version history is in [`CHANGELOG.md`](CHANGELOG.md); design decisions are in [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
-- **User guide**: added [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md) covering exe startup, static stickers, emoji, message stickers, animated stickers, multi-platform export, troubleshooting, and the manual LINE submission boundary.
-- **Reproducible sample assets**: added [`examples/create_sample_assets.py`](examples/create_sample_assets.py) to generate a non-infringing 3x3 grid and 8 GIF files locally; `examples/generated/` and output ZIPs stay out of version control.
-- **Example CLI flows**: [`examples/README.md`](examples/README.md) now documents export, emoji, message, animated, and validate commands.
+### Next
 
-### 🔧 2026-07-07 consistency fixes
-
-- **Split sizing**: `split_grid` no longer requires divisible dimensions; it floors and drops edge remainder (matching the web app), so the common 1024×1024 AI export works in CLI/GUI/web.
-- **`--key-color`**: removed the dead flag from `export`/`stickers`/`preview` (that path always uses green/magenta score-based cleanup); kept on `cleanup`.
-- **Web despill**: `app/app.js` now despills to match Python, so all three paths produce identical output (verified 60/60 pixels).
-- **Packaging verified**: PyInstaller build tested — GUI `--smoke`, CLI export/validate, and bundled resources all pass.
-- **Cleanup on by default**: `export`/`stickers`/`preview` now remove the background by default (LINE requires transparent backgrounds, and the split step fills the key color specifically for removal). Use `--keep-background` to keep the solid fill.
-- **`validate` checks transparency**: `validate` now flags fully opaque stickers (background not removed), catching the most common LINE rejection reason.
-
-See [`REVIEW.md`](REVIEW.md) and [`docs/DECISIONS.md`](docs/DECISIONS.md).
-
-### 🔧 Fixed in v0.13.1
-
-- **GUI export error reporting**: when the pywebview bridge returns `error`, the HTML GUI shows the error instead of staying on "Exporting...".
-- **Documentation sync**: README, README.en, NOTICE, DEVELOPMENT, REVIEW, and agent instructions now match the v0.13.1 state.
-- **Source cleanup**: removed the unused upstream vendored reference source while keeping MIT attribution, external fork links, and git history.
-
-### 🚀 New in v0.13.0
-
-- **Animated stickers: "import multiple animated GIFs" model + GUI.** Corrects the v0.12.0 input shape — a non-professional user generating with AI ends up with **one animated GIF per sticker**, not an animated grid. Now you **import 8/16/24 animated GIF/APNG files (one per sticker)** → per-frame background cleanup, resize to ≤320×270 (one side ≥270), and **APNG (5–20 frames)**, plus an animated 240×240 main and a static 96×74 tab, following the official spec ([creator.line.me/en/guideline/animationsticker](https://creator.line.me/en/guideline/animationsticker/)). GUI "Import animated" (multi-file) + "Export animated" buttons (static exports are blocked in animated mode); CLI `sticker-forge animated a.gif b.gif … -o out.zip`. **16/24 just means importing more files** — no multi-grid needed.
-
-### 🚀 New in v0.12.0
-
-- **LINE animated sticker export (CLI, first cut)**: APNG animated sticker packs per the official spec (≤320×270, 5–20 frames, animated main + static tab). (v0.13.0 switched the input to "import multiple animated GIFs" and added the GUI.)
-
-### 🚀 New in v0.11.0
-
-- **LINE message sticker export**: message stickers (the sender types a short message onto the sticker) — **8/16/24 images, up to 370×320, no baked-in margin (LINE adds one), main 240×240 + tab 96×74** — following the official spec ([creator.line.me/en/guideline/messagesticker](https://creator.line.me/en/guideline/messagesticker/)). GUI "Export message stickers" button; CLI `sticker-forge message <grid…> -o out.zip`. Text position/font are set in LINE's editor.
-
-### 🚀 New in v0.10.0
-
-- **LINE custom emoji export**: export the tile pool as a LINE emoji set — **8–40 images, 180×180 transparent PNG, filenames `001.png…` plus a 96×74 chat thumbnail** — following the official spec ([creator.line.me/en/guideline/emoji](https://creator.line.me/en/guideline/emoji/)). GUI "Export LINE emoji" button; CLI `sticker-forge emoji <grid…> -o out.zip --thumb 1` and `validate --emoji`.
-
-### 🚀 New in v0.9.0
-
-- **Theme presets**: one click applies a themed starter pack (healing bear / office cat / couple bears / festive) — filling character/theme/tone/style plus 8 texts and 8 actions, ready to tweak. GUI dropdown; CLI `sticker-forge prompt --preset office-cat`.
-- **Pack title / author (GUI)**: set the LINE pack title and author in the GUI (written into the ZIP's README; the CLI already had `--title` / `--author`).
-
-### 🚀 New in v0.8.0
-
-- **Larger LINE packs (8/16/24/32/40)**: use "Add grid" to accumulate multiple 3×3 grids into a bigger tile pool, tick the stickers you want, and export a pack of the matching size.
-- **Pick main/tab sticker**: no longer fixed to the first sticker — choose which one is `main.png` and which is `tab.png`.
-- **Reorder stickers**: ▲▼ per tile to set the `01…NN` output order.
-- CLI: `sticker-forge export grid1.png grid2.png -o out.zip --select 1,…,16 --main 2 --tab 3`.
-
-### 🚀 New in v0.7.0
-
-- **Multi-platform export**: beyond LINE, export the stickers sized and formatted for **Telegram (512 PNG), WhatsApp (512 WebP + 96 tray), Discord (320 PNG), and Signal (512 PNG)**. Pick a platform in the GUI and click "Export for platform", or run `sticker-forge platform <grid> -o out.zip --target telegram`. (Inspired by the sticker-convert and StampNyaa references.)
-
-### 🚀 New in v0.6.0
-
-- **Per-sticker zoom**: click any tile thumbnail to open an enlarged view (on a transparency checkerboard) to inspect the cleanup.
-- **Per-sticker clean / reset**: the zoom view can clean up just that tile or reset it to the original slice. Both "clean all" and per-tile clean now work from the original slice, so re-running at a different strength never stacks fringe artifacts.
-
-### 🚀 New in v0.5.0
-
-- **One UI codebase**: the desktop GUI moved from tkinter to a **pywebview window rendering the HTML UI**, with split/cleanup/export/prompt all handled by the local Python core (JS is UI-only). The previously duplicated tkinter + JavaScript implementations are now a single core, ending the parity-maintenance burden. Dependency: pywebview (uses the built-in WebView2 on Windows).
-
-### 🚀 New in v0.4.0
-
-- **Prompt dropdown suggestions**: character / theme / tone / style / language and the 8 text and action slots offer dropdown suggestions — pick one when you are short on ideas, or type your own. The native GUI uses editable comboboxes, the HTML app uses `datalist`, and suggestions switch with the zh/en language.
-
-### 🚀 New in v0.3.0
-
-- **Drag-and-drop import** in the offline HTML workspace (native, zero-dep, browser-verified).
-- **Windows icon** for the GUI/CLI executables (`packaging/icon.ico`).
-- **Legacy cleanup**: removed the legacy Cloudflare/Gemini backend, campaign-checker CI, and now-unused upstream vendored reference source; kept attribution and external fork links for provenance.
-
-### 💡 Reference-inspired candidates
-
-Drawn from the fork source ([yazelin/line-sticker-studio](https://github.com/yazelin/line-sticker-studio)) and the other reference projects (sticker-convert, StampNyaa, signal-sticker-tool, LINE Creators Market):
-
-- **More platform formats**: a full Signal pack (with manifest).
-- **Big / pop-up / effect stickers**: other LINE sticker types, each with its own spec — can be added after verifying each one.
-- **ML background removal**: for non-chroma-key sources (e.g. rembg). **Leaning no**: first run downloads a model (breaks offline use) and the dependency is heavy — against the lightweight local-first principle.
-- **Grid history**: keep imported grids for reuse. **Leaning no**: needs persistent storage, which conflicts with the current `private_mode` "no persistent data" decision.
+- Run one manual LINE Creators Market upload check with non-infringing assets, especially for animated APNG stickers.
+- Add a fuller Signal pack export with manifest and validation.
+- Verify LINE big / pop-up / effect sticker specs one by one before adding them.
 
 ### ⏳ Decided
 
