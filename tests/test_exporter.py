@@ -8,12 +8,14 @@ from PIL import Image, ImageDraw
 
 from sticker_forge.exporter import (
     export_animated_zip,
+    export_big_zip,
     export_emoji_zip,
     export_line_zip,
     export_message_zip,
     export_platform_zip,
     export_stickers_zip,
     fit_to_canvas,
+    validate_big_zip,
     validate_emoji_zip,
     validate_line_zip,
     validate_signal_zip,
@@ -226,6 +228,17 @@ def test_export_message_zip_structure(tmp_path) -> None:
         assert "09.png" not in names
         assert "message" in archive.read("README.txt").decode("utf-8").lower()
     assert validate_line_zip(output) == []
+
+
+def test_export_big_zip_structure_and_validate(tmp_path) -> None:
+    output = export_big_zip(_stickers(), tmp_path / "big.zip", title="Big Pack", author="Tester")
+    with ZipFile(output) as archive:
+        names = set(archive.namelist())
+        assert {"main.png", "tab.png", "01.png", "08.png", "README.txt"} <= names
+        sticker = Image.open(BytesIO(archive.read("01.png")))
+        assert sticker.size == (396, 660)
+        assert "Big Stickers" in archive.read("README.txt").decode("utf-8")
+    assert validate_big_zip(output) == []
 
 
 def test_export_message_zip_rejects_pack_size(tmp_path) -> None:

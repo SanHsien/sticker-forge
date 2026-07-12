@@ -16,11 +16,13 @@ from .exporter import (
     LINE_PACK_SIZES,
     PLATFORM_SPECS,
     export_animated_zip,
+    export_big_zip,
     export_emoji_zip,
     export_line_zip,
     export_message_zip,
     export_platform_zip,
     export_stickers_zip,
+    validate_big_zip,
     validate_emoji_zip,
     validate_line_zip,
     validate_signal_zip,
@@ -40,12 +42,14 @@ MESSAGES = {
         "split_help": "將 3x3 grid 切成 PNG cells",
         "cleanup_help": "用 chroma-key 移除單色背景",
         "export_help": "從 3x3 grid 匯出 LINE 靜態貼圖 ZIP",
+        "big_help": "從 3x3 grid 匯出 LINE Big Stickers ZIP（396x660）",
         "stickers_help": "匯出 9 張 PNG-only 貼圖 ZIP",
         "platform_help": "匯出其他平台尺寸的貼圖 ZIP（Telegram/WhatsApp/Discord/Signal）",
         "emoji_help": "匯出 LINE 原創貼圖 emoji ZIP（8-40 張 × 180x180 ＋ 聊天縮圖）",
         "thumb_help": "聊天縮圖用選取中的第幾張（1-based）。預設：1",
         "emoji_validate_help": "以 LINE emoji 規格檢查 ZIP（而非貼圖）",
         "signal_validate_help": "以 Signal 貼圖素材包規格檢查 ZIP",
+        "big_validate_help": "以 LINE Big Stickers 規格檢查 ZIP",
         "signal_emoji_help": "Signal 每張貼圖對應的 emoji；可填 1 個套用全部，或用逗號填每張一個。預設：🙂",
         "message_help": "匯出 LINE 訊息貼圖 ZIP（8/16/24 張，文字由發送者輸入）",
         "animated_help": "匯出 LINE 動態貼圖 ZIP（匯入 8/16/24 個動態 GIF/APNG，每個一張，5-20 影格）",
@@ -72,6 +76,7 @@ MESSAGES = {
         "split_help": "split a 3x3 grid into PNG cells",
         "cleanup_help": "remove a solid background with chroma-key",
         "export_help": "export a LINE static sticker ZIP from a 3x3 grid",
+        "big_help": "export a LINE Big Stickers ZIP from a 3x3 grid (396x660)",
         "stickers_help": "export all 9 stickers as a PNG-only ZIP",
         "platform_help": "export a sticker ZIP sized for another platform (Telegram/WhatsApp/Discord/Signal)",
         "target_help": "target platform",
@@ -79,6 +84,7 @@ MESSAGES = {
         "thumb_help": "which selected emoji is the chat thumbnail (1-based). Default: 1",
         "emoji_validate_help": "validate the ZIP as a LINE emoji set instead of stickers",
         "signal_validate_help": "validate the ZIP as a Signal sticker asset pack",
+        "big_validate_help": "validate the ZIP as LINE Big Stickers",
         "signal_emoji_help": "Signal emoji assignment; pass one value for all stickers or comma-separated one per sticker. Default: 🙂",
         "message_help": "export a LINE message sticker ZIP (8/16/24, the sender types the text)",
         "animated_help": "export a LINE animated sticker ZIP (import 8/16/24 animated GIF/APNG files, one per sticker, 5-20 frames)",
@@ -219,6 +225,23 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     export.add_argument("--tune", choices=["safe", "balanced", "aggressive"], default="balanced")
     export.add_argument("--padding", type=int, default=LINE_STATIC_SPEC.sticker_padding, help=text["padding_help"])
 
+    big = subparsers.add_parser("big", parents=[language_parent], help=text["big_help"])
+    big.add_argument("input", type=Path, nargs="+")
+    big.add_argument("-o", "--output", type=Path, required=True)
+    big.add_argument(
+        "--select",
+        type=_parse_selection,
+        default=_parse_selection("1,2,3,4,5,6,7,8"),
+        help=text["select_help"],
+    )
+    big.add_argument("--main", type=int, default=1, help=text["main_help"])
+    big.add_argument("--tab", type=int, default=1, help=text["tab_help"])
+    big.add_argument("--title", default="sticker-forge big sticker pack")
+    big.add_argument("--author", default="sticker-forge")
+    big.add_argument("--keep-background", action="store_true", help=text["keep_background_help"])
+    big.add_argument("--key-name", choices=["green", "magenta"], default="green")
+    big.add_argument("--tune", choices=["safe", "balanced", "aggressive"], default="balanced")
+
     stickers = subparsers.add_parser("stickers", parents=[language_parent], help=text["stickers_help"])
     stickers.add_argument("input", type=Path)
     stickers.add_argument("-o", "--output", type=Path, required=True)
@@ -299,6 +322,7 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     validate.add_argument("zip", type=Path)
     validate.add_argument("--emoji", action="store_true", help=text["emoji_validate_help"])
     validate.add_argument("--signal", action="store_true", help=text["signal_validate_help"])
+    validate.add_argument("--big", action="store_true", help=text["big_validate_help"])
 
     return parser
 
@@ -385,6 +409,36 @@ def main(argv: list[str] | None = None) -> int:
             main_index=args.main - 1,
             tab_index=args.tab - 1,
             spec=spec,
+        )
+        print(output)
+        return 0
+
+    if args.command == "big":
+        key = resolve_chroma_key(args.key_name)
+        pool: list[Image.Image] = []
+        for grid_path in args.input:
+            with Image.open(grid_path) as image:
+                pool.extend(split_grid_to_stickers(image, background=(*key.rgb, 255)))
+        if any(index > len(pool) for index in args.select):
+            parser.error(
+                f"--select values must be between 1 and {len(pool)} "
+                f"({len(args.input)} grid(s) = {len(pool)} cells)"
+            )
+        selected = [pool[index - 1] for index in args.select]
+        if not args.keep_background:
+            selected = [
+                remove_chroma_background(sticker, key_name=args.key_name, tune=args.tune)
+                for sticker in selected
+            ]
+        if not 1 <= args.main <= len(selected) or not 1 <= args.tab <= len(selected):
+            parser.error(f"--main/--tab must be between 1 and {len(selected)}")
+        output = export_big_zip(
+            selected,
+            args.output,
+            title=args.title,
+            author=args.author,
+            main_index=args.main - 1,
+            tab_index=args.tab - 1,
         )
         print(output)
         return 0
@@ -542,12 +596,15 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "validate":
-        if args.emoji and args.signal:
-            parser.error("--emoji and --signal cannot be used together")
+        modes = [args.emoji, args.signal, args.big]
+        if sum(1 for mode in modes if mode) > 1:
+            parser.error("--emoji, --signal, and --big cannot be used together")
         if args.emoji:
             errors = validate_emoji_zip(args.zip)
         elif args.signal:
             errors = validate_signal_zip(args.zip)
+        elif args.big:
+            errors = validate_big_zip(args.zip)
         else:
             errors = validate_line_zip(args.zip)
         if errors:

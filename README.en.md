@@ -8,7 +8,7 @@
 
 [繁體中文](README.md) | English
 
-`sticker-forge` is a local-first toolkit for making chat sticker packs. It supports LINE static stickers, emoji, message stickers, animated stickers, and exports for Telegram, WhatsApp, Discord and Signal sizes/formats. It does not run an AI server, host API keys, upload user images, or automate submission. Users generate sticker assets with ChatGPT, Gemini, or another image tool, then import them back into the local app for cleanup and export.
+`sticker-forge` is a local-first toolkit for making chat sticker packs. It supports LINE static stickers, Big Stickers, emoji, message stickers, animated stickers, and exports for Telegram, WhatsApp, Discord and Signal sizes/formats. It does not run an AI server, host API keys, upload user images, or automate submission. Users generate sticker assets with ChatGPT, Gemini, or another image tool, then import them back into the local app for cleanup and export.
 
 ## Workflow
 
@@ -19,7 +19,7 @@
 5. Split, clean up, preview, select/reorder stickers, and prepare animated files locally.
 6. Export a ZIP for LINE Creators Market or another supported platform.
 
-The current scope covers LINE static stickers, emoji, message stickers, animated stickers, and multi-platform size exports. This project does not auto-submit to LINE and does not guarantee review approval.
+The current scope covers LINE static stickers, Big Stickers, emoji, message stickers, animated stickers, and multi-platform size exports. This project does not auto-submit to LINE and does not guarantee review approval.
 
 ## Features
 
@@ -29,7 +29,7 @@ The current scope covers LINE static stickers, emoji, message stickers, animated
 - Multiple animated GIF/APNG import for LINE animated stickers.
 - Green or magenta chroma-key background cleanup with despill.
 - Sticker selection, ordering, and main/tab image selection.
-- LINE static sticker, emoji, message sticker, animated sticker ZIP exports.
+- LINE static sticker, Big Stickers, emoji, message sticker, animated sticker ZIP exports.
 - 9 PNG-only ZIP export and multi-platform ZIP exports for non-LINE use.
 - ZIP structure validation and pre-export preview metadata.
 - Native Windows desktop GUI (a pywebview window rendering the HTML UI, backed by the Python core) plus a separate CLI executable.
@@ -88,25 +88,26 @@ python -m sticker_forge validate outputs\line-stickers.zip
 
 ## Roadmap
 
-Version **v0.15.0**: local-first sticker-pack toolkit (LINE stickers/emoji/message/animated stickers and other platforms). The desktop GUI (a pywebview window rendering the HTML) and the CLI share one Python core. `python -m pytest` passes.
+Version **v0.16.0**: local-first sticker-pack toolkit (LINE stickers/Big Stickers/emoji/message/animated stickers and other platforms). The desktop GUI (a pywebview window rendering the HTML) and the CLI share one Python core. `python -m pytest` passes.
 
 ### ✅ Done
 
 - Local-first direction; the needed fork-source concepts have been folded into the local Python core, pywebview GUI, and project docs.
 - Prompt templates (Chinese/English, text/no-text, green/magenta, risk reminders).
 - Image core: 3x3 split, cleanup, resize/padding, main/tab image, preview metadata.
-- Export: LINE static sticker, emoji, message sticker, animated sticker ZIPs, PNG-only ZIP, platform ZIPs, `validate` and `preview` commands.
-- PyInstaller Windows packaging and releases through `v0.15.0` (GitHub Releases with SHA256 checksums).
+- Export: LINE static sticker, Big Stickers, emoji, message sticker, animated sticker ZIPs, PNG-only ZIP, platform ZIPs, `validate` and `preview` commands.
+- PyInstaller Windows packaging and releases through `v0.16.0` (GitHub Releases with SHA256 checksums).
 - Desktop drag-and-drop import (the webview's HTML dropzone); WebView2 runs with `private_mode`, an ephemeral profile, so nothing persistent is written.
 - User guide and reproducible local sample asset generator (generated images and ZIPs are not committed).
 - Signal platform export now includes `cover.png`, `signal_manifest.json`, and `validate --signal`.
+- LINE Big Stickers export now includes CLI / GUI support and `validate --big`.
 
 Detailed version history is in [`CHANGELOG.md`](CHANGELOG.md); design decisions are in [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
 ### Next
 
 - Run one manual LINE Creators Market upload check with non-infringing assets, especially for animated APNG stickers.
-- Verify LINE big / pop-up / effect sticker specs one by one before adding them.
+- Verify LINE pop-up / effect sticker APNG specs one by one before adding them.
 
 ### ⏳ Decided
 
@@ -119,6 +120,7 @@ These projects informed the design as references only, not runtime dependencies.
 | Project | License | What it informed |
 | --- | --- | --- |
 | [LINE Creators Market](https://creator.line.me/) / [LINE Sticker Maker](https://creator.line.me/en/stickermaker/) | Official | Static sticker specs, pack sizes, transparency, submission flow. |
+| [LINE Big Stickers guideline](https://creator.line.me/en/guideline/bigsticker/) | Official spec | Big Stickers pack sizes, 396x660 maximum size, main/tab images, and transparent-background requirements. |
 | [Signal Stickers Support](https://support.signal.org/hc/en-us/articles/360031836512-Stickers) | Official support docs | Signal sticker size, format, cover, title, author, and emoji-assignment requirements. |
 | [yazelin/line-sticker-studio](https://github.com/yazelin/line-sticker-studio) | MIT (**fork source**) | 3x3 grid, chroma-key, ZIP structure, submission notes, UI flow; provenance kept through attribution and git history, no longer vendored. |
 | [laggykiller/sticker-convert](https://github.com/laggykiller/sticker-convert) | GPL-2.0 | The multi-platform export concept; implemented independently from public specs. |

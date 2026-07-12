@@ -10,7 +10,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 
 from PIL import Image
 
-from .spec import LINE_STATIC_SPEC, LINEStickerSpec
+from .spec import LINE_BIG_SPEC, LINE_STATIC_SPEC, LINEStickerSpec
 
 ImageSource = Image.Image | str | Path
 
@@ -153,6 +153,43 @@ def export_message_zip(
         tab_index=tab_index,
         spec=spec,
         pack_sizes=LINE_MESSAGE_PACK_SIZES,
+        readme=readme,
+    )
+
+
+def export_big_zip(
+    images: Sequence[ImageSource],
+    output_path: str | Path,
+    *,
+    title: str = "sticker-forge big sticker pack",
+    author: str = "sticker-forge",
+    main_index: int = 0,
+    tab_index: int = 0,
+) -> Path:
+    """Export a LINE Big Sticker pack (8/16/24/32/40, 396x660 sticker canvas)."""
+    count = len(images)
+    readme = (
+        f"{title}\n"
+        f"Author: {author}\n\n"
+        "This ZIP was generated locally by sticker-forge (LINE Big Stickers).\n"
+        f"It contains {count} big-sticker images (396x660), main.png (240x240),\n"
+        "and tab.png (96x74). LINE Big Sticker source images must fit the official\n"
+        "80x524 minimum to 396x660 maximum range; this export uses a 396x660 canvas.\n"
+        "Manual LINE Creators Market submission:\n"
+        "1. Sign in and create a new Big Sticker item.\n"
+        "2. Choose 8, 16, 24, 32, or 40 stickers on the Manage Stickers page.\n"
+        "3. Upload this ZIP, or upload main.png, tab.png, and the numbered PNGs manually.\n"
+        "Review current LINE Creators Market Big Sticker rules before submission.\n"
+    )
+    return export_line_zip(
+        images,
+        output_path,
+        title=title,
+        author=author,
+        main_index=main_index,
+        tab_index=tab_index,
+        spec=LINE_BIG_SPEC,
+        pack_sizes=LINE_PACK_SIZES,
         readme=readme,
     )
 
@@ -544,6 +581,11 @@ def validate_emoji_zip(zip_path: str | Path) -> list[str]:
                     errors.append(f"{name} has no transparent background; LINE requires transparent emoji")
 
     return errors
+
+
+def validate_big_zip(zip_path: str | Path) -> list[str]:
+    """Return validation errors for a LINE Big Sticker ZIP."""
+    return validate_line_zip(zip_path, spec=LINE_BIG_SPEC)
 
 
 def validate_signal_zip(zip_path: str | Path) -> list[str]:

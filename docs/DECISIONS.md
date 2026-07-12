@@ -225,3 +225,19 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 - 不產生 Signal 分享連結。
 - 不上傳貼圖到 Signal server。
 - 不處理 Signal Desktop 或手機端自動操作。
+
+## 2026-07-12：LINE Big Stickers（v0.16.0）
+
+依 README 簡化路線圖查證 LINE Big Stickers。官方 guideline（https://creator.line.me/en/guideline/bigsticker/）列出的 Big Sticker 圖片需求是：main 240x240、貼圖 8/16/24/32/40 張、貼圖尺寸最小 80x524、最大 396x660、chat thumbnail 96x74、PNG、透明背景。Big Stickers 仍是靜態 PNG 套組，不需要 APNG pipeline，因此可直接在現有 Python core 上新增獨立匯出。
+
+實作：
+
+- `export_big_zip()` 以 396x660 canvas 輸出 numbered PNGs、`main.png`、`tab.png` 與 README。
+- CLI 新增 `big` 指令；GUI 新增「匯出 Big Stickers」按鈕。
+- `validate --big` 用 LINE Big Stickers 尺寸檢查 ZIP。
+
+邊界：
+
+- 不把 Big Stickers 混進一般 `export`，避免 370x320 靜態貼圖與 396x660 Big Stickers 混淆。
+- 不宣稱已通過 LINE 審核；仍需手動上傳抽驗。
+- Pop-up / effect stickers 是 APNG 全螢幕動畫，留待下一輪獨立實作。

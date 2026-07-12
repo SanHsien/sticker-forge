@@ -4,7 +4,7 @@
 
 ## 下載與啟動
 
-1. 到 GitHub Releases 下載 `sticker-forge-v0.15.0-windows-x64.zip`。
+1. 到 GitHub Releases 下載 `sticker-forge-v0.16.0-windows-x64.zip`。
 2. 解壓縮到本機資料夾。
 3. 雙擊 `sticker-forge.exe` 開啟桌面 GUI。
 4. 需要命令列時使用 `sticker-forge-cli.exe`。
@@ -37,6 +37,15 @@ LINE emoji 使用 180x180 透明 PNG，張數為 8 到 40 張。GUI 可直接匯
 ```powershell
 python -m sticker_forge emoji examples\generated\static-grid.png -o outputs\line-emoji.zip --thumb 1
 python -m sticker_forge validate outputs\line-emoji.zip --emoji
+```
+
+## LINE Big Stickers
+
+Big Stickers 是 LINE 的大型靜態貼圖類型，匯出尺寸為 396x660。GUI 可直接匯出；CLI 可用：
+
+```powershell
+python -m sticker_forge big examples\generated\static-grid.png -o outputs\line-big-stickers.zip --title "Big Pack" --author "sticker-forge"
+python -m sticker_forge validate outputs\line-big-stickers.zip --big
 ```
 
 ## LINE 訊息貼圖

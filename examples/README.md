@@ -33,6 +33,13 @@ python -m sticker_forge emoji examples\generated\static-grid.png -o outputs\line
 python -m sticker_forge validate outputs\line-emoji.zip --emoji
 ```
 
+## LINE Big Stickers
+
+```powershell
+python -m sticker_forge big examples\generated\static-grid.png -o outputs\line-big-stickers.zip --title "Big Pack" --author "sticker-forge"
+python -m sticker_forge validate outputs\line-big-stickers.zip --big
+```
+
 ## LINE 訊息貼圖
 
 ```powershell

@@ -2,6 +2,12 @@
 
 本檔記錄 `sticker-forge` 的版本變更。專案方向、使用方式與路線圖見 [`README.md`](README.md)；架構與打包流程見 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)。
 
+## v0.16.0
+
+- **LINE Big Stickers**：新增 `big` CLI 指令與 GUI「匯出 Big Stickers」按鈕，輸出 396x660 貼圖圖檔、main.png、tab.png 與 README。
+- **Big Sticker validator**：`validate --big` 以 LINE Big Stickers 尺寸檢查 ZIP。
+- **官方規格依據**：依 LINE Creators Market Big Stickers guideline 補文件與決策紀錄；pop-up / effect stickers 留待下一輪 APNG 規格實作。
+
 ## v0.15.0
 
 - **Signal manifest pack**：`platform --target signal` 會輸出 512x512 PNG、`cover.png`、`signal_manifest.json` 與 README，manifest 含 title、author、cover、每張貼圖檔名與 emoji 指派。

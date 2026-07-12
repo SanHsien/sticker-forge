@@ -7,6 +7,7 @@ from .exporter import (
     LINEStickerSpec,
     PLATFORM_SPECS,
     export_animated_zip,
+    export_big_zip,
     export_emoji_zip,
     export_line_zip,
     export_message_zip,
@@ -14,6 +15,7 @@ from .exporter import (
     export_stickers_zip,
     fit_to_canvas,
     validate_emoji_zip,
+    validate_big_zip,
     validate_line_zip,
     validate_signal_zip,
 )
@@ -30,6 +32,7 @@ __all__ = [
     "app_path",
     "build_pack_preview",
     "export_animated_zip",
+    "export_big_zip",
     "export_emoji_zip",
     "export_line_zip",
     "export_message_zip",
@@ -44,6 +47,7 @@ __all__ = [
     "split_grid_file",
     "split_grid_to_stickers",
     "validate_emoji_zip",
+    "validate_big_zip",
     "validate_line_zip",
     "validate_signal_zip",
 ]

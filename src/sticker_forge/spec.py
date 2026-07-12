@@ -42,6 +42,7 @@ class LINEStickerSpec:
 
 
 LINE_STATIC_SPEC = LINEStickerSpec()
+LINE_BIG_SPEC = LINEStickerSpec(sticker_size=(396, 660), sticker_padding=0)
 
 CHROMA_KEYS = {
     "green": ChromaKey(
