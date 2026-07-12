@@ -99,6 +99,7 @@ Version **v0.18.0**: local-first sticker-pack toolkit (LINE stickers/Big Sticker
 - PyInstaller Windows packaging and releases through `v0.18.0` (GitHub Releases with SHA256 checksums).
 - Desktop drag-and-drop import (the webview's HTML dropzone); WebView2 runs with `private_mode`, an ephemeral profile, so nothing persistent is written.
 - User guide and reproducible local sample asset generator (generated images and ZIPs are not committed).
+- LINE manual-upload trial pack generator (generated images and ZIPs are not committed).
 - Signal platform export now includes `cover.png`, `signal_manifest.json`, and `validate --signal`.
 - LINE Big Stickers export now includes CLI / GUI support and `validate --big`.
 - LINE pop-up / effect stickers now include CLI/GUI export and `validate --popup` / `validate --effect`.
@@ -107,7 +108,7 @@ Detailed version history is in [`CHANGELOG.md`](CHANGELOG.md); design decisions 
 
 ### Next
 
-- Run one manual LINE Creators Market upload check with non-infringing assets, especially for animated / pop-up / effect APNG stickers.
+- Run `python examples\create_line_trial_packs.py`, then manually upload the generated non-infringing trial ZIPs to LINE Creators Market, especially for animated / pop-up / effect APNG stickers.
 - Cut `v1.0.0` only after the main LINE types have manual upload evidence, GUI smoke coverage, Windows exe release checks, and documentation consistency review.
 
 ### ⏳ Decided

@@ -37,7 +37,7 @@ v0.13.1 已補發 Windows exe，讓 GUI 匯出錯誤顯示修正進入正式 Rel
 
 ### P2：APNG 類 LINE 規格仍需真實上傳抽驗
 
-程式已用 APNG、影格數、尺寸與 ZIP 結構做基本檢查，但 LINE Creators Market 對動態、pop-up、effect APNG 的檔案大小、播放行為、重複影格等仍可能有平台端判定。下一步應用非侵權素材做一次手動上傳抽驗。
+程式已用 APNG、影格數、尺寸與 ZIP 結構做基本檢查，並新增 `examples/create_line_trial_packs.py` 產生非侵權抽驗 ZIP；但 LINE Creators Market 對動態、pop-up、effect APNG 的檔案大小、播放行為、重複影格等仍可能有平台端判定。下一步是用該腳本產物做一次手動上傳抽驗。
 
 ### P2：pywebview 依賴 Windows WebView2
 

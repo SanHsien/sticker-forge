@@ -276,3 +276,19 @@ v0.17.0 已有 pop-up / effect 的核心與 CLI，但一般使用者不應被迫
 - 不做 LINE 自動送審；匯出後仍由使用者到 LINE Creators Market 手動上傳。
 - 不把 pop-up / effect 混進一般「匯出 ZIP」按鈕，避免使用者分不清一般靜態貼圖與 screen animation 類型。
 - 仍需用非侵權素材做 LINE 平台端手動上傳抽驗，才能考慮 `v1.0.0`。
+
+## 2026-07-12：LINE 手動上傳抽驗包產生器
+
+`v1.0.0` 的主要未完成門檻是 LINE Creators Market 實際上傳表單抽驗。這件事需要外部帳號與人工操作，不能由 repo 內程式自動完成；但 repo 可以把抽驗材料準備好。
+
+決策：
+
+- 新增 `examples/create_line_trial_packs.py`，用 `examples/create_sample_assets.py` 的非侵權範例圖產生靜態、Big、emoji、訊息、動態、pop-up、effect 的 ZIP。
+- 腳本執行後會立即跑本機 validator；動態貼圖目前做基本 APNG 結構檢查，其他類型使用既有 validator。
+- 產物放在 `examples/generated/line-trial-packs/`，不進版控。
+- 腳本不登入 LINE、不送審、不上傳檔案；只協助人工 smoke test 準備檔案。
+
+邊界：
+
+- 若 LINE 平台端拒絕 APNG 或 ZIP，需把拒絕原因回寫 `REVIEW.md` / `CHANGELOG.md` / 對應 exporter 測試，再修正。
+- 沒有平台端抽驗證據前，不切 `v1.0.0`。

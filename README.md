@@ -81,6 +81,7 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 - 桌面拖放匯入（webview 的 HTML dropzone 內建）；WebView2 用 `private_mode` 臨時 profile，不寫持久隱藏資料。
 - 中英文 README。
 - 使用者指南與本機範例素材產生器（不提交生成圖片或 ZIP）。
+- LINE 手動上傳抽驗包產生器（不提交生成圖片或 ZIP）。
 - Signal 多平台匯出已補 `cover.png`、`signal_manifest.json` 與 `validate --signal` 檢查。
 - LINE Big Stickers 已補 CLI / GUI 匯出與 `validate --big` 檢查。
 - LINE pop-up / effect stickers 已補 CLI、GUI 匯出與 `validate --popup` / `validate --effect` 檢查。
@@ -89,7 +90,7 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 
 ### 下一步
 
-- 用非侵權素材做一次 LINE Creators Market 手動上傳抽驗，特別是動態／pop-up／effect APNG。
+- 執行 `python examples\create_line_trial_packs.py` 產生非侵權 LINE 抽驗 ZIP，並到 LINE Creators Market 手動上傳抽驗，特別是動態／pop-up／effect APNG。
 - `v1.0.0` 正式版門檻：完成主要 LINE 類型的手動上傳抽驗、GUI smoke、Windows exe 發行檢查與文件一致性覆核後再切。
 
 ### ⏳ 已定案

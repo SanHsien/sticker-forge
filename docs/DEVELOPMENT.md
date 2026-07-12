@@ -47,6 +47,7 @@ python -m pytest
 
 ```powershell
 python examples\create_sample_assets.py
+python examples\create_line_trial_packs.py
 python -m sticker_forge prompt
 python -m sticker_forge prompt --preset office-cat
 python -m sticker_forge --lang en prompt
@@ -114,6 +115,7 @@ node --check app/app.js
 
 ### v1.0.0 checklist
 
+- 先跑 `python examples\create_line_trial_packs.py`，確認本機產生靜態、Big、emoji、訊息、動態、pop-up、effect 抽驗 ZIP 且 validator 通過。
 - 用非侵權素材完成 LINE Creators Market 手動上傳抽驗，至少涵蓋靜態、Big、emoji、訊息、動態、pop-up、effect 的 ZIP 結構。
 - GUI 覆蓋主要 LINE 類型，或在 README 明確標示 CLI-only 的例外。
 - Windows exe 在乾淨使用者資料環境完成 `--smoke`、GUI 啟動與基本匯出。

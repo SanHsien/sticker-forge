@@ -19,6 +19,26 @@ examples\generated\animated\animated-08.gif
 
 `examples\generated\` 不進版控。
 
+## 產生 LINE 手動上傳抽驗包
+
+這個指令會產生非侵權範例素材，並一次輸出 LINE 靜態、Big、emoji、訊息、動態、pop-up、effect 的 ZIP，再跑本機 validator。產物只用於 LINE Creators Market 上傳表單 smoke test，不會自動送審。
+
+```powershell
+python examples\create_line_trial_packs.py
+```
+
+預設輸出：
+
+```text
+examples\generated\line-trial-packs\line-static.zip
+examples\generated\line-trial-packs\line-big-stickers.zip
+examples\generated\line-trial-packs\line-emoji.zip
+examples\generated\line-trial-packs\line-message.zip
+examples\generated\line-trial-packs\line-animated.zip
+examples\generated\line-trial-packs\line-popup.zip
+examples\generated\line-trial-packs\line-effect.zip
+```
+
 ## 靜態貼圖
 
 ```powershell

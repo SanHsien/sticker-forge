@@ -7,9 +7,22 @@
 ## 支援的 LINE 類型
 
 - 靜態貼圖：8／16／24／32／40 張。
+- Big Stickers：8／16／24／32／40 張。
 - LINE emoji：8–40 張。
 - 訊息貼圖：8／16／24 張，文字位置與字型在 LINE 編輯器設定。
 - 動態貼圖：8／16／24 張 APNG。
+- Pop-up stickers：8／16／24 張靜態貼圖 + 8／16／24 個 480 x 480 APNG 畫面動畫。
+- Effect stickers：8／16／24 張靜態貼圖 + 8／16／24 個 480 x 480 APNG 畫面動畫。
+
+## 手動上傳抽驗包
+
+正式切 `v1.0.0` 前，先用非侵權範例素材做一次 LINE Creators Market 上傳表單抽驗：
+
+```powershell
+python examples\create_line_trial_packs.py
+```
+
+產物會放在 `examples\generated\line-trial-packs\`，包含靜態、Big、emoji、訊息、動態、pop-up、effect 的 ZIP。這些 ZIP 只用來確認 LINE 上傳表單是否接受檔案結構與尺寸；腳本不會登入 LINE、不會自動送審，也不會把素材提交進 Git。
 
 ## 靜態貼圖 ZIP 內容
 
@@ -17,6 +30,14 @@
 - `tab.png`：聊天室標籤圖，96 x 74，對應「聊天室標籤」欄。
 - `01.png` 到 `NN.png`：貼圖本體，370 x 320；`NN` 依套組張數為 08／16／24／32／40。
 - `README.txt`：本機產生的上架提醒。
+
+不同貼圖類型會有不同欄位與檔名要求：
+
+- Big Stickers：貼圖本體為 396 x 660。
+- LINE emoji：`001.png` 到 `0NN.png` 為 180 x 180，另有 `chat-thumbnail.png`。
+- 動態貼圖：`01.png` 到 `NN.png` 與 `main.png` 為 APNG，`tab.png` 為靜態 PNG。
+- Pop-up stickers：靜態 `01.png` 到 `NN.png`，另有 `popup-01.png` 到 `popup-NN.png` 與 `popup-main.png` APNG。
+- Effect stickers：靜態 `01.png` 到 `NN.png`，另有 `effect-01.png` 到 `effect-NN.png` 與 `effect-main.png` APNG。
 
 ## 手動上架流程
 

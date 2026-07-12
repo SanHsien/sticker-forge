@@ -2,6 +2,11 @@
 
 本檔記錄 `sticker-forge` 的版本變更。專案方向、使用方式與路線圖見 [`README.md`](README.md)；架構與打包流程見 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)。
 
+## Unreleased
+
+- **LINE 抽驗包產生器**：新增 `examples/create_line_trial_packs.py`，用非侵權範例素材一次產生靜態、Big、emoji、訊息、動態、pop-up、effect 的 LINE ZIP，並跑本機 validator，方便後續手動上傳 LINE Creators Market 抽驗。
+- **送審文件補齊**：`docs/LINE_SUBMISSION.md` 補上 Big、pop-up、effect 類型與抽驗包流程。
+
 ## v0.18.0
 
 - **Pop-up / effect GUI**：桌面 GUI 新增「匯入畫面動畫」、「匯出 pop-up」、「匯出 effect」，可用靜態 3x3 grid 搭配同數量 480x480 APNG 畫面動畫輸出 LINE pop-up / effect stickers。
