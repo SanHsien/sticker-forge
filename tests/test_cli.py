@@ -197,6 +197,42 @@ def test_cli_animated_creates_zip(tmp_path) -> None:
         assert sticker.is_animated and "main.png" in archive.namelist()
 
 
+def test_cli_popup_creates_and_validates_zip(tmp_path) -> None:
+    grid = Image.new("RGBA", (300, 300), (0, 255, 0, 255))
+    grid_path = tmp_path / "grid.png"
+    grid.save(grid_path)
+    args = ["popup", str(grid_path), "-o", str(tmp_path / "popup.zip")]
+    for i in range(8):
+        p = tmp_path / f"popup-{i}.png"
+        _animated_gif(p)
+        args.extend(["-a", str(p)])
+
+    assert main(args) == 0
+
+    with ZipFile(tmp_path / "popup.zip") as archive:
+        assert "popup-main.png" in archive.namelist()
+        assert "popup-08.png" in archive.namelist()
+    assert main(["validate", str(tmp_path / "popup.zip"), "--popup"]) == 0
+
+
+def test_cli_effect_creates_and_validates_zip(tmp_path) -> None:
+    grid = Image.new("RGBA", (300, 300), (0, 255, 0, 255))
+    grid_path = tmp_path / "grid.png"
+    grid.save(grid_path)
+    args = ["effect", str(grid_path), "-o", str(tmp_path / "effect.zip")]
+    for i in range(8):
+        p = tmp_path / f"effect-{i}.png"
+        _animated_gif(p)
+        args.extend(["-a", str(p)])
+
+    assert main(args) == 0
+
+    with ZipFile(tmp_path / "effect.zip") as archive:
+        assert "effect-main.png" in archive.namelist()
+        assert "effect-08.png" in archive.namelist()
+    assert main(["validate", str(tmp_path / "effect.zip"), "--effect"]) == 0
+
+
 def test_cli_platform_creates_zip(tmp_path) -> None:
     grid = Image.new("RGBA", (300, 300), (0, 255, 0, 255))
     grid_path = tmp_path / "grid.png"

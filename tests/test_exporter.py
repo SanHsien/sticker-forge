@@ -9,15 +9,19 @@ from PIL import Image, ImageDraw
 from sticker_forge.exporter import (
     export_animated_zip,
     export_big_zip,
+    export_effect_zip,
     export_emoji_zip,
     export_line_zip,
     export_message_zip,
     export_platform_zip,
+    export_popup_zip,
     export_stickers_zip,
     fit_to_canvas,
     validate_big_zip,
+    validate_effect_zip,
     validate_emoji_zip,
     validate_line_zip,
+    validate_popup_zip,
     validate_signal_zip,
 )
 
@@ -218,6 +222,61 @@ def test_export_animated_zip_rejects_frame_count(tmp_path) -> None:
         assert "frames" in str(exc)
     else:
         raise AssertionError("animated export should require 5-20 frames")
+
+
+def _screen_animation_frames(count: int = 8):
+    frames = []
+    durations = []
+    for index in range(count):
+        sticker_frames = []
+        sticker_durations = []
+        for frame_index in range(6):
+            image = Image.new("RGBA", (220, 180), (0, 0, 0, 0))
+            draw = ImageDraw.Draw(image)
+            draw.rectangle(
+                [20 + frame_index * 5, 30 + index, 90 + frame_index * 5, 100 + index],
+                fill=(20 + index, 120, 220, 220),
+            )
+            sticker_frames.append(image)
+            sticker_durations.append(120)
+        frames.append(sticker_frames)
+        durations.append(sticker_durations)
+    return frames, durations
+
+
+def test_export_popup_zip_structure_and_validate(tmp_path) -> None:
+    frames, durations = _screen_animation_frames()
+    output = export_popup_zip(_stickers(), frames, tmp_path / "popup.zip", durations=durations)
+    with ZipFile(output) as archive:
+        names = set(archive.namelist())
+        assert {"main.png", "tab.png", "01.png", "popup-01.png", "popup-main.png", "README.txt"} <= names
+        popup = Image.open(BytesIO(archive.read("popup-01.png")))
+        assert popup.is_animated and popup.n_frames == 6 and popup.size == (480, 480)
+        static = Image.open(BytesIO(archive.read("01.png")))
+        assert static.size == (370, 320)
+    assert validate_popup_zip(output) == []
+
+
+def test_export_effect_zip_structure_and_validate(tmp_path) -> None:
+    frames, durations = _screen_animation_frames()
+    output = export_effect_zip(_stickers(), frames, tmp_path / "effect.zip", durations=durations)
+    with ZipFile(output) as archive:
+        names = set(archive.namelist())
+        assert {"effect-01.png", "effect-main.png", "main.png", "tab.png", "README.txt"} <= names
+        effect = Image.open(BytesIO(archive.read("effect-main.png")))
+        assert effect.is_animated and effect.size == (480, 480)
+        assert "effect" in archive.read("README.txt").decode("utf-8").lower()
+    assert validate_effect_zip(output) == []
+
+
+def test_export_popup_zip_rejects_animation_count_mismatch(tmp_path) -> None:
+    frames, _ = _screen_animation_frames(count=7)
+    try:
+        export_popup_zip(_stickers(), frames, tmp_path / "popup.zip")
+    except ValueError as exc:
+        assert "APNG animations" in str(exc)
+    else:
+        raise AssertionError("pop-up export should require one animation per sticker")
 
 
 def test_export_message_zip_structure(tmp_path) -> None:

@@ -241,3 +241,20 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 - 不把 Big Stickers 混進一般 `export`，避免 370x320 靜態貼圖與 396x660 Big Stickers 混淆。
 - 不宣稱已通過 LINE 審核；仍需手動上傳抽驗。
 - Pop-up / effect stickers 是 APNG 全螢幕動畫，留待下一輪獨立實作。
+
+## 2026-07-12：LINE pop-up / effect stickers（v0.17.0）
+
+依 README 簡化路線圖查證 LINE pop-up / effect stickers。官方 guideline（https://creator.line.me/en/guideline/popupsticker/ 與 https://creator.line.me/en/guideline/effectsticker/）列出的共同需求是：main 240x240、靜態貼圖 8/16/24 張且最大 370x320、screen animation 8/16/24 個且最大 480x480 APNG、pop-up/effect main 480x480 APNG、tab 96x74、APNG 5-20 frames、1-3 loops 且總長不超過 3 秒、透明背景。
+
+實作：
+
+- 新增 `export_popup_zip()` 與 `export_effect_zip()`，輸出靜態 numbered PNGs、`popup-01.png...` 或 `effect-01.png...`、`popup-main.png` 或 `effect-main.png`、`main.png`、`tab.png` 與 README。
+- APNG screen animation 固定放進 480x480 透明 canvas，符合「寬或高必須剛好 480」與最小邊條件。
+- CLI 新增 `popup` / `effect` 指令：使用靜態 3x3 grid 加上 8/16/24 個動態 GIF/APNG，每個動態檔對應一張貼圖。
+- `validate --popup` / `validate --effect` 檢查張數、檔名、尺寸、APNG 影格數、透明背景、單檔 1 MB 與 ZIP 結構。
+
+邊界：
+
+- v0.17.0 先做 CLI-first，因為使用者手上的資料形狀是「一張靜態 grid + 多個動態檔」，GUI 流程需要另外整理匯入、預覽與錯誤提示。
+- 不宣稱 pop-up / effect 已通過 LINE 審核；仍需以非侵權素材做手動上傳抽驗。
+- `v1.0.0` 不在本輪切出。正式版門檻是主要 LINE 類型完成手動上傳抽驗、GUI smoke、Windows exe 發行檢查與文件一致性覆核。

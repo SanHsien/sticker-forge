@@ -10,7 +10,7 @@
 
 Local-first toolkit for making chat sticker packs: prompt templates, image cleanup, slicing, and export for LINE, Telegram, WhatsApp, Discord and Signal.
 
-`sticker-forge` 是本機優先的貼圖包製作工具。支援 LINE 靜態貼圖、Big Stickers、emoji、訊息貼圖、動態貼圖，也能一鍵匯出成 Telegram、WhatsApp、Discord、Signal 的尺寸與格式。它不架 AI server、不代管 API key，也不收集使用者圖片；使用者自行用 ChatGPT、Gemini 或其他生圖工具產圖，再把圖片匯回本機程式加工與匯出。
+`sticker-forge` 是本機優先的貼圖包製作工具。支援 LINE 靜態貼圖、Big Stickers、emoji、訊息貼圖、動態貼圖、pop-up stickers、effect stickers，也能一鍵匯出成 Telegram、WhatsApp、Discord、Signal 的尺寸與格式。它不架 AI server、不代管 API key，也不收集使用者圖片；使用者自行用 ChatGPT、Gemini 或其他生圖工具產圖，再把圖片匯回本機程式加工與匯出。
 
 ## 目標流程
 
@@ -21,7 +21,7 @@ Local-first toolkit for making chat sticker packs: prompt templates, image clean
 5. 程式在本機切圖、去背、整理尺寸、預覽。
 6. 程式匯出符合 LINE Creators Market 或其他平台規格的 ZIP。
 
-目前範圍涵蓋 LINE 靜態貼圖、Big Stickers、emoji、訊息貼圖、動態貼圖與多平台尺寸匯出。不做 LINE 自動上架，也不保證審核通過。
+目前範圍涵蓋 LINE 靜態貼圖、Big Stickers、emoji、訊息貼圖、動態貼圖、pop-up stickers、effect stickers 與多平台尺寸匯出。不做 LINE 自動上架，也不保證審核通過。
 
 ## 產品原則
 
@@ -35,7 +35,7 @@ Local-first toolkit for making chat sticker packs: prompt templates, image clean
 
 - **提示詞**：依 LINE 規格產生 3x3 grid prompt，支援主題／角色／語氣／語言／8 句文字／8 個動作，有字與無字兩版，可複製微調。
 - **圖片加工**：匯入 3x3 grid 或多個動態 GIF/APNG、切圖、選圖、排序、green/magenta chroma-key 去背、尺寸與 padding 整理、main/tab image、逐張預覽。
-- **匯出**：LINE 靜態貼圖、Big Stickers、emoji、訊息貼圖、動態貼圖 ZIP，9 張獨立 PNG 的一般貼圖 ZIP，多平台尺寸 ZIP，尺寸／張數／檔名／結構檢查、簡短上架說明。
+- **匯出**：LINE 靜態貼圖、Big Stickers、emoji、訊息貼圖、動態貼圖、pop-up stickers、effect stickers ZIP，9 張獨立 PNG 的一般貼圖 ZIP，多平台尺寸 ZIP，尺寸／張數／檔名／結構檢查、簡短上架說明。
 
 ## 使用入口
 
@@ -68,28 +68,30 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 
 ## 專案狀態與路線圖
 
-目前版本 **v0.16.0**：local-first 貼圖包工具（LINE 貼圖／Big Stickers／emoji／訊息貼圖／動態貼圖 及多平台），桌面 GUI（pywebview 載入 HTML）與 CLI 共用同一套 Python core，`python -m pytest` 全數通過。
+目前版本 **v0.17.0**：local-first 貼圖包工具（LINE 貼圖／Big Stickers／emoji／訊息貼圖／動態貼圖／pop-up／effect 及多平台），桌面 GUI（pywebview 載入 HTML）與 CLI 共用同一套 Python core，`python -m pytest` 70 passed。
 
 ### ✅ 已完成
 
 - 產品方向固定為 local-first；已把需要的 fork 來源概念收斂成本機 Python core、pywebview GUI 與規格文件。
 - prompt 模板：中英文、有字／無字、green/magenta 背景、高風險內容提醒。
 - 圖片處理核心：3x3 切圖、去背、尺寸／padding、main/tab image、預覽 metadata 與選圖檢查。
-- 匯出：LINE 靜態貼圖／Big Stickers／emoji／訊息貼圖／動態貼圖 ZIP、9 張 PNG-only ZIP、多平台 ZIP、`validate` 與 `preview` 指令、上架說明。
+- 匯出：LINE 靜態貼圖／Big Stickers／emoji／訊息貼圖／動態貼圖／pop-up／effect ZIP、9 張 PNG-only ZIP、多平台 ZIP、`validate` 與 `preview` 指令、上架說明。
 - 桌面 GUI（pywebview HTML）與 CLI 共用 Python core（`--lang` 中英）。
-- PyInstaller Windows 打包與發行，已發行到 `v0.16.0`（正式 GitHub Release，含 SHA256 checksum）。
+- PyInstaller Windows 打包與發行，已發行到 `v0.17.0`（正式 GitHub Release，含 SHA256 checksum）。
 - 桌面拖放匯入（webview 的 HTML dropzone 內建）；WebView2 用 `private_mode` 臨時 profile，不寫持久隱藏資料。
 - 中英文 README。
 - 使用者指南與本機範例素材產生器（不提交生成圖片或 ZIP）。
 - Signal 多平台匯出已補 `cover.png`、`signal_manifest.json` 與 `validate --signal` 檢查。
 - LINE Big Stickers 已補 CLI / GUI 匯出與 `validate --big` 檢查。
+- LINE pop-up / effect stickers 已補 CLI 匯出與 `validate --popup` / `validate --effect` 檢查。
 
 詳細版本紀錄見 [`CHANGELOG.md`](CHANGELOG.md)；設計決策見 [`docs/DECISIONS.md`](docs/DECISIONS.md)。
 
 ### 下一步
 
-- 用非侵權素材做一次 LINE Creators Market 手動上傳抽驗，特別是動態貼圖 APNG。
-- 逐一查證 LINE pop-up／effect stickers APNG 規格，再決定是否加入。
+- 用非侵權素材做一次 LINE Creators Market 手動上傳抽驗，特別是動態／pop-up／effect APNG。
+- 把 pop-up / effect stickers 補進 GUI 流程，讓一般使用者不用 CLI。
+- `v1.0.0` 正式版門檻：完成主要 LINE 類型的手動上傳抽驗、GUI smoke、Windows exe 發行檢查與文件一致性覆核後再切。
 
 ### ⏳ 已定案
 
@@ -115,6 +117,8 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 | [LINE Creators Market](https://creator.line.me/) | 官方平台 | LINE 貼圖規格、套組張數、透明背景與送審流程。 |
 | [LINE Sticker Maker](https://creator.line.me/en/stickermaker/) | 官方手機 app | 手機製作與送審流程；本專案只保留手動送審說明，不代送審。 |
 | [LINE Big Stickers guideline](https://creator.line.me/en/guideline/bigsticker/) | 官方規格 | Big Stickers 的張數、396x660 最大尺寸、main/tab image 與透明背景要求。 |
+| [LINE Pop-up Stickers guideline](https://creator.line.me/en/guideline/popupsticker/) | 官方規格 | Pop-up stickers 的 480x480 APNG、5-20 影格、1-3 loops 與張數要求。 |
+| [LINE Effect Stickers guideline](https://creator.line.me/en/guideline/effectsticker/) | 官方規格 | Effect stickers 的 480x480 APNG、5-20 影格、1-3 loops 與張數要求。 |
 | [Signal Stickers Support](https://support.signal.org/hc/en-us/articles/360031836512-Stickers) | 官方支援文件 | Signal 貼圖尺寸、格式、封面、title、author 與 emoji 指派需求。 |
 | [yazelin/line-sticker-studio](https://github.com/yazelin/line-sticker-studio) | MIT（**fork 來源**） | 3x3 grid、chroma-key、ZIP 結構、上架說明與 UI 流程；來源脈絡保留於 attribution 與 git history，不再 vendored。 |
 | [laggykiller/sticker-convert](https://github.com/laggykiller/sticker-convert) | GPL-2.0 | 「一組貼圖匯出到多平台」的概念；本專案多平台匯出照公開規格自行實作。 |

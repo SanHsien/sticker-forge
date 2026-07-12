@@ -26,7 +26,7 @@ split → cleanup → resize → preview → export ZIP
 | `prompts` | 提示詞欄位渲染（中英文模板、有字／無字）、`SUGGESTIONS` 下拉建議、`PROMPT_PRESETS` 主題預設包 |
 | `splitter` | 3x3 grid 切圖，3% inset；尺寸不整除時向下取整丟餘數；`load_animated_frames` 讀單一動態檔（GIF/APNG）→ 影格＋時間 |
 | `cleanup` | green / magenta chroma-key 去背 + despill |
-| `exporter` | LINE 貼圖 ZIP（`LINE_PACK_SIZES` 8/16/24/32/40、可選 main/tab index）、LINE Big Stickers ZIP（396×660）、LINE 訊息貼圖 ZIP（`LINE_MESSAGE_PACK_SIZES` 8/16/24、padding 0）、LINE emoji ZIP（8–40×180×180＋96×74 縮圖）、LINE 動態貼圖 ZIP（`export_animated_zip`：8/16/24 APNG≤320×270＋動畫 main＋靜態 tab）、PNG-only ZIP、多平台 ZIP（`PLATFORM_SPECS`：Telegram/WhatsApp/Discord/Signal）匯出與 ZIP 驗證（貼圖／Big／emoji／Signal、含透明背景檢查）、尺寸整理與 padding |
+| `exporter` | LINE 貼圖 ZIP（`LINE_PACK_SIZES` 8/16/24/32/40、可選 main/tab index）、LINE Big Stickers ZIP（396×660）、LINE 訊息貼圖 ZIP（`LINE_MESSAGE_PACK_SIZES` 8/16/24、padding 0）、LINE emoji ZIP（8–40×180×180＋96×74 縮圖）、LINE 動態貼圖 ZIP（`export_animated_zip`：8/16/24 APNG≤320×270＋動畫 main＋靜態 tab）、LINE pop-up / effect stickers ZIP（靜態貼圖＋480×480 APNG screen animation）、PNG-only ZIP、多平台 ZIP（`PLATFORM_SPECS`：Telegram/WhatsApp/Discord/Signal）匯出與 ZIP 驗證（貼圖／Big／emoji／Signal／pop-up／effect、含透明背景檢查）、尺寸整理與 padding |
 | `preview` | 貼圖預覽 metadata 與選圖檢查 |
 | `cli` | 命令列入口（`python -m sticker_forge`） |
 | `webapi` | pywebview bridge：`Api`（JS 呼叫的 render_prompt/split/cleanup/export）＋ `run()` 開視窗 |
@@ -66,8 +66,12 @@ python -m sticker_forge validate outputs\signal.zip --signal
 python -m sticker_forge emoji examples\grid.png -o outputs\line-emoji.zip --thumb 1
 python -m sticker_forge message examples\grid.png -o outputs\line-message.zip
 python -m sticker_forge animated a.gif b.gif c.gif ... -o outputs\line-animated.zip   # 8/16/24 animated files
+python -m sticker_forge popup examples\grid.png -a p1.gif -a p2.gif -a p3.gif -a p4.gif -a p5.gif -a p6.gif -a p7.gif -a p8.gif -o outputs\line-popup.zip
+python -m sticker_forge effect examples\grid.png -a e1.gif -a e2.gif -a e3.gif -a e4.gif -a e5.gif -a e6.gif -a e7.gif -a e8.gif -o outputs\line-effect.zip
 python -m sticker_forge validate outputs\line-stickers.zip
 python -m sticker_forge validate outputs\line-emoji.zip --emoji
+python -m sticker_forge validate outputs\line-popup.zip --popup
+python -m sticker_forge validate outputs\line-effect.zip --effect
 sticker-forge-gui --lang en          # or: python -m sticker_forge.gui  (opens the pywebview desktop app)
 ```
 
@@ -83,7 +87,7 @@ node --check app/app.js
 
 ## 測試涵蓋
 
-`python -m pytest`（目前 65 passed）。最小涵蓋：prompt CLI 輸出與渲染、中英文語系、3x3 inset 切圖（含 1024×1024 非整除尺寸）、選圖／排序、green/magenta 去背、匯出預設去背與 `--keep-background`、main/tab image、LINE 靜態／Big／emoji／訊息／動態 ZIP 結構與 validator（含透明背景檢查）、PNG-only ZIP、多平台 ZIP、Signal manifest、padding、`webapi.Api` bridge（bootstrap/prompt/split/cleanup/export）。GUI 視窗本身需在 Windows 桌面實跑 `sticker-forge-gui` 或 exe 驗證。
+`python -m pytest`（目前 70 passed）。最小涵蓋：prompt CLI 輸出與渲染、中英文語系、3x3 inset 切圖（含 1024×1024 非整除尺寸）、選圖／排序、green/magenta 去背、匯出預設去背與 `--keep-background`、main/tab image、LINE 靜態／Big／emoji／訊息／動態／pop-up／effect ZIP 結構與 validator（含透明背景檢查）、PNG-only ZIP、多平台 ZIP、Signal manifest、padding、`webapi.Api` bridge（bootstrap/prompt/split/cleanup/export）。GUI 視窗本身需在 Windows 桌面實跑 `sticker-forge-gui` 或 exe 驗證。
 
 ## 打包與發行
 
@@ -108,6 +112,13 @@ node --check app/app.js
 - 用 `python examples\create_sample_assets.py` 產生範例 3x3 grid，匯出 ZIP 並 `validate`。
 - 確認沒有 API key、使用者圖片、生成 ZIP 或暫存檔進版控。
 
+### v1.0.0 checklist
+
+- 用非侵權素材完成 LINE Creators Market 手動上傳抽驗，至少涵蓋靜態、Big、emoji、訊息、動態、pop-up、effect 的 ZIP 結構。
+- GUI 覆蓋主要 LINE 類型，或在 README 明確標示 CLI-only 的例外。
+- Windows exe 在乾淨使用者資料環境完成 `--smoke`、GUI 啟動與基本匯出。
+- README / README.en.md / CHANGELOG.md / REVIEW.md / docs 同步到同一版本狀態。
+
 ### Artifact 命名
 
 ```text
@@ -115,7 +126,7 @@ sticker-forge-v{VERSION}-windows-x64.zip
 sticker-forge-v{VERSION}-windows-x64.zip.sha256
 ```
 
-已發行：`v0.1.0`…`v0.16.0`。exe 圖示為 `packaging/icon.ico`。
+已發行：`v0.1.0`…`v0.17.0`。exe 圖示為 `packaging/icon.ico`。
 
 ## Legacy 邊界
 

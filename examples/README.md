@@ -61,6 +61,34 @@ python -m sticker_forge animated `
   -o outputs\line-animated.zip
 ```
 
+## LINE pop-up / effect stickers
+
+```powershell
+python -m sticker_forge popup examples\generated\static-grid.png `
+  -a examples\generated\animated\animated-01.gif `
+  -a examples\generated\animated\animated-02.gif `
+  -a examples\generated\animated\animated-03.gif `
+  -a examples\generated\animated\animated-04.gif `
+  -a examples\generated\animated\animated-05.gif `
+  -a examples\generated\animated\animated-06.gif `
+  -a examples\generated\animated\animated-07.gif `
+  -a examples\generated\animated\animated-08.gif `
+  -o outputs\line-popup.zip
+python -m sticker_forge validate outputs\line-popup.zip --popup
+
+python -m sticker_forge effect examples\generated\static-grid.png `
+  -a examples\generated\animated\animated-01.gif `
+  -a examples\generated\animated\animated-02.gif `
+  -a examples\generated\animated\animated-03.gif `
+  -a examples\generated\animated\animated-04.gif `
+  -a examples\generated\animated\animated-05.gif `
+  -a examples\generated\animated\animated-06.gif `
+  -a examples\generated\animated\animated-07.gif `
+  -a examples\generated\animated\animated-08.gif `
+  -o outputs\line-effect.zip
+python -m sticker_forge validate outputs\line-effect.zip --effect
+```
+
 ## Signal
 
 ```powershell

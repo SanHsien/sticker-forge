@@ -2,6 +2,13 @@
 
 本檔記錄 `sticker-forge` 的版本變更。專案方向、使用方式與路線圖見 [`README.md`](README.md)；架構與打包流程見 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)。
 
+## v0.17.0
+
+- **LINE pop-up stickers**：新增 `popup` CLI 指令，使用靜態 3x3 grid 搭配 8/16/24 個動態 GIF/APNG，輸出靜態貼圖、480x480 APNG pop-up images、`popup-main.png`、`main.png`、`tab.png` 與 README。
+- **LINE effect stickers**：新增 `effect` CLI 指令，輸出 480x480 APNG effect images 與同套靜態貼圖結構。
+- **Pop-up / effect validator**：新增 `validate --popup` 與 `validate --effect`，檢查張數、檔名、尺寸、APNG 影格數、透明背景與 ZIP 結構。
+- **正式版門檻**：文件明確把 `v1.0.0` 留給手動 LINE 上傳抽驗、GUI smoke、Windows exe 發行檢查與文件一致性覆核完成後。
+
 ## v0.16.0
 
 - **LINE Big Stickers**：新增 `big` CLI 指令與 GUI「匯出 Big Stickers」按鈕，輸出 396x660 貼圖圖檔、main.png、tab.png 與 README。

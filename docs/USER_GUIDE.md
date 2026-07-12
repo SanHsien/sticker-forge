@@ -4,7 +4,7 @@
 
 ## 下載與啟動
 
-1. 到 GitHub Releases 下載 `sticker-forge-v0.16.0-windows-x64.zip`。
+1. 到 GitHub Releases 下載 `sticker-forge-v0.17.0-windows-x64.zip`。
 2. 解壓縮到本機資料夾。
 3. 雙擊 `sticker-forge.exe` 開啟桌面 GUI。
 4. 需要命令列時使用 `sticker-forge-cli.exe`。
@@ -74,6 +74,36 @@ python -m sticker_forge animated `
 ```
 
 匯出後仍要到 LINE Creators Market 手動上傳抽驗。LINE 可能針對 APNG 檔案大小、播放狀態或內容做平台端判定。
+
+## LINE pop-up / effect stickers
+
+pop-up / effect stickers 同時需要靜態貼圖與每張貼圖對應的 480x480 APNG。這一版先提供 CLI 流程；GUI 入口會在後續版本補上。
+
+```powershell
+python -m sticker_forge popup examples\generated\static-grid.png `
+  -a examples\generated\animated\animated-01.gif `
+  -a examples\generated\animated\animated-02.gif `
+  -a examples\generated\animated\animated-03.gif `
+  -a examples\generated\animated\animated-04.gif `
+  -a examples\generated\animated\animated-05.gif `
+  -a examples\generated\animated\animated-06.gif `
+  -a examples\generated\animated\animated-07.gif `
+  -a examples\generated\animated\animated-08.gif `
+  -o outputs\line-popup.zip
+python -m sticker_forge validate outputs\line-popup.zip --popup
+
+python -m sticker_forge effect examples\generated\static-grid.png `
+  -a examples\generated\animated\animated-01.gif `
+  -a examples\generated\animated\animated-02.gif `
+  -a examples\generated\animated\animated-03.gif `
+  -a examples\generated\animated\animated-04.gif `
+  -a examples\generated\animated\animated-05.gif `
+  -a examples\generated\animated\animated-06.gif `
+  -a examples\generated\animated\animated-07.gif `
+  -a examples\generated\animated\animated-08.gif `
+  -o outputs\line-effect.zip
+python -m sticker_forge validate outputs\line-effect.zip --effect
+```
 
 ## 其他平台
 

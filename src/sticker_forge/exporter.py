@@ -421,10 +421,33 @@ def _fit_frames_within(frames: list[Image.Image], box: tuple[int, int]) -> list[
     return [frame.convert("RGBA").resize(size, Image.Resampling.LANCZOS) for frame in frames]
 
 
-def _apng_bytes(frames: list[Image.Image], durations: list[int]) -> bytes:
-    # LINE wants 1-4 loops totalling <= 4 s; pick a loop count that fits.
+def _fit_durations_to_total(durations: Sequence[int], *, max_total_ms: int) -> list[int]:
+    fitted = [max(20, int(duration)) for duration in durations]
+    total = sum(fitted)
+    if total <= max_total_ms:
+        return fitted
+
+    scale = max_total_ms / max(1, total)
+    fitted = [max(20, round(duration * scale)) for duration in fitted]
+    while sum(fitted) > max_total_ms:
+        index = max(range(len(fitted)), key=fitted.__getitem__)
+        if fitted[index] <= 20:
+            break
+        fitted[index] -= 1
+    return fitted
+
+
+def _apng_bytes(
+    frames: list[Image.Image],
+    durations: list[int],
+    *,
+    max_loops: int = 4,
+    max_total_ms: int = 4000,
+) -> bytes:
+    # LINE limits loops by sticker type; pick a loop count that fits.
+    durations = _fit_durations_to_total(durations, max_total_ms=max_total_ms)
     one_loop = max(1, sum(durations))
-    loops = max(1, min(4, 4000 // one_loop))
+    loops = max(1, min(max_loops, max_total_ms // one_loop))
     buffer = BytesIO()
     frames[0].save(
         buffer,
@@ -494,6 +517,169 @@ def export_animated_zip(
         archive.writestr("README.txt", readme)
 
     return output
+
+
+# LINE pop-up/effect stickers share the same asset shape: 8/16/24 static
+# stickers plus 480x480 APNG screen animations and an APNG main image.
+LINE_SCREEN_ANIM_SIZE = (480, 480)
+LINE_SCREEN_ANIM_PACK_SIZES = (8, 16, 24)
+LINE_SCREEN_ANIM_MIN_FRAMES = 5
+LINE_SCREEN_ANIM_MAX_FRAMES = 20
+LINE_SCREEN_ANIM_MAX_BYTES = 1_000_000
+LINE_SCREEN_ANIM_ZIP_MAX_BYTES = 60_000_000
+
+
+def _fit_screen_frames(frames: Sequence[Image.Image]) -> list[Image.Image]:
+    return [fit_to_canvas(frame, LINE_SCREEN_ANIM_SIZE, padding=0) for frame in frames]
+
+
+def _validate_screen_animation_inputs(
+    static_images: Sequence[ImageSource],
+    screen_frames: Sequence[Sequence[Image.Image]],
+    *,
+    kind: str,
+) -> None:
+    count = len(static_images)
+    if count not in LINE_SCREEN_ANIM_PACK_SIZES:
+        allowed = " / ".join(str(size) for size in LINE_SCREEN_ANIM_PACK_SIZES)
+        raise ValueError(f"LINE {kind} packs must have {allowed} stickers, got {count}")
+    if len(screen_frames) != count:
+        raise ValueError(f"LINE {kind} packs need {count} APNG animations, got {len(screen_frames)}")
+    for index, frames in enumerate(screen_frames, start=1):
+        if not LINE_SCREEN_ANIM_MIN_FRAMES <= len(frames) <= LINE_SCREEN_ANIM_MAX_FRAMES:
+            raise ValueError(
+                f"{kind} animation {index} has {len(frames)} frames, expected "
+                f"{LINE_SCREEN_ANIM_MIN_FRAMES}-{LINE_SCREEN_ANIM_MAX_FRAMES}"
+            )
+
+
+def _export_screen_animation_zip(
+    static_images: Sequence[ImageSource],
+    screen_frames: Sequence[Sequence[Image.Image]],
+    output_path: str | Path,
+    *,
+    kind: str,
+    animation_prefix: str,
+    main_index: int = 0,
+    tab_index: int = 0,
+    title: str,
+    author: str,
+    durations: Sequence[Sequence[int]] | None = None,
+) -> Path:
+    _validate_screen_animation_inputs(static_images, screen_frames, kind=kind)
+    count = len(static_images)
+    if not 0 <= main_index < count or not 0 <= tab_index < count:
+        raise ValueError("main_index and tab_index must point at a sticker in the pack")
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+
+    loaded_static = [_load_image(image) for image in static_images]
+    static_spec = replace(LINE_STATIC_SPEC, sticker_padding=0)
+
+    def _durations_for(index: int, frames: Sequence[Image.Image]) -> list[int]:
+        if durations and index < len(durations) and durations[index] and len(durations[index]) == len(frames):
+            return [max(20, int(d)) for d in durations[index]]
+        return [100] * len(frames)
+
+    readme = (
+        f"{title}\n"
+        f"Author: {author}\n\n"
+        f"This ZIP was generated locally by sticker-forge (LINE {kind} stickers).\n"
+        f"It contains {count} static sticker images (01.png-{count:02d}.png),\n"
+        f"{count} screen APNG files ({animation_prefix}-01.png-{animation_prefix}-{count:02d}.png),\n"
+        f"{animation_prefix}-main.png, main.png (240x240), and tab.png (96x74).\n"
+        "Each screen APNG is exported on a 480x480 transparent canvas with 5-20 frames.\n"
+        "Manual LINE Creators Market submission:\n"
+        f"1. Sign in and create a new {kind.title()} Sticker item.\n"
+        "2. Choose 8, 16, or 24 stickers on the Manage Stickers page.\n"
+        "3. Upload the static sticker images, screen APNG images, main image, and tab icon.\n"
+        "Review current LINE Creators Market rules before submission.\n"
+    )
+
+    with ZipFile(output, "w", compression=ZIP_DEFLATED) as archive:
+        archive.writestr("main.png", _png_bytes(fit_to_canvas(loaded_static[main_index], static_spec.main_size)))
+        archive.writestr("tab.png", _png_bytes(fit_to_canvas(loaded_static[tab_index], static_spec.tab_size)))
+        for index, image in enumerate(loaded_static, start=1):
+            archive.writestr(
+                f"{index:02d}.png",
+                _png_bytes(fit_to_canvas(image, static_spec.sticker_size, padding=0)),
+            )
+        for index, frames in enumerate(screen_frames):
+            fitted = _fit_screen_frames(frames)
+            archive.writestr(
+                f"{animation_prefix}-{index + 1:02d}.png",
+                _apng_bytes(
+                    fitted,
+                    _durations_for(index, frames),
+                    max_loops=3,
+                    max_total_ms=3000,
+                ),
+            )
+        main_frames = _fit_screen_frames(screen_frames[main_index])
+        archive.writestr(
+            f"{animation_prefix}-main.png",
+            _apng_bytes(
+                main_frames,
+                _durations_for(main_index, screen_frames[main_index]),
+                max_loops=3,
+                max_total_ms=3000,
+            ),
+        )
+        archive.writestr("README.txt", readme)
+
+    return output
+
+
+def export_popup_zip(
+    static_images: Sequence[ImageSource],
+    popup_frames: Sequence[Sequence[Image.Image]],
+    output_path: str | Path,
+    *,
+    main_index: int = 0,
+    tab_index: int = 0,
+    title: str = "sticker-forge pop-up",
+    author: str = "sticker-forge",
+    durations: Sequence[Sequence[int]] | None = None,
+) -> Path:
+    """Export a LINE pop-up sticker pack (static images + 480x480 APNG pop-ups)."""
+    return _export_screen_animation_zip(
+        static_images,
+        popup_frames,
+        output_path,
+        kind="pop-up",
+        animation_prefix="popup",
+        main_index=main_index,
+        tab_index=tab_index,
+        title=title,
+        author=author,
+        durations=durations,
+    )
+
+
+def export_effect_zip(
+    static_images: Sequence[ImageSource],
+    effect_frames: Sequence[Sequence[Image.Image]],
+    output_path: str | Path,
+    *,
+    main_index: int = 0,
+    tab_index: int = 0,
+    title: str = "sticker-forge effect",
+    author: str = "sticker-forge",
+    durations: Sequence[Sequence[int]] | None = None,
+) -> Path:
+    """Export a LINE effect sticker pack (static images + 480x480 APNG effects)."""
+    return _export_screen_animation_zip(
+        static_images,
+        effect_frames,
+        output_path,
+        kind="effect",
+        animation_prefix="effect",
+        main_index=main_index,
+        tab_index=tab_index,
+        title=title,
+        author=author,
+        durations=durations,
+    )
 
 
 def _is_fully_opaque(image: Image.Image) -> bool:
@@ -586,6 +772,92 @@ def validate_emoji_zip(zip_path: str | Path) -> list[str]:
 def validate_big_zip(zip_path: str | Path) -> list[str]:
     """Return validation errors for a LINE Big Sticker ZIP."""
     return validate_line_zip(zip_path, spec=LINE_BIG_SPEC)
+
+
+def _validate_screen_animation_zip(zip_path: str | Path, *, animation_prefix: str) -> list[str]:
+    errors: list[str] = []
+
+    with ZipFile(zip_path) as archive:
+        names = set(archive.namelist())
+        if archive.fp and Path(zip_path).stat().st_size > LINE_SCREEN_ANIM_ZIP_MAX_BYTES:
+            errors.append("ZIP is larger than 60 MB")
+
+        static_names = sorted(name for name in names if re.fullmatch(r"\d{2}\.png", name))
+        animation_names = sorted(
+            name for name in names if re.fullmatch(rf"{re.escape(animation_prefix)}-\d{{2}}\.png", name)
+        )
+        count = len(static_names)
+        if count not in LINE_SCREEN_ANIM_PACK_SIZES:
+            allowed = ", ".join(str(size) for size in LINE_SCREEN_ANIM_PACK_SIZES)
+            errors.append(f"sticker count is {count}, expected one of {allowed}")
+        if len(animation_names) != count:
+            errors.append(f"{animation_prefix} APNG count is {len(animation_names)}, expected {count}")
+
+        required = {"main.png", "tab.png", f"{animation_prefix}-main.png", "README.txt"}
+        required |= {f"{index:02d}.png" for index in range(1, count + 1)}
+        required |= {f"{animation_prefix}-{index:02d}.png" for index in range(1, count + 1)}
+        missing = sorted(required - names)
+        if missing:
+            errors.append(f"missing files: {', '.join(missing)}")
+
+        expected_sizes = {
+            "main.png": LINE_STATIC_SPEC.main_size,
+            "tab.png": LINE_STATIC_SPEC.tab_size,
+            **{f"{index:02d}.png": LINE_STATIC_SPEC.sticker_size for index in range(1, count + 1)},
+        }
+        for name, size in expected_sizes.items():
+            if name not in names:
+                continue
+            with archive.open(name) as file:
+                image = Image.open(file)
+                if image.size != size:
+                    errors.append(f"{name} size is {image.size[0]}x{image.size[1]}, expected {size[0]}x{size[1]}")
+                if image.format != "PNG":
+                    errors.append(f"{name} is not PNG")
+                if _is_fully_opaque(image):
+                    errors.append(f"{name} has no transparent background")
+
+        for name in sorted({f"{animation_prefix}-main.png", *animation_names} & names):
+            data = archive.read(name)
+            if len(data) > LINE_SCREEN_ANIM_MAX_BYTES:
+                errors.append(f"{name} is larger than 1 MB")
+            image = Image.open(BytesIO(data))
+            if image.format != "PNG":
+                errors.append(f"{name} is not PNG/APNG")
+            width, height = image.size
+            if width > 480 or height > 480:
+                errors.append(f"{name} size is {width}x{height}, expected within 480x480")
+            if width != 480 and height != 480:
+                errors.append(f"{name} must have width or height exactly 480")
+            if width == 480 and height < 320:
+                errors.append(f"{name} height is {height}, expected at least 320 when width is 480")
+            if height == 480 and width < 200:
+                errors.append(f"{name} width is {width}, expected at least 200 when height is 480")
+            frames = getattr(image, "n_frames", 1)
+            if not LINE_SCREEN_ANIM_MIN_FRAMES <= frames <= LINE_SCREEN_ANIM_MAX_FRAMES:
+                errors.append(
+                    f"{name} has {frames} frames, expected "
+                    f"{LINE_SCREEN_ANIM_MIN_FRAMES}-{LINE_SCREEN_ANIM_MAX_FRAMES}"
+                )
+            if _is_fully_opaque(image):
+                errors.append(f"{name} has no transparent background")
+
+        allowed = required
+        extra_pngs = sorted(name for name in names - allowed if name.lower().endswith(".png"))
+        if extra_pngs:
+            errors.append(f"unexpected PNG files: {', '.join(extra_pngs)}")
+
+    return errors
+
+
+def validate_popup_zip(zip_path: str | Path) -> list[str]:
+    """Return validation errors for a LINE pop-up sticker ZIP."""
+    return _validate_screen_animation_zip(zip_path, animation_prefix="popup")
+
+
+def validate_effect_zip(zip_path: str | Path) -> list[str]:
+    """Return validation errors for a LINE effect sticker ZIP."""
+    return _validate_screen_animation_zip(zip_path, animation_prefix="effect")
 
 
 def validate_signal_zip(zip_path: str | Path) -> list[str]:

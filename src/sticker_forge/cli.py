@@ -14,17 +14,22 @@ from .exporter import (
     LINE_EMOJI_MIN,
     LINE_MESSAGE_PACK_SIZES,
     LINE_PACK_SIZES,
+    LINE_SCREEN_ANIM_PACK_SIZES,
     PLATFORM_SPECS,
     export_animated_zip,
     export_big_zip,
+    export_effect_zip,
     export_emoji_zip,
     export_line_zip,
     export_message_zip,
     export_platform_zip,
+    export_popup_zip,
     export_stickers_zip,
     validate_big_zip,
+    validate_effect_zip,
     validate_emoji_zip,
     validate_line_zip,
+    validate_popup_zip,
     validate_signal_zip,
 )
 from .prompts import PROMPT_PRESETS, normalize_locale, render_line_static_prompt
@@ -53,6 +58,10 @@ MESSAGES = {
         "signal_emoji_help": "Signal 每張貼圖對應的 emoji；可填 1 個套用全部，或用逗號填每張一個。預設：🙂",
         "message_help": "匯出 LINE 訊息貼圖 ZIP（8/16/24 張，文字由發送者輸入）",
         "animated_help": "匯出 LINE 動態貼圖 ZIP（匯入 8/16/24 個動態 GIF/APNG，每個一張，5-20 影格）",
+        "popup_help": "匯出 LINE pop-up stickers ZIP（靜態 grid + 8/16/24 個 480x480 APNG）",
+        "effect_help": "匯出 LINE effect stickers ZIP（靜態 grid + 8/16/24 個 480x480 APNG）",
+        "popup_validate_help": "以 LINE pop-up stickers 規格檢查 ZIP",
+        "effect_validate_help": "以 LINE effect stickers 規格檢查 ZIP",
         "target_help": "目標平台",
         "preview_help": "預覽 3x3 grid 匯出狀態",
         "validate_help": "檢查 LINE 靜態貼圖 ZIP",
@@ -88,6 +97,10 @@ MESSAGES = {
         "signal_emoji_help": "Signal emoji assignment; pass one value for all stickers or comma-separated one per sticker. Default: 🙂",
         "message_help": "export a LINE message sticker ZIP (8/16/24, the sender types the text)",
         "animated_help": "export a LINE animated sticker ZIP (import 8/16/24 animated GIF/APNG files, one per sticker, 5-20 frames)",
+        "popup_help": "export a LINE pop-up stickers ZIP (static grid + 8/16/24 480x480 APNG files)",
+        "effect_help": "export a LINE effect stickers ZIP (static grid + 8/16/24 480x480 APNG files)",
+        "popup_validate_help": "validate the ZIP as LINE pop-up stickers",
+        "effect_validate_help": "validate the ZIP as LINE effect stickers",
         "preview_help": "preview export readiness for a 3x3 grid",
         "validate_help": "validate a LINE static sticker ZIP",
         "text_help": "repeat exactly 8 times",
@@ -305,6 +318,42 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     animated.add_argument("--title", default="sticker-forge animated")
     animated.add_argument("--author", default="sticker-forge")
 
+    popup = subparsers.add_parser("popup", parents=[language_parent], help=text["popup_help"])
+    popup.add_argument("static_input", type=Path, nargs="+")
+    popup.add_argument("-a", "--animation", type=Path, action="append", required=True)
+    popup.add_argument("-o", "--output", type=Path, required=True)
+    popup.add_argument(
+        "--select",
+        type=_parse_message_selection,
+        default=_parse_message_selection("1,2,3,4,5,6,7,8"),
+        help=text["select_help"],
+    )
+    popup.add_argument("--main", type=int, default=1, help=text["main_help"])
+    popup.add_argument("--tab", type=int, default=1, help=text["tab_help"])
+    popup.add_argument("--keep-background", action="store_true", help=text["keep_background_help"])
+    popup.add_argument("--key-name", choices=["green", "magenta"], default="green")
+    popup.add_argument("--tune", choices=["safe", "balanced", "aggressive"], default="balanced")
+    popup.add_argument("--title", default="sticker-forge pop-up")
+    popup.add_argument("--author", default="sticker-forge")
+
+    effect = subparsers.add_parser("effect", parents=[language_parent], help=text["effect_help"])
+    effect.add_argument("static_input", type=Path, nargs="+")
+    effect.add_argument("-a", "--animation", type=Path, action="append", required=True)
+    effect.add_argument("-o", "--output", type=Path, required=True)
+    effect.add_argument(
+        "--select",
+        type=_parse_message_selection,
+        default=_parse_message_selection("1,2,3,4,5,6,7,8"),
+        help=text["select_help"],
+    )
+    effect.add_argument("--main", type=int, default=1, help=text["main_help"])
+    effect.add_argument("--tab", type=int, default=1, help=text["tab_help"])
+    effect.add_argument("--keep-background", action="store_true", help=text["keep_background_help"])
+    effect.add_argument("--key-name", choices=["green", "magenta"], default="green")
+    effect.add_argument("--tune", choices=["safe", "balanced", "aggressive"], default="balanced")
+    effect.add_argument("--title", default="sticker-forge effect")
+    effect.add_argument("--author", default="sticker-forge")
+
     preview = subparsers.add_parser("preview", parents=[language_parent], help=text["preview_help"])
     preview.add_argument("input", type=Path)
     preview.add_argument(
@@ -323,6 +372,8 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     validate.add_argument("--emoji", action="store_true", help=text["emoji_validate_help"])
     validate.add_argument("--signal", action="store_true", help=text["signal_validate_help"])
     validate.add_argument("--big", action="store_true", help=text["big_validate_help"])
+    validate.add_argument("--popup", action="store_true", help=text["popup_validate_help"])
+    validate.add_argument("--effect", action="store_true", help=text["effect_validate_help"])
 
     return parser
 
@@ -565,6 +616,55 @@ def main(argv: list[str] | None = None) -> int:
         print(output)
         return 0
 
+    if args.command in {"popup", "effect"}:
+        if len(args.animation) not in LINE_SCREEN_ANIM_PACK_SIZES:
+            allowed = " / ".join(str(size) for size in LINE_SCREEN_ANIM_PACK_SIZES)
+            parser.error(f"{args.command} packs need {allowed} animation files, got {len(args.animation)}")
+        key = resolve_chroma_key(args.key_name)
+        pool: list[Image.Image] = []
+        for grid_path in args.static_input:
+            with Image.open(grid_path) as image:
+                pool.extend(split_grid_to_stickers(image, background=(*key.rgb, 255)))
+        if any(index > len(pool) for index in args.select):
+            parser.error(
+                f"--select values must be between 1 and {len(pool)} "
+                f"({len(args.static_input)} grid(s) = {len(pool)} cells)"
+            )
+        selected = [pool[index - 1] for index in args.select]
+        if len(selected) != len(args.animation):
+            parser.error(f"--select count ({len(selected)}) must match animation files ({len(args.animation)})")
+        if not args.keep_background:
+            selected = [
+                remove_chroma_background(sticker, key_name=args.key_name, tune=args.tune)
+                for sticker in selected
+            ]
+        animation_frames: list[list[Image.Image]] = []
+        durations_list: list[list[int]] = []
+        for path in args.animation:
+            frames, frame_durations = load_animated_frames(path)
+            if not args.keep_background:
+                frames = [
+                    remove_chroma_background(frame, key_name=args.key_name, tune=args.tune)
+                    for frame in frames
+                ]
+            animation_frames.append(frames)
+            durations_list.append(frame_durations)
+        if not 1 <= args.main <= len(selected) or not 1 <= args.tab <= len(selected):
+            parser.error(f"--main/--tab must be between 1 and {len(selected)}")
+        exporter = export_popup_zip if args.command == "popup" else export_effect_zip
+        output = exporter(
+            selected,
+            animation_frames,
+            args.output,
+            main_index=args.main - 1,
+            tab_index=args.tab - 1,
+            title=args.title,
+            author=args.author,
+            durations=durations_list,
+        )
+        print(output)
+        return 0
+
     if args.command == "preview":
         spec = replace(LINE_STATIC_SPEC, sticker_padding=args.padding)
         with Image.open(args.input) as image:
@@ -596,15 +696,19 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "validate":
-        modes = [args.emoji, args.signal, args.big]
+        modes = [args.emoji, args.signal, args.big, args.popup, args.effect]
         if sum(1 for mode in modes if mode) > 1:
-            parser.error("--emoji, --signal, and --big cannot be used together")
+            parser.error("--emoji, --signal, --big, --popup, and --effect cannot be used together")
         if args.emoji:
             errors = validate_emoji_zip(args.zip)
         elif args.signal:
             errors = validate_signal_zip(args.zip)
         elif args.big:
             errors = validate_big_zip(args.zip)
+        elif args.popup:
+            errors = validate_popup_zip(args.zip)
+        elif args.effect:
+            errors = validate_effect_zip(args.zip)
         else:
             errors = validate_line_zip(args.zip)
         if errors:
