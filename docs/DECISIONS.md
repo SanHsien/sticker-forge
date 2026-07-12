@@ -208,3 +208,20 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 - 根目錄 MIT `LICENSE`。
 - `NOTICE.md` 的 `yazelin/line-sticker-studio` attribution。
 - README / docs 中對 fork 來源與設計啟發的外部連結。
+
+## 2026-07-12：Signal manifest pack（v0.15.0）
+
+依 README 簡化路線圖補齊 Signal 多平台匯出。Signal 官方支援文件（https://support.signal.org/hc/en-us/articles/360031836512-Stickers）列出的重點是：貼圖為獨立 PNG/WebP、512x512、透明背景、每張指定 emoji、最多 200 張、封面 512x512、title 與 author。`sticker-forge` 維持 local-first，因此不做 Signal 上傳、不串 Signal 伺服器，只輸出可人工匯入 Signal Desktop 的本機素材包。
+
+實作：
+
+- `platform --target signal` 維持輸出 `01.png...`，並新增 `cover.png` 與 `signal_manifest.json`。
+- manifest 內容含 `title`、`author`、`cover`、每張貼圖 `file` 與 `emoji`。
+- CLI `platform` 新增 `--title`、`--author`、`--emoji`；GUI 多平台匯出沿用套組標題與作者欄位。
+- `validate --signal` 檢查 manifest、cover、貼圖尺寸、格式、透明背景、emoji 指派與 manifest/ZIP 一致性。
+
+邊界：
+
+- 不產生 Signal 分享連結。
+- 不上傳貼圖到 Signal server。
+- 不處理 Signal Desktop 或手機端自動操作。

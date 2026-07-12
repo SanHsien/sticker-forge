@@ -54,6 +54,13 @@ python -m sticker_forge animated `
   -o outputs\line-animated.zip
 ```
 
+## Signal
+
+```powershell
+python -m sticker_forge platform examples\generated\static-grid.png -o outputs\signal.zip --target signal --title "Signal Pack" --author "sticker-forge" --emoji "🙂"
+python -m sticker_forge validate outputs\signal.zip --signal
+```
+
 ## 原則
 
 - 不放使用者私有圖片。

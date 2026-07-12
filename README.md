@@ -68,7 +68,7 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 
 ## 專案狀態與路線圖
 
-目前版本 **v0.14.0**：local-first 貼圖包工具（LINE 貼圖／emoji／訊息貼圖／動態貼圖 及多平台），桌面 GUI（pywebview 載入 HTML）與 CLI 共用同一套 Python core，`python -m pytest` 全數通過。
+目前版本 **v0.15.0**：local-first 貼圖包工具（LINE 貼圖／emoji／訊息貼圖／動態貼圖 及多平台），桌面 GUI（pywebview 載入 HTML）與 CLI 共用同一套 Python core，`python -m pytest` 全數通過。
 
 ### ✅ 已完成
 
@@ -77,17 +77,17 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 - 圖片處理核心：3x3 切圖、去背、尺寸／padding、main/tab image、預覽 metadata 與選圖檢查。
 - 匯出：LINE 靜態貼圖／emoji／訊息貼圖／動態貼圖 ZIP、9 張 PNG-only ZIP、多平台 ZIP、`validate` 與 `preview` 指令、上架說明。
 - 桌面 GUI（pywebview HTML）與 CLI 共用 Python core（`--lang` 中英）。
-- PyInstaller Windows 打包與發行，已發行到 `v0.14.0`（正式 GitHub Release，含 SHA256 checksum）。
+- PyInstaller Windows 打包與發行，已發行到 `v0.15.0`（正式 GitHub Release，含 SHA256 checksum）。
 - 桌面拖放匯入（webview 的 HTML dropzone 內建）；WebView2 用 `private_mode` 臨時 profile，不寫持久隱藏資料。
 - 中英文 README。
 - 使用者指南與本機範例素材產生器（不提交生成圖片或 ZIP）。
+- Signal 多平台匯出已補 `cover.png`、`signal_manifest.json` 與 `validate --signal` 檢查。
 
 詳細版本紀錄見 [`CHANGELOG.md`](CHANGELOG.md)；設計決策見 [`docs/DECISIONS.md`](docs/DECISIONS.md)。
 
 ### 下一步
 
 - 用非侵權素材做一次 LINE Creators Market 手動上傳抽驗，特別是動態貼圖 APNG。
-- 補更完整的 Signal pack（含 manifest）與必要驗證。
 - 逐一查證 LINE big stickers／pop-up／effect stickers 規格，再決定是否加入。
 
 ### ⏳ 已定案
@@ -113,6 +113,7 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 | --- | --- | --- |
 | [LINE Creators Market](https://creator.line.me/) | 官方平台 | LINE 貼圖規格、套組張數、透明背景與送審流程。 |
 | [LINE Sticker Maker](https://creator.line.me/en/stickermaker/) | 官方手機 app | 手機製作與送審流程；本專案只保留手動送審說明，不代送審。 |
+| [Signal Stickers Support](https://support.signal.org/hc/en-us/articles/360031836512-Stickers) | 官方支援文件 | Signal 貼圖尺寸、格式、封面、title、author 與 emoji 指派需求。 |
 | [yazelin/line-sticker-studio](https://github.com/yazelin/line-sticker-studio) | MIT（**fork 來源**） | 3x3 grid、chroma-key、ZIP 結構、上架說明與 UI 流程；來源脈絡保留於 attribution 與 git history，不再 vendored。 |
 | [laggykiller/sticker-convert](https://github.com/laggykiller/sticker-convert) | GPL-2.0 | 「一組貼圖匯出到多平台」的概念；本專案多平台匯出照公開規格自行實作。 |
 | [MarvNC/StampNyaa](https://github.com/MarvNC/StampNyaa) | 未宣告 | 「LINE 貼圖轉用到其他平台」的桌面流程。 |

@@ -669,7 +669,11 @@ async function exportPlatform() {
   if (!tiles.length) return setStatus(ui().noTilesExport, true);
   setStatus(ui().exporting);
   try {
-    const result = await bridge.export_platform(tiles.map((t) => t.url), { platform: $("platform-target").value });
+    const result = await bridge.export_platform(tiles.map((t) => t.url), {
+      platform: $("platform-target").value,
+      title: $("pack-title").value,
+      author: $("pack-author").value,
+    });
     reportExport(result);
   } catch (err) {
     setStatus(String(err), true);

@@ -59,6 +59,8 @@ python -m sticker_forge export examples\grid.png -o outputs\raw.zip --keep-backg
 python -m sticker_forge export g1.png g2.png -o outputs\pack16.zip --select 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16 --main 2 --tab 3
 python -m sticker_forge stickers examples\grid.png -o outputs\transparent-stickers.zip
 python -m sticker_forge platform examples\grid.png -o outputs\telegram.zip --target telegram
+python -m sticker_forge platform examples\grid.png -o outputs\signal.zip --target signal --title "Signal Pack" --author "sticker-forge" --emoji "🙂"
+python -m sticker_forge validate outputs\signal.zip --signal
 python -m sticker_forge emoji examples\grid.png -o outputs\line-emoji.zip --thumb 1
 python -m sticker_forge message examples\grid.png -o outputs\line-message.zip
 python -m sticker_forge animated a.gif b.gif c.gif ... -o outputs\line-animated.zip   # 8/16/24 animated files
@@ -111,7 +113,7 @@ sticker-forge-v{VERSION}-windows-x64.zip
 sticker-forge-v{VERSION}-windows-x64.zip.sha256
 ```
 
-已發行：`v0.1.0`…`v0.14.0`。exe 圖示為 `packaging/icon.ico`。
+已發行：`v0.1.0`…`v0.15.0`。exe 圖示為 `packaging/icon.ico`。
 
 ## Legacy 邊界
 

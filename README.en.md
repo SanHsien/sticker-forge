@@ -88,7 +88,7 @@ python -m sticker_forge validate outputs\line-stickers.zip
 
 ## Roadmap
 
-Version **v0.14.0**: local-first sticker-pack toolkit (LINE stickers/emoji/message/animated stickers and other platforms). The desktop GUI (a pywebview window rendering the HTML) and the CLI share one Python core. `python -m pytest` passes.
+Version **v0.15.0**: local-first sticker-pack toolkit (LINE stickers/emoji/message/animated stickers and other platforms). The desktop GUI (a pywebview window rendering the HTML) and the CLI share one Python core. `python -m pytest` passes.
 
 ### ✅ Done
 
@@ -96,16 +96,16 @@ Version **v0.14.0**: local-first sticker-pack toolkit (LINE stickers/emoji/messa
 - Prompt templates (Chinese/English, text/no-text, green/magenta, risk reminders).
 - Image core: 3x3 split, cleanup, resize/padding, main/tab image, preview metadata.
 - Export: LINE static sticker, emoji, message sticker, animated sticker ZIPs, PNG-only ZIP, platform ZIPs, `validate` and `preview` commands.
-- PyInstaller Windows packaging and releases through `v0.14.0` (GitHub Releases with SHA256 checksums).
+- PyInstaller Windows packaging and releases through `v0.15.0` (GitHub Releases with SHA256 checksums).
 - Desktop drag-and-drop import (the webview's HTML dropzone); WebView2 runs with `private_mode`, an ephemeral profile, so nothing persistent is written.
 - User guide and reproducible local sample asset generator (generated images and ZIPs are not committed).
+- Signal platform export now includes `cover.png`, `signal_manifest.json`, and `validate --signal`.
 
 Detailed version history is in [`CHANGELOG.md`](CHANGELOG.md); design decisions are in [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
 ### Next
 
 - Run one manual LINE Creators Market upload check with non-infringing assets, especially for animated APNG stickers.
-- Add a fuller Signal pack export with manifest and validation.
 - Verify LINE big / pop-up / effect sticker specs one by one before adding them.
 
 ### ⏳ Decided
@@ -119,6 +119,7 @@ These projects informed the design as references only, not runtime dependencies.
 | Project | License | What it informed |
 | --- | --- | --- |
 | [LINE Creators Market](https://creator.line.me/) / [LINE Sticker Maker](https://creator.line.me/en/stickermaker/) | Official | Static sticker specs, pack sizes, transparency, submission flow. |
+| [Signal Stickers Support](https://support.signal.org/hc/en-us/articles/360031836512-Stickers) | Official support docs | Signal sticker size, format, cover, title, author, and emoji-assignment requirements. |
 | [yazelin/line-sticker-studio](https://github.com/yazelin/line-sticker-studio) | MIT (**fork source**) | 3x3 grid, chroma-key, ZIP structure, submission notes, UI flow; provenance kept through attribution and git history, no longer vendored. |
 | [laggykiller/sticker-convert](https://github.com/laggykiller/sticker-convert) | GPL-2.0 | The multi-platform export concept; implemented independently from public specs. |
 | [MarvNC/StampNyaa](https://github.com/MarvNC/StampNyaa) | Unlicensed | The "use LINE stickers on other platforms" desktop workflow. |

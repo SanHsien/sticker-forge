@@ -2,9 +2,9 @@
 
 ## 結論
 
-`sticker-forge` v0.14.0 是可用的 local-first 貼圖工具：CLI 與 pywebview 桌面 GUI 共用 Python core，支援 LINE 靜態貼圖、emoji、訊息貼圖、動態貼圖與多平台尺寸匯出。專案仍符合不架 server、不代管 AI API、不上傳使用者圖片、不自動送 LINE 審核的邊界。
+`sticker-forge` v0.15.0 是可用的 local-first 貼圖工具：CLI 與 pywebview 桌面 GUI 共用 Python core，支援 LINE 靜態貼圖、emoji、訊息貼圖、動態貼圖與多平台尺寸匯出。專案仍符合不架 server、不代管 AI API、不上傳使用者圖片、不自動送 LINE 審核的邊界。
 
-v0.13.1 已補發 Windows exe，讓 GUI 匯出錯誤顯示修正進入正式 Release。v0.14.0 接著補齊一般使用者指南與可重現範例素材流程，降低第一次下載 exe 後不知道如何測試的落差。
+v0.13.1 已補發 Windows exe，讓 GUI 匯出錯誤顯示修正進入正式 Release。v0.14.0 補齊一般使用者指南與可重現範例素材流程。v0.15.0 補上 Signal manifest pack 與 `validate --signal`，讓多平台匯出不只產尺寸檔，也能保留 Signal 需要的 title、author、cover 與 emoji 指派。
 
 ## 已修正
 
@@ -14,16 +14,18 @@ v0.13.1 已補發 Windows exe，讓 GUI 匯出錯誤顯示修正進入正式 Rel
 | 缺一般使用者流程文件 | ✅ 已修 | 新增 `docs/USER_GUIDE.md`，整理 exe 啟動、靜態貼圖、emoji、訊息貼圖、動態貼圖、多平台匯出與常見問題。 |
 | 缺可公開測試素材 | ✅ 已修 | 新增 `examples/create_sample_assets.py`，本機產生非侵權 3x3 grid 與 8 個 GIF；生成素材與 ZIP 不進版控。 |
 | 範例 CLI 流程太少 | ✅ 已修 | `examples/README.md` 補齊 export、emoji、message、animated 與 validate 指令。 |
+| Signal 多平台匯出缺 metadata | ✅ 已修 | `platform --target signal` 產出 `cover.png` 與 `signal_manifest.json`，`validate --signal` 可檢查 ZIP。 |
 
 ## 覆核證據
 
 - `v0.13.1` 是把 `v0.13.0` 後的 GUI 錯誤顯示修正與文件清理補發成 Windows exe 的 patch release。
 - `v0.14.0` 加入 user guide 與 sample asset generator，讓使用者能在不提交生成素材的前提下重現基本流程。
+- `v0.15.0` 加入 Signal manifest pack 與 validator。
 - `python -m pytest`：58 passed。
 - `.\packaging\build-windows.ps1`：通過。
 - `git diff --check`：無 whitespace error。
 - 打包後 GUI `--smoke` 與 CLI `--help` 通過。
-- GitHub Release 含 `sticker-forge-v0.14.0-windows-x64.zip` 與 `.sha256`。
+- GitHub Release 含 `sticker-forge-v0.15.0-windows-x64.zip` 與 `.sha256`。
 
 ## 目前風險
 

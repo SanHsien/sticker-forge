@@ -2,6 +2,12 @@
 
 本檔記錄 `sticker-forge` 的版本變更。專案方向、使用方式與路線圖見 [`README.md`](README.md)；架構與打包流程見 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)。
 
+## v0.15.0
+
+- **Signal manifest pack**：`platform --target signal` 會輸出 512x512 PNG、`cover.png`、`signal_manifest.json` 與 README，manifest 含 title、author、cover、每張貼圖檔名與 emoji 指派。
+- **Signal validator**：`validate --signal` 檢查 Signal ZIP 的 manifest、cover、貼圖尺寸、透明背景、檔名與 emoji 指派。
+- **CLI metadata**：`platform` 新增 `--title`、`--author`、`--emoji`；GUI 多平台匯出會沿用套組標題與作者欄位。
+
 ## v0.14.0
 
 - **使用者指南**：新增 [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md)，整理 exe 啟動、LINE 靜態貼圖、emoji、訊息貼圖、動態貼圖、多平台匯出、常見問題與手動送審邊界。

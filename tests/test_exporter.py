@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from io import BytesIO
 from zipfile import ZipFile
 
@@ -15,6 +16,7 @@ from sticker_forge.exporter import (
     fit_to_canvas,
     validate_emoji_zip,
     validate_line_zip,
+    validate_signal_zip,
 )
 
 
@@ -127,6 +129,39 @@ def test_export_platform_zip_whatsapp_has_webp_and_tray(tmp_path) -> None:
         assert sticker.size == (512, 512) and sticker.format == "WEBP"
         tray = Image.open(BytesIO(archive.read("tray.png")))
         assert tray.size == (96, 96)
+
+
+def test_export_platform_zip_signal_has_manifest_and_cover(tmp_path) -> None:
+    output = export_platform_zip(
+        _stickers()[:3],
+        tmp_path / "signal.zip",
+        platform="signal",
+        title="Signal Pack",
+        author="Tester",
+        emoji="😀,😄,😉",
+    )
+    with ZipFile(output) as archive:
+        names = set(archive.namelist())
+        assert {"01.png", "03.png", "cover.png", "signal_manifest.json", "README.txt"} <= names
+        manifest = json.loads(archive.read("signal_manifest.json").decode("utf-8"))
+        assert manifest["title"] == "Signal Pack"
+        assert manifest["author"] == "Tester"
+        assert manifest["cover"] == "cover.png"
+        assert manifest["stickers"][0] == {"file": "01.png", "emoji": "😀"}
+        sticker = Image.open(BytesIO(archive.read("01.png")))
+        assert sticker.size == (512, 512)
+        cover = Image.open(BytesIO(archive.read("cover.png")))
+        assert cover.size == (512, 512)
+    assert validate_signal_zip(output) == []
+
+
+def test_export_platform_zip_signal_rejects_wrong_emoji_count(tmp_path) -> None:
+    try:
+        export_platform_zip(_stickers()[:3], tmp_path / "signal.zip", platform="signal", emoji="😀,😄")
+    except ValueError as exc:
+        assert "Signal emoji list" in str(exc)
+    else:
+        raise AssertionError("Signal export should reject emoji lists that do not match sticker count")
 
 
 def test_export_platform_zip_rejects_unknown_platform(tmp_path) -> None:
@@ -256,3 +291,14 @@ def test_validate_line_zip_reports_bad_structure(tmp_path) -> None:
 
     assert any("missing files" in error for error in errors)
     assert any("01.png size is 1x1" in error for error in errors)
+
+
+def test_validate_signal_zip_reports_bad_structure(tmp_path) -> None:
+    output = tmp_path / "bad-signal.zip"
+    with ZipFile(output, "w") as archive:
+        archive.writestr("signal_manifest.json", '{"title":"","author":"","cover":"missing.png","stickers":[]}')
+        archive.writestr("README.txt", "bad")
+
+    errors = validate_signal_zip(output)
+
+    assert any("missing files: cover.png" in error for error in errors)

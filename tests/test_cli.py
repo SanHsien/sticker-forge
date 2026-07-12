@@ -195,6 +195,38 @@ def test_cli_platform_creates_zip(tmp_path) -> None:
         assert "01.png" in archive.namelist()
 
 
+def test_cli_signal_platform_creates_and_validates_zip(tmp_path) -> None:
+    grid = Image.new("RGBA", (300, 300), (0, 255, 0, 255))
+    grid_path = tmp_path / "grid.png"
+    grid.save(grid_path)
+    output_path = tmp_path / "signal.zip"
+
+    assert (
+        main(
+            [
+                "platform",
+                str(grid_path),
+                "-o",
+                str(output_path),
+                "--target",
+                "signal",
+                "--title",
+                "Signal Pack",
+                "--author",
+                "Tester",
+                "--emoji",
+                "😀",
+            ]
+        )
+        == 0
+    )
+
+    with ZipFile(output_path) as archive:
+        names = archive.namelist()
+        assert "signal_manifest.json" in names and "cover.png" in names
+    assert main(["validate", str(output_path), "--signal"]) == 0
+
+
 def test_cli_preview_reports_grid_readiness(tmp_path, capsys) -> None:
     grid = Image.new("RGBA", (300, 300), (255, 255, 255, 0))
     grid_path = tmp_path / "grid.png"

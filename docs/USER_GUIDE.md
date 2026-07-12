@@ -4,7 +4,7 @@
 
 ## 下載與啟動
 
-1. 到 GitHub Releases 下載 `sticker-forge-v0.14.0-windows-x64.zip`。
+1. 到 GitHub Releases 下載 `sticker-forge-v0.15.0-windows-x64.zip`。
 2. 解壓縮到本機資料夾。
 3. 雙擊 `sticker-forge.exe` 開啟桌面 GUI。
 4. 需要命令列時使用 `sticker-forge-cli.exe`。
@@ -74,8 +74,11 @@ python -m sticker_forge animated `
 python -m sticker_forge platform examples\generated\static-grid.png -o outputs\telegram.zip --target telegram
 python -m sticker_forge platform examples\generated\static-grid.png -o outputs\whatsapp.zip --target whatsapp
 python -m sticker_forge platform examples\generated\static-grid.png -o outputs\discord.zip --target discord
-python -m sticker_forge platform examples\generated\static-grid.png -o outputs\signal.zip --target signal
+python -m sticker_forge platform examples\generated\static-grid.png -o outputs\signal.zip --target signal --title "Signal Pack" --author "sticker-forge" --emoji "🙂"
+python -m sticker_forge validate outputs\signal.zip --signal
 ```
+
+Signal ZIP 會包含 `cover.png` 與 `signal_manifest.json`。Signal Desktop 仍需手動建立貼圖包、匯入圖片，並依 manifest 填入標題、作者與 emoji。
 
 ## 範例素材
 

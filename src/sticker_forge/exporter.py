@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import replace
 from io import BytesIO
@@ -190,6 +191,44 @@ PLATFORM_SPECS = {
     "discord": {"size": (320, 320), "format": "PNG", "ext": "png", "tray": None},
     "signal": {"size": (512, 512), "format": "PNG", "ext": "png", "tray": None},
 }
+SIGNAL_MAX_STICKERS = 200
+SIGNAL_DEFAULT_EMOJI = "🙂"
+
+
+def _normalise_signal_emojis(count: int, emojis: Sequence[str] | str | None) -> list[str]:
+    if emojis is None:
+        values = [SIGNAL_DEFAULT_EMOJI]
+    elif isinstance(emojis, str):
+        values = [item.strip() for item in emojis.split(",") if item.strip()]
+    else:
+        values = [str(item).strip() for item in emojis if str(item).strip()]
+    if not values:
+        values = [SIGNAL_DEFAULT_EMOJI]
+    if len(values) == 1:
+        values *= count
+    if len(values) != count:
+        raise ValueError(f"Signal emoji list must contain 1 or {count} values")
+    return values
+
+
+def _signal_manifest(
+    *,
+    title: str,
+    author: str,
+    sticker_names: Sequence[str],
+    emojis: Sequence[str],
+    cover: str,
+) -> str:
+    manifest = {
+        "title": title,
+        "author": author,
+        "cover": cover,
+        "stickers": [
+            {"file": name, "emoji": emoji}
+            for name, emoji in zip(sticker_names, emojis, strict=True)
+        ],
+    }
+    return json.dumps(manifest, ensure_ascii=False, indent=2) + "\n"
 
 
 def _encode_image(image: Image.Image, image_format: str) -> bytes:
@@ -206,12 +245,17 @@ def export_platform_zip(
     output_path: str | Path,
     *,
     platform: str,
+    title: str = "sticker-forge pack",
+    author: str = "sticker-forge",
+    emoji: Sequence[str] | str | None = None,
 ) -> Path:
     """Export stickers resized to another chat platform's sticker spec."""
     if platform not in PLATFORM_SPECS:
         raise ValueError(f"unknown platform: {platform}")
     if not stickers:
         raise ValueError("expected at least one sticker")
+    if platform == "signal" and len(stickers) > SIGNAL_MAX_STICKERS:
+        raise ValueError(f"Signal sticker packs support at most {SIGNAL_MAX_STICKERS} stickers")
 
     profile = PLATFORM_SPECS[platform]
     loaded = [_load_image(sticker) for sticker in stickers]
@@ -219,17 +263,42 @@ def export_platform_zip(
     output.parent.mkdir(parents=True, exist_ok=True)
 
     with ZipFile(output, "w", compression=ZIP_DEFLATED) as archive:
+        sticker_names = []
         for index, sticker in enumerate(loaded, start=1):
             fitted = fit_to_canvas(sticker, profile["size"])
-            archive.writestr(f"{index:02d}.{profile['ext']}", _encode_image(fitted, profile["format"]))
+            name = f"{index:02d}.{profile['ext']}"
+            sticker_names.append(name)
+            archive.writestr(name, _encode_image(fitted, profile["format"]))
         if profile["tray"]:
             tray = fit_to_canvas(loaded[0], profile["tray"])
             archive.writestr("tray.png", _png_bytes(tray))
+        if platform == "signal":
+            cover = fit_to_canvas(loaded[0], profile["size"])
+            signal_emojis = _normalise_signal_emojis(len(loaded), emoji)
+            archive.writestr("cover.png", _png_bytes(cover))
+            archive.writestr(
+                "signal_manifest.json",
+                _signal_manifest(
+                    title=title,
+                    author=author,
+                    sticker_names=sticker_names,
+                    emojis=signal_emojis,
+                    cover="cover.png",
+                ),
+            )
         archive.writestr(
             "README.txt",
+            f"{title}\n"
+            f"Author: {author}\n\n"
             f"{platform} sticker pack generated locally by sticker-forge.\n"
             f"Sticker size: {profile['size'][0]}x{profile['size'][1]} {profile['format']}.\n"
-            "Review the platform's current sticker rules before publishing.\n",
+            + (
+                "Signal notes: import the numbered files in Signal Desktop, use cover.png as the cover,\n"
+                "and copy title/author/emoji assignments from signal_manifest.json.\n"
+                if platform == "signal"
+                else ""
+            )
+            + "Review the platform's current sticker rules before publishing.\n",
         )
 
     return output
@@ -473,5 +542,83 @@ def validate_emoji_zip(zip_path: str | Path) -> list[str]:
                     errors.append(f"{name} is not PNG")
                 if _is_fully_opaque(image):
                     errors.append(f"{name} has no transparent background; LINE requires transparent emoji")
+
+    return errors
+
+
+def validate_signal_zip(zip_path: str | Path) -> list[str]:
+    """Return validation errors for a local Signal sticker ZIP."""
+    errors: list[str] = []
+
+    with ZipFile(zip_path) as archive:
+        names = set(archive.namelist())
+        required = {"README.txt", "cover.png", "signal_manifest.json"}
+        missing = sorted(required - names)
+        if missing:
+            errors.append(f"missing files: {', '.join(missing)}")
+            return errors
+
+        try:
+            manifest = json.loads(archive.read("signal_manifest.json").decode("utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+            errors.append(f"signal_manifest.json is invalid: {exc}")
+            return errors
+
+        title = str(manifest.get("title", "")).strip()
+        author = str(manifest.get("author", "")).strip()
+        cover_name = str(manifest.get("cover", "")).strip()
+        stickers = manifest.get("stickers")
+        if not title:
+            errors.append("signal_manifest.json title is required")
+        if not author:
+            errors.append("signal_manifest.json author is required")
+        if cover_name != "cover.png":
+            errors.append("signal_manifest.json cover must be cover.png")
+        if not isinstance(stickers, list) or not stickers:
+            errors.append("signal_manifest.json stickers must be a non-empty list")
+            stickers = []
+        if len(stickers) > SIGNAL_MAX_STICKERS:
+            errors.append(f"Signal sticker count is {len(stickers)}, expected at most {SIGNAL_MAX_STICKERS}")
+
+        seen_files: set[str] = set()
+        for index, item in enumerate(stickers, start=1):
+            if not isinstance(item, dict):
+                errors.append(f"sticker {index} metadata must be an object")
+                continue
+            filename = str(item.get("file", "")).strip()
+            emoji = str(item.get("emoji", "")).strip()
+            if not re.fullmatch(r"\d{2}\.(png|webp)", filename):
+                errors.append(f"sticker {index} file name is invalid: {filename or '<empty>'}")
+                continue
+            if filename in seen_files:
+                errors.append(f"duplicate sticker file in manifest: {filename}")
+            seen_files.add(filename)
+            if filename not in names:
+                errors.append(f"manifest references missing file: {filename}")
+                continue
+            if not emoji:
+                errors.append(f"{filename} emoji is required")
+            with archive.open(filename) as file:
+                image = Image.open(file)
+                if image.size != PLATFORM_SPECS["signal"]["size"]:
+                    errors.append(
+                        f"{filename} size is {image.size[0]}x{image.size[1]}, expected 512x512"
+                    )
+                if image.format not in {"PNG", "WEBP"}:
+                    errors.append(f"{filename} must be PNG or WebP")
+                if _is_fully_opaque(image):
+                    errors.append(f"{filename} has no transparent background")
+
+        with archive.open("cover.png") as file:
+            cover = Image.open(file)
+            if cover.size != PLATFORM_SPECS["signal"]["size"]:
+                errors.append(f"cover.png size is {cover.size[0]}x{cover.size[1]}, expected 512x512")
+            if cover.format != "PNG":
+                errors.append("cover.png must be PNG")
+
+        numbered_files = {name for name in names if re.fullmatch(r"\d{2}\.(png|webp)", name)}
+        extras = sorted(numbered_files - seen_files)
+        if extras:
+            errors.append(f"numbered files not listed in signal_manifest.json: {', '.join(extras)}")
 
     return errors

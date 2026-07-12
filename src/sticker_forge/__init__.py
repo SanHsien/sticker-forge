@@ -15,6 +15,7 @@ from .exporter import (
     fit_to_canvas,
     validate_emoji_zip,
     validate_line_zip,
+    validate_signal_zip,
 )
 from .prompts import render_line_static_prompt
 from .preview import PackPreview, StickerPreview, build_pack_preview
@@ -44,4 +45,5 @@ __all__ = [
     "split_grid_to_stickers",
     "validate_emoji_zip",
     "validate_line_zip",
+    "validate_signal_zip",
 ]

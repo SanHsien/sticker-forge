@@ -164,7 +164,13 @@ class Api:
         path = self._ask_save_path(f"{platform}-stickers.zip")
         if not path:
             return {"cancelled": True}
-        export_platform_zip([_decode(url) for url in tile_data_urls], path, platform=platform)
+        export_platform_zip(
+            [_decode(url) for url in tile_data_urls],
+            path,
+            platform=platform,
+            title=((options or {}).get("title") or "").strip() or "sticker-forge pack",
+            author=((options or {}).get("author") or "").strip() or "sticker-forge",
+        )
         return {"saved": str(path)}
 
     # --- animated stickers (one animated file per sticker) ------------------

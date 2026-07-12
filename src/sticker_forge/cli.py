@@ -23,6 +23,7 @@ from .exporter import (
     export_stickers_zip,
     validate_emoji_zip,
     validate_line_zip,
+    validate_signal_zip,
 )
 from .prompts import PROMPT_PRESETS, normalize_locale, render_line_static_prompt
 from .preview import build_pack_preview
@@ -44,6 +45,8 @@ MESSAGES = {
         "emoji_help": "匯出 LINE 原創貼圖 emoji ZIP（8-40 張 × 180x180 ＋ 聊天縮圖）",
         "thumb_help": "聊天縮圖用選取中的第幾張（1-based）。預設：1",
         "emoji_validate_help": "以 LINE emoji 規格檢查 ZIP（而非貼圖）",
+        "signal_validate_help": "以 Signal 貼圖素材包規格檢查 ZIP",
+        "signal_emoji_help": "Signal 每張貼圖對應的 emoji；可填 1 個套用全部，或用逗號填每張一個。預設：🙂",
         "message_help": "匯出 LINE 訊息貼圖 ZIP（8/16/24 張，文字由發送者輸入）",
         "animated_help": "匯出 LINE 動態貼圖 ZIP（匯入 8/16/24 個動態 GIF/APNG，每個一張，5-20 影格）",
         "target_help": "目標平台",
@@ -75,6 +78,8 @@ MESSAGES = {
         "emoji_help": "export a LINE custom emoji ZIP (8-40 x 180x180 + chat thumbnail)",
         "thumb_help": "which selected emoji is the chat thumbnail (1-based). Default: 1",
         "emoji_validate_help": "validate the ZIP as a LINE emoji set instead of stickers",
+        "signal_validate_help": "validate the ZIP as a Signal sticker asset pack",
+        "signal_emoji_help": "Signal emoji assignment; pass one value for all stickers or comma-separated one per sticker. Default: 🙂",
         "message_help": "export a LINE message sticker ZIP (8/16/24, the sender types the text)",
         "animated_help": "export a LINE animated sticker ZIP (import 8/16/24 animated GIF/APNG files, one per sticker, 5-20 frames)",
         "preview_help": "preview export readiness for a 3x3 grid",
@@ -229,6 +234,9 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     platform.add_argument("--keep-background", action="store_true", help=text["keep_background_help"])
     platform.add_argument("--key-name", choices=["green", "magenta"], default="green")
     platform.add_argument("--tune", choices=["safe", "balanced", "aggressive"], default="balanced")
+    platform.add_argument("--title", default="sticker-forge pack")
+    platform.add_argument("--author", default="sticker-forge")
+    platform.add_argument("--emoji", default="🙂", help=text["signal_emoji_help"])
 
     emoji = subparsers.add_parser("emoji", parents=[language_parent], help=text["emoji_help"])
     emoji.add_argument("input", type=Path, nargs="+")
@@ -290,6 +298,7 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     validate = subparsers.add_parser("validate", parents=[language_parent], help=text["validate_help"])
     validate.add_argument("zip", type=Path)
     validate.add_argument("--emoji", action="store_true", help=text["emoji_validate_help"])
+    validate.add_argument("--signal", action="store_true", help=text["signal_validate_help"])
 
     return parser
 
@@ -407,7 +416,14 @@ def main(argv: list[str] | None = None) -> int:
                 remove_chroma_background(sticker, key_name=args.key_name, tune=args.tune)
                 for sticker in stickers
             ]
-        output = export_platform_zip(stickers, args.output, platform=args.target)
+        output = export_platform_zip(
+            stickers,
+            args.output,
+            platform=args.target,
+            title=args.title,
+            author=args.author,
+            emoji=args.emoji,
+        )
         print(output)
         return 0
 
@@ -526,7 +542,14 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "validate":
-        errors = validate_emoji_zip(args.zip) if args.emoji else validate_line_zip(args.zip)
+        if args.emoji and args.signal:
+            parser.error("--emoji and --signal cannot be used together")
+        if args.emoji:
+            errors = validate_emoji_zip(args.zip)
+        elif args.signal:
+            errors = validate_signal_zip(args.zip)
+        else:
+            errors = validate_line_zip(args.zip)
         if errors:
             for error in errors:
                 print(error)
