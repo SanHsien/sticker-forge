@@ -88,7 +88,7 @@ python -m sticker_forge validate outputs\line-stickers.zip
 
 ## Roadmap
 
-Version **v0.17.0**: local-first sticker-pack toolkit (LINE stickers/Big Stickers/emoji/message/animated/pop-up/effect stickers and other platforms). The desktop GUI (a pywebview window rendering the HTML) and the CLI share one Python core. `python -m pytest` passes with 70 tests.
+Version **v0.18.0**: local-first sticker-pack toolkit (LINE stickers/Big Stickers/emoji/message/animated/pop-up/effect stickers and other platforms). The desktop GUI (a pywebview window rendering the HTML) and the CLI share one Python core. `python -m pytest` passes with 73 tests.
 
 ### ✅ Done
 
@@ -96,19 +96,18 @@ Version **v0.17.0**: local-first sticker-pack toolkit (LINE stickers/Big Sticker
 - Prompt templates (Chinese/English, text/no-text, green/magenta, risk reminders).
 - Image core: 3x3 split, cleanup, resize/padding, main/tab image, preview metadata.
 - Export: LINE static sticker, Big Stickers, emoji, message sticker, animated sticker, pop-up sticker, and effect sticker ZIPs, PNG-only ZIP, platform ZIPs, `validate` and `preview` commands.
-- PyInstaller Windows packaging and releases through `v0.17.0` (GitHub Releases with SHA256 checksums).
+- PyInstaller Windows packaging and releases through `v0.18.0` (GitHub Releases with SHA256 checksums).
 - Desktop drag-and-drop import (the webview's HTML dropzone); WebView2 runs with `private_mode`, an ephemeral profile, so nothing persistent is written.
 - User guide and reproducible local sample asset generator (generated images and ZIPs are not committed).
 - Signal platform export now includes `cover.png`, `signal_manifest.json`, and `validate --signal`.
 - LINE Big Stickers export now includes CLI / GUI support and `validate --big`.
-- LINE pop-up / effect stickers now include CLI export and `validate --popup` / `validate --effect`.
+- LINE pop-up / effect stickers now include CLI/GUI export and `validate --popup` / `validate --effect`.
 
 Detailed version history is in [`CHANGELOG.md`](CHANGELOG.md); design decisions are in [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
 ### Next
 
 - Run one manual LINE Creators Market upload check with non-infringing assets, especially for animated / pop-up / effect APNG stickers.
-- Add pop-up / effect stickers to the GUI flow so general users do not need the CLI.
 - Cut `v1.0.0` only after the main LINE types have manual upload evidence, GUI smoke coverage, Windows exe release checks, and documentation consistency review.
 
 ### ⏳ Decided

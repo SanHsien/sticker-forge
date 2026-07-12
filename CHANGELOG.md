@@ -2,6 +2,13 @@
 
 本檔記錄 `sticker-forge` 的版本變更。專案方向、使用方式與路線圖見 [`README.md`](README.md)；架構與打包流程見 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)。
 
+## v0.18.0
+
+- **Pop-up / effect GUI**：桌面 GUI 新增「匯入畫面動畫」、「匯出 pop-up」、「匯出 effect」，可用靜態 3x3 grid 搭配同數量 480x480 APNG 畫面動畫輸出 LINE pop-up / effect stickers。
+- **Webview bridge**：新增 `prepare_screen_animations()`、`export_popup()`、`export_effect()`，GUI 與 CLI 共用同一套 Python exporter。
+- **GUI 驗證狀態**：預覽區會顯示畫面動畫數量；只有選取 8/16/24 張靜態貼圖且動畫數量相同時才允許匯出 pop-up / effect。
+- **測試**：`python -m pytest` 更新為 73 passed，涵蓋 screen animation APNG 準備與 GUI bridge pop-up / effect ZIP。
+
 ## v0.17.0
 
 - **LINE pop-up stickers**：新增 `popup` CLI 指令，使用靜態 3x3 grid 搭配 8/16/24 個動態 GIF/APNG，輸出靜態貼圖、480x480 APNG pop-up images、`popup-main.png`、`main.png`、`tab.png` 與 README。

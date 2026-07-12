@@ -19,15 +19,19 @@ from .app_launcher import app_path
 from .cleanup import remove_chroma_background
 from .exporter import (
     LINE_ANIM_MAX_SIZE,
+    LINE_SCREEN_ANIM_SIZE,
     PLATFORM_SPECS,
     _apng_bytes,
     _fit_frames_within,
+    _fit_screen_frames,
     export_animated_zip,
     export_big_zip,
+    export_effect_zip,
     export_emoji_zip,
     export_line_zip,
     export_message_zip,
     export_platform_zip,
+    export_popup_zip,
     export_stickers_zip,
 )
 from .prompts import (
@@ -66,6 +70,12 @@ def _encode_apng(frames: list[Image.Image], durations: list[int]) -> str:
     return "data:image/png;base64," + base64.b64encode(_apng_bytes(frames, durations)).decode("ascii")
 
 
+def _encode_screen_apng(frames: list[Image.Image], durations: list[int]) -> str:
+    return "data:image/png;base64," + base64.b64encode(
+        _apng_bytes(frames, durations, max_loops=3, max_total_ms=3000)
+    ).decode("ascii")
+
+
 def _spec_for(options: dict) -> "LINE_STATIC_SPEC.__class__":
     padding = int(options.get("padding", LINE_STATIC_SPEC.sticker_padding))
     return replace(LINE_STATIC_SPEC, sticker_padding=padding)
@@ -91,6 +101,8 @@ class Api:
             "spec": {
                 "stickerW": LINE_STATIC_SPEC.sticker_size[0],
                 "stickerH": LINE_STATIC_SPEC.sticker_size[1],
+                "screenAnimationW": LINE_SCREEN_ANIM_SIZE[0],
+                "screenAnimationH": LINE_SCREEN_ANIM_SIZE[1],
                 "mainSize": LINE_STATIC_SPEC.main_size[0],
                 "tabW": LINE_STATIC_SPEC.tab_size[0],
                 "tabH": LINE_STATIC_SPEC.tab_size[1],
@@ -246,6 +258,91 @@ class Api:
                 author=(options.get("author") or "").strip() or "sticker-forge",
                 durations=durations,
             )
+        except ValueError as exc:
+            return {"error": str(exc)}
+        return {"saved": str(path)}
+
+    # --- pop-up / effect stickers (static stickers + screen APNGs) ----------
+    def prepare_screen_animations(self, data_urls: list[str], options: dict) -> list[str]:
+        """Load screen animation files, clean per frame, fit to 480x480 APNG previews."""
+        options = options or {}
+        previews = []
+        for url in data_urls:
+            frames, durations = _decode_animated(url)
+            if not options.get("keepBackground", False):
+                frames = [
+                    remove_chroma_background(
+                        frame,
+                        key_name=options.get("keyName", "green"),
+                        tune=options.get("tune", "balanced"),
+                    )
+                    for frame in frames
+                ]
+            previews.append(_encode_screen_apng(_fit_screen_frames(frames), [max(20, int(d)) for d in durations]))
+        return previews
+
+    def export_popup(self, tile_data_urls: list[str], apng_data_urls: list[str], options: dict) -> dict:
+        options = options or {}
+        path = self._ask_save_path("line-popup-stickers.zip")
+        if not path:
+            return {"cancelled": True}
+        return self._write_screen_zip("popup", tile_data_urls, apng_data_urls, path, options)
+
+    def export_effect(self, tile_data_urls: list[str], apng_data_urls: list[str], options: dict) -> dict:
+        options = options or {}
+        path = self._ask_save_path("line-effect-stickers.zip")
+        if not path:
+            return {"cancelled": True}
+        return self._write_screen_zip("effect", tile_data_urls, apng_data_urls, path, options)
+
+    def _write_screen_zip(
+        self,
+        kind: str,
+        tile_data_urls: list[str],
+        apng_data_urls: list[str],
+        path: str | Path,
+        options: dict,
+    ) -> dict:
+        tiles = [_decode(url) for url in tile_data_urls]
+        sticker_frames = []
+        durations = []
+        for url in apng_data_urls:
+            frames, frame_durations = _decode_animated(url)
+            sticker_frames.append(frames)
+            durations.append(frame_durations)
+        main_index = int(options.get("mainIndex", 0))
+        tab_index = int(options.get("tabIndex", 0))
+        if not 0 <= main_index < len(tiles):
+            main_index = 0
+        if not 0 <= tab_index < len(tiles):
+            tab_index = 0
+        title = (options.get("title") or "").strip()
+        author = (options.get("author") or "").strip() or "sticker-forge"
+        try:
+            if kind == "popup":
+                export_popup_zip(
+                    tiles,
+                    sticker_frames,
+                    path,
+                    main_index=main_index,
+                    tab_index=tab_index,
+                    title=title or "sticker-forge pop-up",
+                    author=author,
+                    durations=durations,
+                )
+            elif kind == "effect":
+                export_effect_zip(
+                    tiles,
+                    sticker_frames,
+                    path,
+                    main_index=main_index,
+                    tab_index=tab_index,
+                    title=title or "sticker-forge effect",
+                    author=author,
+                    durations=durations,
+                )
+            else:
+                return {"error": f"unknown screen sticker type: {kind}"}
         except ValueError as exc:
             return {"error": str(exc)}
         return {"saved": str(path)}

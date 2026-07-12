@@ -43,9 +43,16 @@ const UI = {
     needMessage: (count) => `LINE 訊息貼圖需 8／16／24 張，目前 ${count} 張`,
     exportBig: "匯出 Big Stickers",
     importAnimated: "匯入動態貼圖",
+    importScreenAnimations: "匯入畫面動畫",
     exportAnimated: "匯出動態貼圖",
+    exportPopup: "匯出 pop-up",
+    exportEffect: "匯出 effect",
     preparing: "處理動態貼圖中…",
+    preparingScreen: "處理畫面動畫中…",
     needAnimated: (count) => `LINE 動態貼圖需 8／16／24 張，目前 ${count} 張`,
+    needScreenAnimations: (stickers, animations) => `pop-up / effect 需 8／16／24 張靜態貼圖，且畫面動畫數量需相同；目前 ${stickers} 張靜態、${animations} 個動畫`,
+    screenAnimationImported: (count) => `已匯入 ${count} 個畫面動畫`,
+    screenAnimationSummary: (count) => `畫面動畫：${count} 個 APNG`,
     animatedModeHint: "目前是動態貼圖模式，請用「匯出動態貼圖」，或重新匯入靜態 3x3 grid",
     staticModeHint: "請先匯入動態貼圖檔（GIF/APNG）",
     platformLabel: "其他平台",
@@ -124,9 +131,16 @@ const UI = {
     needMessage: (count) => `LINE message stickers need 8/16/24; ${count} selected`,
     exportBig: "Export Big Stickers",
     importAnimated: "Import animated",
+    importScreenAnimations: "Import screen animations",
     exportAnimated: "Export animated",
+    exportPopup: "Export pop-up",
+    exportEffect: "Export effect",
     preparing: "Preparing animated stickers…",
+    preparingScreen: "Preparing screen animations…",
     needAnimated: (count) => `LINE animated stickers need 8/16/24; ${count} selected`,
+    needScreenAnimations: (stickers, animations) => `Pop-up / effect needs 8/16/24 static stickers and the same number of screen animations; ${stickers} static, ${animations} animations`,
+    screenAnimationImported: (count) => `Imported ${count} screen animations`,
+    screenAnimationSummary: (count) => `Screen animations: ${count} APNG files`,
     animatedModeHint: "Animated mode: use Export animated, or re-import a static 3x3 grid",
     staticModeHint: "Import animated files (GIF/APNG) first",
     platformLabel: "Other platform",
@@ -173,6 +187,7 @@ const state = {
   locale: UI[localStorage.getItem("stickerForgeLocale")] ? localStorage.getItem("stickerForgeLocale") : "zh-Hant",
   sourceDataUrl: null,
   tiles: [],
+  screenAnimations: [],
   zoomIndex: -1,
   mode: "static",
 };
@@ -373,7 +388,10 @@ async function splitGrid(append = false) {
   const bridge = api();
   if (!bridge) return setStatus(ui().bridgeMissing, true);
   if (!state.sourceDataUrl) return setStatus(ui().needGrid, true);
-  if (!append) state.mode = "static";
+  if (!append) {
+    state.mode = "static";
+    state.screenAnimations = [];
+  }
   setStatus(ui().splitting);
   try {
     const urls = await bridge.split(state.sourceDataUrl, { ...options(), cleanup: false });
@@ -405,6 +423,7 @@ function moveTile(index, delta) {
 
 function clearTiles() {
   state.tiles = [];
+  state.screenAnimations = [];
   state.mode = "static";
   renderTiles();
   updatePreview();
@@ -589,10 +608,31 @@ async function loadAnimatedFiles(files) {
       tune: $("cleanup-tune").value,
     });
     state.mode = "animated";
+    state.screenAnimations = [];
     state.tiles = previews.map((url) => ({ raw: url, url, included: true }));
     renderTiles();
     updatePreview();
     setStatus(ui().splitDone);
+  } catch (err) {
+    setStatus(String(err), true);
+  }
+}
+
+async function loadScreenAnimationFiles(files) {
+  const bridge = api();
+  if (!bridge) return setStatus(ui().bridgeMissing, true);
+  const list = Array.from(files).filter((f) => f.type.startsWith("image/") || /\.(gif|apng|png)$/i.test(f.name));
+  if (!list.length) return;
+  if (state.mode === "animated") return setStatus(ui().animatedModeHint, true);
+  setStatus(ui().preparingScreen);
+  try {
+    const dataUrls = await Promise.all(list.map(readFileAsDataURL));
+    state.screenAnimations = await bridge.prepare_screen_animations(dataUrls, {
+      keyName: $("chroma-key").value,
+      tune: $("cleanup-tune").value,
+    });
+    updatePreview();
+    setStatus(ui().screenAnimationImported(state.screenAnimations.length));
   } catch (err) {
     setStatus(String(err), true);
   }
@@ -614,6 +654,37 @@ async function exportAnimated() {
       title: $("pack-title").value,
       author: $("pack-author").value,
     });
+    reportExport(result);
+  } catch (err) {
+    setStatus(String(err), true);
+  }
+}
+
+async function exportScreenSticker(kind) {
+  const bridge = api();
+  if (!bridge) return setStatus(ui().bridgeMissing, true);
+  if (blockedInAnimated()) return;
+  const selected = includedTiles();
+  if (![8, 16, 24].includes(selected.length) || state.screenAnimations.length !== selected.length) {
+    return setStatus(ui().needScreenAnimations(selected.length, state.screenAnimations.length), true);
+  }
+  setStatus(ui().exporting);
+  try {
+    const mainIndex = Math.max(0, (parseInt($("main-index").value, 10) || 1) - 1);
+    const tabIndex = Math.max(0, (parseInt($("tab-index").value, 10) || 1) - 1);
+    const payload = [
+      selected.map((t) => t.url),
+      state.screenAnimations,
+      {
+        mainIndex,
+        tabIndex,
+        title: $("pack-title").value,
+        author: $("pack-author").value,
+      },
+    ];
+    const result = kind === "popup"
+      ? await bridge.export_popup(...payload)
+      : await bridge.export_effect(...payload);
     reportExport(result);
   } catch (err) {
     setStatus(String(err), true);
@@ -736,7 +807,15 @@ function updatePreview() {
     item.textContent = data.needPackSize(selected.length);
     errors.appendChild(item);
   }
+  const screenReady = [8, 16, 24].includes(selected.length) && state.screenAnimations.length === selected.length;
+  if (state.screenAnimations.length && !screenReady) {
+    const item = document.createElement("li");
+    item.textContent = data.needScreenAnimations(selected.length, state.screenAnimations.length);
+    errors.appendChild(item);
+  }
   $("export-zip").disabled = !isPackSize(selected.length);
+  $("export-popup").disabled = !screenReady;
+  $("export-effect").disabled = !screenReady;
   populateMainTab(selected.length);
   const files = $("preview-files");
   files.innerHTML = "";
@@ -751,6 +830,12 @@ function updatePreview() {
     const item = document.createElement("div");
     item.className = "preview-file";
     item.textContent = text;
+    files.appendChild(item);
+  }
+  if (state.screenAnimations.length) {
+    const item = document.createElement("div");
+    item.className = "preview-file";
+    item.textContent = data.screenAnimationSummary(state.screenAnimations.length);
     files.appendChild(item);
   }
 }
@@ -821,6 +906,11 @@ function bindEvents() {
     if (files && files.length) loadAnimatedFiles(files);
     event.target.value = "";
   });
+  $("screen-animation-files").addEventListener("change", (event) => {
+    const files = event.target.files;
+    if (files && files.length) loadScreenAnimationFiles(files);
+    event.target.value = "";
+  });
   setupDropzone();
   $("split-grid").addEventListener("click", () => splitGrid(false));
   $("cleanup-all").addEventListener("click", cleanupAll);
@@ -831,6 +921,8 @@ function bindEvents() {
   $("export-message").addEventListener("click", exportMessage);
   $("export-big").addEventListener("click", exportBig);
   $("export-animated").addEventListener("click", exportAnimated);
+  $("export-popup").addEventListener("click", () => exportScreenSticker("popup"));
+  $("export-effect").addEventListener("click", () => exportScreenSticker("effect"));
   $("export-zip").addEventListener("click", exportZip);
   $("export-platform").addEventListener("click", exportPlatform);
   $("zoom-close").addEventListener("click", closeZoom);

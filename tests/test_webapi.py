@@ -4,9 +4,9 @@ import base64
 from io import BytesIO
 from zipfile import ZipFile
 
-from PIL import Image
+from PIL import Image, ImageDraw
 
-from sticker_forge.exporter import validate_line_zip
+from sticker_forge.exporter import validate_effect_zip, validate_line_zip, validate_popup_zip
 from sticker_forge.prompts import SUGGESTIONS
 from sticker_forge.webapi import Api, _decode, _encode
 
@@ -14,6 +14,18 @@ from sticker_forge.webapi import Api, _decode, _encode
 def _grid_data_url(color=(0, 255, 0, 255), size=(300, 300)) -> str:
     buffer = BytesIO()
     Image.new("RGBA", size, color).save(buffer, format="PNG")
+    return "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode("ascii")
+
+
+def _animated_data_url(frames: int = 6) -> str:
+    images = []
+    for index in range(frames):
+        image = Image.new("RGBA", (200, 200), (0, 255, 0, 255))
+        draw = ImageDraw.Draw(image)
+        draw.ellipse([20 + index * 8, 40, 50 + index * 8, 70], fill=(200, 30, 30, 255))
+        images.append(image)
+    buffer = BytesIO()
+    images[0].save(buffer, format="PNG", save_all=True, append_images=images[1:], duration=120, loop=0, disposal=2)
     return "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode("ascii")
 
 
@@ -77,6 +89,46 @@ def test_export_big_bridge_cancels_without_window() -> None:
     api = Api()
     tile = _encode(Image.new("RGBA", (370, 320), (10, 20, 30, 255)))
     assert api.export_big([tile] * 8, {}) == {"cancelled": True}
+
+
+def test_prepare_screen_animations_returns_480_apng() -> None:
+    api = Api()
+    [preview] = api.prepare_screen_animations([_animated_data_url()], {"keyName": "green"})
+    image = _decode(preview)
+    assert image.size == (480, 480)
+    assert image.getpixel((0, 0))[3] == 0
+
+
+def test_write_popup_and_effect_zip_are_valid(tmp_path) -> None:
+    api = Api()
+    tiles = api.split(_grid_data_url(), {"keyName": "green", "cleanup": True})[:8]
+    animations = api.prepare_screen_animations([_animated_data_url() for _ in range(8)], {"keyName": "green"})
+
+    popup = api._write_screen_zip(
+        "popup",
+        tiles,
+        animations,
+        tmp_path / "popup.zip",
+        {"title": "Popup Pack", "author": "Tester"},
+    )
+    effect = api._write_screen_zip(
+        "effect",
+        tiles,
+        animations,
+        tmp_path / "effect.zip",
+        {"title": "Effect Pack", "author": "Tester"},
+    )
+
+    assert "saved" in popup and validate_popup_zip(tmp_path / "popup.zip") == []
+    assert "saved" in effect and validate_effect_zip(tmp_path / "effect.zip") == []
+
+
+def test_export_popup_effect_bridge_cancels_without_window() -> None:
+    api = Api()
+    tile = _encode(Image.new("RGBA", (370, 320), (10, 20, 30, 255)))
+    animation = _animated_data_url()
+    assert api.export_popup([tile] * 8, [animation] * 8, {}) == {"cancelled": True}
+    assert api.export_effect([tile] * 8, [animation] * 8, {}) == {"cancelled": True}
 
 
 def test_export_emoji_bridge_cancels_without_window() -> None:

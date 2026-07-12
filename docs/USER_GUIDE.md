@@ -4,7 +4,7 @@
 
 ## 下載與啟動
 
-1. 到 GitHub Releases 下載 `sticker-forge-v0.17.0-windows-x64.zip`。
+1. 到 GitHub Releases 下載 `sticker-forge-v0.18.0-windows-x64.zip`。
 2. 解壓縮到本機資料夾。
 3. 雙擊 `sticker-forge.exe` 開啟桌面 GUI。
 4. 需要命令列時使用 `sticker-forge-cli.exe`。
@@ -77,7 +77,14 @@ python -m sticker_forge animated `
 
 ## LINE pop-up / effect stickers
 
-pop-up / effect stickers 同時需要靜態貼圖與每張貼圖對應的 480x480 APNG。這一版先提供 CLI 流程；GUI 入口會在後續版本補上。
+pop-up / effect stickers 同時需要靜態貼圖與每張貼圖對應的 480x480 APNG。GUI 流程：
+
+1. 先匯入 3x3 靜態 grid，選取 8、16 或 24 張。
+2. 點「匯入畫面動畫」，選同樣數量的 GIF/APNG。
+3. 預覽區確認靜態貼圖數量與畫面動畫數量相同。
+4. 點「匯出 pop-up」或「匯出 effect」。
+
+CLI 也可用：
 
 ```powershell
 python -m sticker_forge popup examples\generated\static-grid.png `

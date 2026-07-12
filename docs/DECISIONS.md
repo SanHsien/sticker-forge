@@ -258,3 +258,21 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 - v0.17.0 先做 CLI-first，因為使用者手上的資料形狀是「一張靜態 grid + 多個動態檔」，GUI 流程需要另外整理匯入、預覽與錯誤提示。
 - 不宣稱 pop-up / effect 已通過 LINE 審核；仍需以非侵權素材做手動上傳抽驗。
 - `v1.0.0` 不在本輪切出。正式版門檻是主要 LINE 類型完成手動上傳抽驗、GUI smoke、Windows exe 發行檢查與文件一致性覆核。
+
+## 2026-07-12：LINE pop-up / effect GUI（v0.18.0）
+
+v0.17.0 已有 pop-up / effect 的核心與 CLI，但一般使用者不應被迫跑命令列。v0.18.0 把同一套 exporter 接進 pywebview GUI。
+
+實作：
+
+- HTML GUI 新增「匯入畫面動畫」、「匯出 pop-up」、「匯出 effect」。
+- JS 狀態拆成靜態貼圖池 `tiles` 與畫面動畫池 `screenAnimations`；匯入畫面動畫不切換到一般動態貼圖 mode，也不覆蓋靜態貼圖。
+- `webapi.Api` 新增 `prepare_screen_animations()`，把 GIF/APNG 逐格去背並轉成 480x480 APNG 預覽。
+- `webapi.Api` 新增 `export_popup()` / `export_effect()`，GUI 與 CLI 共用 `export_popup_zip()` / `export_effect_zip()`。
+- GUI 只在選取 8/16/24 張靜態貼圖且畫面動畫數量相同時允許匯出 pop-up / effect。
+
+邊界：
+
+- 不做 LINE 自動送審；匯出後仍由使用者到 LINE Creators Market 手動上傳。
+- 不把 pop-up / effect 混進一般「匯出 ZIP」按鈕，避免使用者分不清一般靜態貼圖與 screen animation 類型。
+- 仍需用非侵權素材做 LINE 平台端手動上傳抽驗，才能考慮 `v1.0.0`。
