@@ -63,6 +63,7 @@ python -m pytest
 - `CHANGELOG.md`：版本變更紀錄。
 - `REVIEW.md`：最新專案 review。**修 bug 必回註（適用所有 AI agent：Claude、Codex 等，維護者 2026-07-19 指示）**：每修復 REVIEW.md 列出的問題，須回到對應項目標註修復 commit hash 與日期；修復過程中額外發現並修掉的 bug 也要補註。REVIEW 維持 latest-only，但修復狀態必須跟上現況。
 - `docs/DEVELOPMENT.md`：架構、本機指令、打包發行、legacy 邊界。
+- `docs/WINDOWS_VALIDATION.md`：Windows Release、Computer Use GUI 與 LINE 平台驗收。
 - `docs/DECISIONS.md`：決策紀錄。
 - `docs/LINE_SUBMISSION.md`：LINE 手動上架與送審說明。
 - `NOTICE.md`：fork 來源、MIT 授權與第三方聲明。

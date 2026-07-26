@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+- **GUI 英文啟動修正**：修正 `sticker-forge.exe --lang en` 仍被前端預設值覆蓋成繁中的問題；初始語系改以 Python bridge 為準並補回歸測試。
+- **GUI 版面修正**：匯出工具列改為自動換行，移除一般 Windows 視窗寬度下的水平溢位。
+- **Windows 實機驗收**：新增 `docs/WINDOWS_VALIDATION.md`，定義 GitHub Release 資產、Computer Use GUI、檔案匯出與 LINE Creators Market 的 `PASS`／`FAIL`／`BLOCKED` 流程。
 - **LINE 抽驗包產生器**：新增 `examples/create_line_trial_packs.py`，用非侵權範例素材一次產生靜態、Big、emoji、訊息、動態、pop-up、effect 的 LINE ZIP，並跑本機 validator，方便後續手動上傳 LINE Creators Market 抽驗。
 - **送審文件補齊**：`docs/LINE_SUBMISSION.md` 補上 Big、pop-up、effect 類型與抽驗包流程。
 

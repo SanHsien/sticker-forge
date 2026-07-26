@@ -44,7 +44,7 @@ Local-first toolkit for making chat sticker packs: prompt templates, image clean
 | `sticker-forge.exe` | 桌面 GUI：pywebview 原生視窗載入 `app/` 的 HTML 介面，切圖/去背/匯出全由本機 Python core 處理，無 console，雙擊即用 |
 | `sticker-forge-cli.exe` / `python -m sticker_forge` | 命令列，支援 `--lang zh-Hant\|en` |
 
-GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge 呼叫 Python）。一般使用流程見 [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md)，從原始碼安裝與打包步驟見 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)。
+GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge 呼叫 Python）。一般使用流程見 [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md)，從原始碼安裝與打包步驟見 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)，正式 Windows／Computer Use 驗收見 [`docs/WINDOWS_VALIDATION.md`](docs/WINDOWS_VALIDATION.md)。
 
 ## 目前狀態
 
@@ -60,7 +60,7 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 ├── packaging/              # exe 打包設定與發行流程
 ├── tests/                  # 自動化測試
 ├── examples/               # 範例輸入位置，不放侵權素材
-├── docs/                   # 使用與維護文件（USER_GUIDE / DEVELOPMENT / DECISIONS / LINE_SUBMISSION）
+├── docs/                   # 使用、開發、Windows 驗收、決策與 LINE 送審文件
 ├── README.md / README.en.md / CHANGELOG.md / REVIEW.md
 ├── AGENTS.md / CLAUDE.md / SKILL.md          # AI 接手指引
 └── NOTICE.md / LICENSE
@@ -68,7 +68,7 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 
 ## 專案狀態與路線圖
 
-目前版本 **v0.18.0**：local-first 貼圖包工具（LINE 貼圖／Big Stickers／emoji／訊息貼圖／動態貼圖／pop-up／effect 及多平台），桌面 GUI（pywebview 載入 HTML）與 CLI 共用同一套 Python core，`python -m pytest` 73 passed。
+目前 Release 為 **v0.18.0**；`main` 已進入 `v0.18.1` 修正版候選。local-first 貼圖包工具支援 LINE 貼圖／Big Stickers／emoji／訊息貼圖／動態貼圖／pop-up／effect 及多平台，桌面 GUI（pywebview 載入 HTML）與 CLI 共用同一套 Python core，`python -m pytest` 74 passed。
 
 ### ✅ 已完成
 
@@ -85,13 +85,16 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 - Signal 多平台匯出已補 `cover.png`、`signal_manifest.json` 與 `validate --signal` 檢查。
 - LINE Big Stickers 已補 CLI / GUI 匯出與 `validate --big` 檢查。
 - LINE pop-up / effect stickers 已補 CLI、GUI 匯出與 `validate --popup` / `validate --effect` 檢查。
+- Windows／Computer Use 正式驗收 runbook 已建立，明確分開自動化、桌面 GUI、Release 資產與 LINE 平台證據。
+- GUI 啟動語系已由 Python bridge 決定，`--lang en` 可直接開英文介面；匯出工具列在一般視窗寬度會自動換行。
 
 詳細版本紀錄見 [`CHANGELOG.md`](CHANGELOG.md)；設計決策見 [`docs/DECISIONS.md`](docs/DECISIONS.md)。
 
 ### 下一步
 
+- 依 [`docs/WINDOWS_VALIDATION.md`](docs/WINDOWS_VALIDATION.md) 重建並驗收修正版 Windows ZIP，發布 `v0.18.1`。
 - 執行 `python examples\create_line_trial_packs.py` 產生非侵權 LINE 抽驗 ZIP，並到 LINE Creators Market 手動上傳抽驗，特別是動態／pop-up／effect APNG。
-- `v1.0.0` 正式版門檻：完成主要 LINE 類型的手動上傳抽驗、GUI smoke、Windows exe 發行檢查與文件一致性覆核後再切。
+- `v1.0.0` 正式版門檻：完成完整 GUI 匯出矩陣、主要 LINE 類型手動上傳抽驗、Windows Release 資產檢查與文件一致性覆核後再切。
 
 ### ⏳ 已定案
 
@@ -103,6 +106,7 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 - [`CHANGELOG.md`](CHANGELOG.md)：版本變更紀錄。
 - [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md)：一般使用者指南。
 - [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)：架構、本機指令、打包發行、legacy 邊界。
+- [`docs/WINDOWS_VALIDATION.md`](docs/WINDOWS_VALIDATION.md)：Windows Release、Computer Use 與 LINE 平台實機驗收。
 - [`docs/DECISIONS.md`](docs/DECISIONS.md)：重要決策紀錄。
 - [`docs/LINE_SUBMISSION.md`](docs/LINE_SUBMISSION.md)：LINE Creators Market 手動上架與送審說明。
 - [`NOTICE.md`](NOTICE.md)：授權、fork 來源與第三方聲明。

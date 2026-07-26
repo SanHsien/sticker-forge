@@ -1,5 +1,19 @@
 # Decisions
 
+## 2026-07-26：Windows／Computer Use 驗收與語系啟動
+
+- Windows Release 不能只用 pytest、PyInstaller 或 `--smoke` 判定完成；新增
+  `docs/WINDOWS_VALIDATION.md`，把 source、local build、GitHub Release 資產、
+  Computer Use GUI 與 LINE Creators Market 平台證據分開記錄。
+- Computer Use 只做受監督的桌面操作；視窗 id、accessibility index、座標與檔案
+  對話框焦點每一步重新取得，不建立盲目重播巨集。
+- LINE 登入、OTP、CAPTCHA、安全提示與最終送審由維護者操作；上傳前再次確認
+  非侵權抽驗包與目標帳號。
+- `v0.18.0` 實機發現 `--lang en` 被前端繁中預設值覆蓋。`f2fdbee`
+  改由 Python bridge 的 initial locale 決定啟動語系，並讓匯出 actions 自動換行。
+- 語系偏好不跨啟動保存；GUI 使用 WebView2 `private_mode`，每次啟動由
+  `--lang zh-Hant|en` 決定初始值，啟動後仍可在介面內切換。
+
 ## 2026-07-05：Repo 命名
 
 決定使用 `sticker-forge` 作為 fork 後 repo 名稱。
@@ -49,7 +63,7 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 決策：
 
 - CLI 使用 `--lang zh-Hant|en` 切換 help、prompt 與狀態輸出。
-- 本機 HTML 工作台提供語言選單，並以 localStorage 記住使用者選擇。
+- 本機 HTML 工作台提供語言選單；初始語系由 `--lang` 與 Python bridge 決定。
 - prompt template 維持中英文各一份，全部打包進 PyInstaller bundle。
 - README 維持繁體中文主入口，另建 `README.en.md`。
 

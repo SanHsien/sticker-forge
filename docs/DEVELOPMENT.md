@@ -1,6 +1,6 @@
 # Development
 
-維護者與 AI 接手用的單一開發文件：架構、本機指令、打包發行、legacy 邊界。一般使用流程在 [`USER_GUIDE.md`](USER_GUIDE.md)；使用者入口在根目錄 [`README.md`](../README.md)；版本紀錄在 [`../CHANGELOG.md`](../CHANGELOG.md)；決策紀錄在 [`DECISIONS.md`](DECISIONS.md)；上架流程在 [`LINE_SUBMISSION.md`](LINE_SUBMISSION.md)；最新 review 在 [`../REVIEW.md`](../REVIEW.md)。
+維護者與 AI 接手用的單一開發文件：架構、本機指令、打包發行、legacy 邊界。一般使用流程在 [`USER_GUIDE.md`](USER_GUIDE.md)；Windows／Computer Use 正式驗收在 [`WINDOWS_VALIDATION.md`](WINDOWS_VALIDATION.md)；使用者入口在根目錄 [`README.md`](../README.md)；版本紀錄在 [`../CHANGELOG.md`](../CHANGELOG.md)；決策紀錄在 [`DECISIONS.md`](DECISIONS.md)；上架流程在 [`LINE_SUBMISSION.md`](LINE_SUBMISSION.md)；最新 review 在 [`../REVIEW.md`](../REVIEW.md)。
 
 ## 架構
 
@@ -88,7 +88,7 @@ node --check app/app.js
 
 ## 測試涵蓋
 
-`python -m pytest`（目前 73 passed）。最小涵蓋：prompt CLI 輸出與渲染、中英文語系、3x3 inset 切圖（含 1024×1024 非整除尺寸）、選圖／排序、green/magenta 去背、匯出預設去背與 `--keep-background`、main/tab image、LINE 靜態／Big／emoji／訊息／動態／pop-up／effect ZIP 結構與 validator（含透明背景檢查）、PNG-only ZIP、多平台 ZIP、Signal manifest、padding、`webapi.Api` bridge（bootstrap/prompt/split/cleanup/export/prepare_screen_animations/export_popup/export_effect）。GUI 視窗本身需在 Windows 桌面實跑 `sticker-forge-gui` 或 exe 驗證。
+`python -m pytest`（目前 74 passed）。最小涵蓋：prompt CLI 輸出與渲染、中英文語系、GUI 初始語系 bridge contract、3x3 inset 切圖（含 1024×1024 非整除尺寸）、選圖／排序、green/magenta 去背、匯出預設去背與 `--keep-background`、main/tab image、LINE 靜態／Big／emoji／訊息／動態／pop-up／effect ZIP 結構與 validator（含透明背景檢查）、PNG-only ZIP、多平台 ZIP、Signal manifest、padding、`webapi.Api` bridge（bootstrap/prompt/split/cleanup/export/prepare_screen_animations/export_popup/export_effect）。GUI 視窗本身需依 [`WINDOWS_VALIDATION.md`](WINDOWS_VALIDATION.md) 在 Windows 桌面驗證。
 
 ## 打包與發行
 
@@ -112,6 +112,7 @@ node --check app/app.js
 - `sticker-forge.exe --smoke` 與 `sticker-forge-cli.exe --help` 通過。
 - 用 `python examples\create_sample_assets.py` 產生範例 3x3 grid，匯出 ZIP 並 `validate`。
 - 確認沒有 API key、使用者圖片、生成 ZIP 或暫存檔進版控。
+- 依 [`WINDOWS_VALIDATION.md`](WINDOWS_VALIDATION.md) 驗證下載資產 SHA-256、Expand-Archive、繁中／英文 GUI 與實際匯出。
 
 ### v1.0.0 checklist
 
@@ -119,6 +120,7 @@ node --check app/app.js
 - 用非侵權素材完成 LINE Creators Market 手動上傳抽驗，至少涵蓋靜態、Big、emoji、訊息、動態、pop-up、effect 的 ZIP 結構。
 - GUI 覆蓋主要 LINE 類型，或在 README 明確標示 CLI-only 的例外。
 - Windows exe 在乾淨使用者資料環境完成 `--smoke`、GUI 啟動與基本匯出。
+- 完成 [`WINDOWS_VALIDATION.md`](WINDOWS_VALIDATION.md) 的完整 GUI 匯出矩陣。
 - README / README.en.md / CHANGELOG.md / REVIEW.md / docs 同步到同一版本狀態。
 
 ### Artifact 命名

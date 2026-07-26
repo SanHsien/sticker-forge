@@ -41,7 +41,7 @@ The current scope covers LINE static stickers, Big Stickers, emoji, message stic
 | `sticker-forge.exe` | Desktop GUI: a pywebview window rendering the `app/` HTML UI; split/cleanup/export all run in the local Python core. No console. |
 | `sticker-forge-cli.exe` / `python -m sticker_forge` | Command line, `--lang zh-Hant\|en` |
 
-General usage is documented in [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md) (Traditional Chinese). Source install and packaging notes are in [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md).
+General usage is documented in [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md) (Traditional Chinese). Source install and packaging notes are in [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md). The Windows release and supervised Computer Use runbook is in [`docs/WINDOWS_VALIDATION.md`](docs/WINDOWS_VALIDATION.md) (Traditional Chinese).
 
 ## Install From Source
 
@@ -82,13 +82,13 @@ python -m sticker_forge validate outputs\line-stickers.zip
 ├── packaging/              # Windows exe build scripts
 ├── tests/                  # Automated tests
 ├── examples/               # Input location, no infringing assets
-├── docs/                   # User and maintainer docs (USER_GUIDE / DEVELOPMENT / DECISIONS / LINE_SUBMISSION)
+├── docs/                   # User, development, Windows validation, decision, and LINE submission docs
 ├── README.md / README.en.md / CHANGELOG.md / REVIEW.md
 ```
 
 ## Roadmap
 
-Version **v0.18.0**: local-first sticker-pack toolkit (LINE stickers/Big Stickers/emoji/message/animated/pop-up/effect stickers and other platforms). The desktop GUI (a pywebview window rendering the HTML) and the CLI share one Python core. `python -m pytest` passes with 73 tests.
+The latest Release is **v0.18.0**; `main` is now the `v0.18.1` patch candidate. The local-first toolkit supports LINE stickers/Big Stickers/emoji/message/animated/pop-up/effect stickers and other platforms. The desktop GUI and CLI share one Python core. `python -m pytest` passes with 74 tests.
 
 ### ✅ Done
 
@@ -103,13 +103,16 @@ Version **v0.18.0**: local-first sticker-pack toolkit (LINE stickers/Big Sticker
 - Signal platform export now includes `cover.png`, `signal_manifest.json`, and `validate --signal`.
 - LINE Big Stickers export now includes CLI / GUI support and `validate --big`.
 - LINE pop-up / effect stickers now include CLI/GUI export and `validate --popup` / `validate --effect`.
+- A Windows/Computer Use validation runbook now separates automated, desktop GUI, release-asset, and LINE platform evidence.
+- GUI startup now honors the Python bridge locale, so `--lang en` opens the English UI; export actions wrap at normal window widths.
 
 Detailed version history is in [`CHANGELOG.md`](CHANGELOG.md); design decisions are in [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
 ### Next
 
+- Rebuild and validate the patched Windows ZIP with [`docs/WINDOWS_VALIDATION.md`](docs/WINDOWS_VALIDATION.md), then release `v0.18.1`.
 - Run `python examples\create_line_trial_packs.py`, then manually upload the generated non-infringing trial ZIPs to LINE Creators Market, especially for animated / pop-up / effect APNG stickers.
-- Cut `v1.0.0` only after the main LINE types have manual upload evidence, GUI smoke coverage, Windows exe release checks, and documentation consistency review.
+- Cut `v1.0.0` only after the complete GUI export matrix, the main LINE upload trials, Windows release-asset checks, and documentation consistency review pass.
 
 ### ⏳ Decided
 
