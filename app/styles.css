@@ -112,6 +112,11 @@ h2 {
   margin-bottom: 12px;
 }
 
+.actions {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
 .compact {
   margin-bottom: 8px;
 }

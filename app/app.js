@@ -184,7 +184,7 @@ const PACK_SIZE = 8;
 const LINE_PACK_SIZES = [8, 16, 24, 32, 40];
 const isPackSize = (n) => LINE_PACK_SIZES.includes(n);
 const state = {
-  locale: UI[localStorage.getItem("stickerForgeLocale")] ? localStorage.getItem("stickerForgeLocale") : "zh-Hant",
+  locale: "zh-Hant",
   sourceDataUrl: null,
   tiles: [],
   screenAnimations: [],
@@ -302,7 +302,6 @@ function populateDatalists() {
 function setLocale(locale) {
   const previousLocale = state.locale;
   state.locale = UI[locale] ? locale : "zh-Hant";
-  localStorage.setItem("stickerForgeLocale", state.locale);
   applyLocale(previousLocale);
   updatePreview();
 }
@@ -946,8 +945,10 @@ async function init() {
     setStatus(ui().bridgeMissing, true);
     return;
   }
-  boots["zh-Hant"] = await bridge.bootstrap("zh-Hant");
-  boots.en = await bridge.bootstrap("en");
+  const initial = await bridge.bootstrap();
+  boots["zh-Hant"] = initial.locale === "zh-Hant" ? initial : await bridge.bootstrap("zh-Hant");
+  boots.en = initial.locale === "en" ? initial : await bridge.bootstrap("en");
+  state.locale = UI[initial.locale] ? initial.locale : "zh-Hant";
   $("ui-language").value = state.locale;
   setupSlots();
   bindEvents();
