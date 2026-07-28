@@ -41,10 +41,17 @@ minor／patch；圖片、GUI、打包、未知範圍與 major 更新維持人工
 - 最新穩定基線 Pillow 12.3.0、pytest 9.1.1、packaging 26.2、
   pywebview 6.2.1、PyInstaller 6.21.0、setuptools 83.0.0、wheel 0.47.0
   已通過本機完整 build；GitHub CI 再覆蓋 Python 3.11–3.14 與 Windows exe。
-- [Dependency freshness run 30366971010](https://github.com/SanHsien/sticker-forge/actions/runs/30366971010)
+- [Dependency freshness run 30374819214](https://github.com/SanHsien/sticker-forge/actions/runs/30374819214)
   已確認八筆直接依賴全為 `OK`，且沒有 open Dependabot PR。
-- [CI run 30367569318](https://github.com/SanHsien/sticker-forge/actions/runs/30367569318)
-  已在 `e7ad2ab` 通過 Python 3.11–3.14 與 Windows Server 2025 exe build／smoke。
+- [CI run 30374819314](https://github.com/SanHsien/sticker-forge/actions/runs/30374819314)
+  已在 `1cde070` 通過 Python 3.11–3.14、92 tests 與 Windows Server 2025
+  exe build／smoke。
+- [Guarded merge run 30374963568](https://github.com/SanHsien/sticker-forge/actions/runs/30374963568)
+  已由上述 CI 的 `workflow_run` 自動觸發；token 只有 Actions write、Checks read、
+  Contents write、Pull requests write，無候選 PR 時正確安全退出。
+- repo 已設定 `default_workflow_permissions=write` 與
+  `can_approve_pull_request_reviews=true`，三個政策 label 已預建；GitHub Issues
+  仍維持關閉。
 - guarded merge 本機測試涵蓋安全工具、圖片／GUI／打包套件、major、混合群組、
   超出範圍檔案、GitHub Actions 與未知 metadata；workflow 契約另檢查 trusted
   base、head SHA、五個 CI job、rebase、squash 與 `--match-head-commit`。
