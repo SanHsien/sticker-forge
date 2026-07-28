@@ -90,7 +90,7 @@ python -m sticker_forge validate outputs\line-stickers.zip
 
 ## Roadmap
 
-The latest Release is **v0.18.0**; `main` is now the `v0.18.1` patch candidate. The local-first toolkit supports LINE stickers/Big Stickers/emoji/message/animated/pop-up/effect stickers and other platforms. The desktop GUI and CLI share one Python core. `python -m pytest` passes with 81 tests.
+The latest Release is **v0.18.0**; `main` is now the `v0.18.1` patch candidate. The local-first toolkit supports LINE stickers/Big Stickers/emoji/message/animated/pop-up/effect stickers and other platforms. The desktop GUI and CLI share one Python core. `python -m pytest` passes with 92 tests.
 
 ### ✅ Done
 
@@ -107,7 +107,7 @@ The latest Release is **v0.18.0**; `main` is now the `v0.18.1` patch candidate. 
 - LINE pop-up / effect stickers now include CLI/GUI export and `validate --popup` / `validate --effect`.
 - A Windows/Computer Use validation runbook now separates automated, desktop GUI, release-asset, and LINE platform evidence.
 - GUI startup now honors the Python bridge locale, so `--lang en` opens the English UI; export actions wrap at normal window widths.
-- Dependency maintenance is automated: Dependabot checks Python and GitHub Actions weekly, a monthly freshness job reviews direct dependencies, and every update remains under human review with Python 3.11–3.14 and Windows EXE CI coverage.
+- Dependency maintenance is automated with weekly Dependabot, monthly freshness, Python 3.11–3.14, and Windows EXE CI. Low-risk maintenance tools and GitHub Actions minor/patch updates are squash-merged only after a head-bound policy check and all required CI pass; image, GUI, packaging, and all major updates remain under human review.
 
 Detailed version history is in [`CHANGELOG.md`](CHANGELOG.md); design decisions are in [`docs/DECISIONS.md`](docs/DECISIONS.md).
 

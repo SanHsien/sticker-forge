@@ -88,21 +88,25 @@ node --check app/app.js
 
 ## 測試涵蓋
 
-`python -m pytest`（目前 81 passed）。最小涵蓋：prompt CLI 輸出與渲染、中英文語系、Windows 非 UTF-8 console、GUI 初始語系 bridge contract、3x3 inset 切圖（含 1024×1024 非整除尺寸）、選圖／排序、green/magenta 去背、匯出預設去背與 `--keep-background`、main/tab image、LINE 靜態／Big／emoji／訊息／動態／pop-up／effect ZIP 結構與 validator（含透明背景檢查）、PNG-only ZIP、多平台 ZIP、Signal manifest、padding、`webapi.Api` bridge（bootstrap/prompt/split/cleanup/export/prepare_screen_animations/export_popup/export_effect），以及依賴 freshness parser／workflow 契約。GUI 視窗本身需依 [`WINDOWS_VALIDATION.md`](WINDOWS_VALIDATION.md) 在 Windows 桌面驗證。
+`python -m pytest`（目前 92 passed）。最小涵蓋：prompt CLI 輸出與渲染、中英文語系、Windows 非 UTF-8 console、GUI 初始語系 bridge contract、3x3 inset 切圖（含 1024×1024 非整除尺寸）、選圖／排序、green/magenta 去背、匯出預設去背與 `--keep-background`、main/tab image、LINE 靜態／Big／emoji／訊息／動態／pop-up／effect ZIP 結構與 validator（含透明背景檢查）、PNG-only ZIP、多平台 ZIP、Signal manifest、padding、`webapi.Api` bridge（bootstrap/prompt/split/cleanup/export/prepare_screen_animations/export_popup/export_effect），以及依賴 freshness、風險分類與 guarded merge workflow 契約。GUI 視窗本身需依 [`WINDOWS_VALIDATION.md`](WINDOWS_VALIDATION.md) 在 Windows 桌面驗證。
 
 ## 依賴維護
 
 - `.github/dependabot.yml`：每週一 07:00（Asia/Taipei）檢查 pip 與 GitHub Actions。
 - `.github/workflows/dependency-freshness.yml`：每月 1 日 11:00（Asia/Taipei）比較 `pyproject.toml` 直接依賴與 PyPI，並列出 open Dependabot PR。
 - `.github/workflows/ci.yml`：Python 3.11–3.14 跑 pytest；Windows 3.14 跑 JavaScript syntax、PyInstaller build、GUI `--smoke` 與 CLI help。
+- `.github/workflows/dependabot-review.yml`：只從受信任的 base commit 執行政策分類，建立綁定 PR head SHA 的 `Dependabot policy` check。
+- `.github/workflows/dependabot-merge.yml`：按 PR number 序列化處理低風險 PR；重驗作者、base、head SHA、政策 check 與五個 CI job，必要時要求 Dependabot rebase，再核准並 squash merge。
 - `tools/check_dependency_freshness.py`：可在本機輸出相同 freshness 報告。
+- `tools/classify_dependabot_update.py`：可在本機測試同一套自動／人工分類政策。
 
 ```powershell
 python -m pip install -e ".[dev,maintenance]"
 python tools\check_dependency_freshness.py
+python tools\classify_dependabot_update.py --ecosystem pip --dependency-type direct:development --update-type version-update:semver-minor --dependency-names pytest --changed-file pyproject.toml
 ```
 
-圖片處理、桌面 GUI 與打包依賴都可能改變使用者輸出，因此 Dependabot PR 一律人工審查，不啟用自動合併。freshness 發現較新版、查詢失敗或 open Dependabot PR 時會讓該次 workflow 失敗並把細節寫入 Actions summary；GitHub Issues 維持關閉。
+自動合併只涵蓋 `pytest`、`packaging`、`setuptools`、`wheel` 與 GitHub Actions 的 minor／patch。`Pillow`、`pywebview`、`PyInstaller`、所有 major、未知 metadata、間接依賴或超出預期檔案範圍都套用 `dependencies-manual-review`，必須人工處理。freshness 發現較新版、查詢失敗或 open Dependabot PR 時會讓該次 workflow 失敗並把細節寫入 Actions summary；GitHub Issues 維持關閉。
 
 ## 打包與發行
 

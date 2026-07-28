@@ -14,13 +14,14 @@ local-first 邊界也仍成立：不架 hosted backend、不代管 AI API、不�
 
 2026-07-28 再比對 `yt_fetch`、`gpt-ai-assistant`、`voicetype` 與 `openshelf`
 的依賴維護流程後，本 repo 已補上 Dependabot、CI 與直接依賴 freshness 排程。
-所有依賴更新維持人工審查，不會由 workflow 自動合併。
+後續再補 guarded merge：只自動處理四個 CI 維護工具與 GitHub Actions 的
+minor／patch；圖片、GUI、打包、未知範圍與 major 更新維持人工審查。
 
 ## 本輪實證
 
 - `HEAD` 與 `origin/main` 在 review 開始時同步於 `bfde266`，工作樹乾淨。
-- Python 3.14.6：GUI 修正前 73 passed；GUI 修正後 74 passed；依賴維護與
-  Windows code-page 回歸測試新增後，以最新穩定依賴完成 81 passed。
+- Python 3.14.6：GUI 修正前 73 passed；GUI 修正後 74 passed；依賴維護、
+  Windows code-page 與 guarded merge 政策測試新增後完成 92 passed。
 - `node --check app/app.js`、`python -m compileall`、
   `git diff --check` 通過。
 - `examples/create_line_trial_packs.py` 產生 static、Big、emoji、message、
@@ -44,6 +45,9 @@ local-first 邊界也仍成立：不架 hosted backend、不代管 AI API、不�
   已確認八筆直接依賴全為 `OK`，且沒有 open Dependabot PR。
 - [CI run 30367569318](https://github.com/SanHsien/sticker-forge/actions/runs/30367569318)
   已在 `e7ad2ab` 通過 Python 3.11–3.14 與 Windows Server 2025 exe build／smoke。
+- guarded merge 本機測試涵蓋安全工具、圖片／GUI／打包套件、major、混合群組、
+  超出範圍檔案、GitHub Actions 與未知 metadata；workflow 契約另檢查 trusted
+  base、head SHA、五個 CI job、rebase、squash 與 `--match-head-commit`。
 
 ## 已修復
 
@@ -79,6 +83,13 @@ Big、emoji、訊息、動態、pop-up、effect 與多平台輸出。
 少數 Windows 10/11 可能缺 WebView2 Runtime；SmartScreen、Defender 或 runtime
 安裝提示也不能由自動測試代替。這些項目須由維護者在旁監督並記錄
 `PASS`、`FAIL` 或 `BLOCKED`。
+
+### P2：guarded merge 尚待第一個真實低風險 Dependabot PR
+
+分類器、workflow 契約、遠端 CI 與無 PR queue 的安全退出都可自動驗證，但實際
+label、head-bound policy check、自動核准與 squash merge 必須等 Dependabot
+提出符合政策的 minor／patch PR 後才能取得端到端證據。在此之前不能宣稱真實
+PR lifecycle 已完成驗收。
 
 ## 發行判定
 

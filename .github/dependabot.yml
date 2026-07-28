@@ -1,7 +1,6 @@
 version: 2
 updates:
   # Image runtime, desktop GUI, tests, maintenance, and Windows packaging.
-  # Updates stay under human review because they can affect image output or the EXE.
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
@@ -15,17 +14,22 @@ updates:
       - "dependencies"
       - "python"
     groups:
-      runtime-minor-and-patch:
-        dependency-type: "production"
+      ci-tooling-minor-and-patch:
+        patterns:
+          - "pytest"
+          - "packaging"
+          - "setuptools"
+          - "wheel"
         update-types: ["minor", "patch"]
-      runtime-major:
-        dependency-type: "production"
-        update-types: ["major"]
-      development-minor-and-patch:
-        dependency-type: "development"
+      runtime-gui-and-packaging-minor-and-patch:
+        patterns:
+          - "pillow"
+          - "pywebview"
+          - "pyinstaller"
         update-types: ["minor", "patch"]
-      development-major:
-        dependency-type: "development"
+      major-updates:
+        patterns:
+          - "*"
         update-types: ["major"]
 
   - package-ecosystem: "github-actions"

@@ -1,13 +1,16 @@
 # Decisions
 
-## 2026-07-28：依賴維護採人工審查
+## 2026-07-28：依賴維護採風險分類與 guarded merge
 
 - 每週由 Dependabot 檢查 pip 與 GitHub Actions，每月由 freshness workflow
   比較 `pyproject.toml` 直接依賴與 PyPI，避免只等實際故障才發現版本落後。
 - push／PR 由 Python 3.11–3.14 pytest 與 Windows PyInstaller build／smoke
   作為更新門檻。
-- Pillow、pywebview、PyInstaller 都會影響圖片或 Windows exe，所有依賴 PR
-  一律人工審查，不啟用自動合併。
+- `pytest`、`packaging`、`setuptools`、`wheel` 與 GitHub Actions minor／patch
+  可在 trusted-base 分類、綁定目前 head SHA 的政策 check、完整 CI 與序列化
+  rebase gate 全部通過後自動核准並 squash merge。
+- Pillow、pywebview、PyInstaller 會影響圖片、GUI 或 Windows exe；這三項、
+  未知依賴／檔案範圍與所有 major 更新一律人工審查。
 - GitHub Issues 維持關閉；需要維護時以 Dependabot PR、失敗的 freshness run
   與 Actions summary 通知，不新增 tracker issue。
 

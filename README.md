@@ -70,7 +70,7 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 
 ## 專案狀態與路線圖
 
-目前 Release 為 **v0.18.0**；`main` 已進入 `v0.18.1` 修正版候選。local-first 貼圖包工具支援 LINE 貼圖／Big Stickers／emoji／訊息貼圖／動態貼圖／pop-up／effect 及多平台，桌面 GUI（pywebview 載入 HTML）與 CLI 共用同一套 Python core，`python -m pytest` 81 passed。
+目前 Release 為 **v0.18.0**；`main` 已進入 `v0.18.1` 修正版候選。local-first 貼圖包工具支援 LINE 貼圖／Big Stickers／emoji／訊息貼圖／動態貼圖／pop-up／effect 及多平台，桌面 GUI（pywebview 載入 HTML）與 CLI 共用同一套 Python core，`python -m pytest` 92 passed。
 
 ### ✅ 已完成
 
@@ -89,7 +89,7 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 - LINE pop-up / effect stickers 已補 CLI、GUI 匯出與 `validate --popup` / `validate --effect` 檢查。
 - Windows／Computer Use 正式驗收 runbook 已建立，明確分開自動化、桌面 GUI、Release 資產與 LINE 平台證據。
 - GUI 啟動語系已由 Python bridge 決定，`--lang en` 可直接開英文介面；匯出工具列在一般視窗寬度會自動換行。
-- 依賴維護已自動化：每週 Dependabot 檢查 Python／GitHub Actions、每月 freshness 盤點直接依賴，所有更新保留人工審查並由 Python 3.11–3.14 與 Windows exe CI 驗證。
+- 依賴維護已自動化：每週 Dependabot、每月 freshness、Python 3.11–3.14 與 Windows exe CI；低風險維護工具及 GitHub Actions minor／patch 通過 head SHA 政策與完整 CI 後自動 squash merge，圖片／GUI／打包依賴及所有 major 維持人工審查。
 
 詳細版本紀錄見 [`CHANGELOG.md`](CHANGELOG.md)；設計決策見 [`docs/DECISIONS.md`](docs/DECISIONS.md)。
 

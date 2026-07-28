@@ -4,8 +4,9 @@
 
 ## Unreleased
 
-- **依賴維護自動化**：新增每週 Dependabot（pip／GitHub Actions）、每月直接依賴 freshness 檢查，以及 Python 3.11–3.14／Windows exe CI；依賴 PR 一律人工審查，不自動合併。
-- **依賴基線更新**：以最新穩定版 Pillow 12.3.0、pytest 9.1.1、packaging 26.2、pywebview 6.2.1、PyInstaller 6.21.0、setuptools 83.0.0、wheel 0.47.0 完成本機 81 tests、PyInstaller 與 exe smoke。
+- **依賴維護自動化**：新增每週 Dependabot（pip／GitHub Actions）、每月直接依賴 freshness 檢查，以及 Python 3.11–3.14／Windows exe CI。
+- **低風險自動合併**：`pytest`／`packaging`／`setuptools`／`wheel` 與 GitHub Actions minor／patch 經 trusted-base 分類、綁定 head SHA 政策 check、完整 CI、序列化 rebase gate 後自動核准並 squash merge；`Pillow`／`pywebview`／`PyInstaller`、未知範圍與所有 major 維持人工審查。
+- **依賴基線更新**：以最新穩定版 Pillow 12.3.0、pytest 9.1.1、packaging 26.2、pywebview 6.2.1、PyInstaller 6.21.0、setuptools 83.0.0、wheel 0.47.0 完成本機 92 tests、PyInstaller 與 exe smoke。
 - **Windows CLI code page 修正**：非 UTF-8 Windows console 輸出繁中 help 時不再因 `UnicodeEncodeError` 閃退；保留目前 code page 並替換無法表示的字元，英文可用 `--lang en` 完整顯示。
 - **GUI 英文啟動修正**：修正 `sticker-forge.exe --lang en` 仍被前端預設值覆蓋成繁中的問題；初始語系改以 Python bridge 為準並補回歸測試。
 - **GUI 版面修正**：匯出工具列改為自動換行，移除一般 Windows 視窗寬度下的水平溢位。
