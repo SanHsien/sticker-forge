@@ -1,5 +1,16 @@
 # Decisions
 
+## 2026-07-28：依賴維護採人工審查
+
+- 每週由 Dependabot 檢查 pip 與 GitHub Actions，每月由 freshness workflow
+  比較 `pyproject.toml` 直接依賴與 PyPI，避免只等實際故障才發現版本落後。
+- push／PR 由 Python 3.11–3.14 pytest 與 Windows PyInstaller build／smoke
+  作為更新門檻。
+- Pillow、pywebview、PyInstaller 都會影響圖片或 Windows exe，所有依賴 PR
+  一律人工審查，不啟用自動合併。
+- GitHub Issues 維持關閉；需要維護時以 Dependabot PR、失敗的 freshness run
+  與 Actions summary 通知，不新增 tracker issue。
+
 ## 2026-07-26：Windows／Computer Use 驗收與語系啟動
 
 - Windows Release 不能只用 pytest、PyInstaller 或 `--smoke` 判定完成；新增

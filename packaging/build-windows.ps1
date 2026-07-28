@@ -3,7 +3,7 @@ $ErrorActionPreference = "Stop"
 $repo = Resolve-Path (Join-Path $PSScriptRoot "..")
 Set-Location $repo
 
-python -m pip install -e ".[dev,packaging]"
+python -m pip install -e ".[dev,maintenance,packaging]"
 python -m pytest
 
 $work = Join-Path $env:TEMP "sticker-forge-pyinstaller-build"

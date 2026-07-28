@@ -5,6 +5,8 @@
 [![Local-first](https://img.shields.io/badge/local--first-no_backend-brightgreen.svg)](docs/DEVELOPMENT.md)
 [![LINE sticker packs](https://img.shields.io/badge/LINE-sticker_packs-00B900.svg)](prompts/line-static-3x3.md)
 [![Tests: pytest](https://img.shields.io/badge/tests-pytest-blueviolet.svg)](tests)
+[![CI](https://github.com/SanHsien/sticker-forge/actions/workflows/ci.yml/badge.svg)](https://github.com/SanHsien/sticker-forge/actions/workflows/ci.yml)
+[![Dependency freshness](https://github.com/SanHsien/sticker-forge/actions/workflows/dependency-freshness.yml/badge.svg)](https://github.com/SanHsien/sticker-forge/actions/workflows/dependency-freshness.yml)
 
 [繁體中文](README.md) | [English](README.en.md)
 
@@ -68,7 +70,7 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 
 ## 專案狀態與路線圖
 
-目前 Release 為 **v0.18.0**；`main` 已進入 `v0.18.1` 修正版候選。local-first 貼圖包工具支援 LINE 貼圖／Big Stickers／emoji／訊息貼圖／動態貼圖／pop-up／effect 及多平台，桌面 GUI（pywebview 載入 HTML）與 CLI 共用同一套 Python core，`python -m pytest` 74 passed。
+目前 Release 為 **v0.18.0**；`main` 已進入 `v0.18.1` 修正版候選。local-first 貼圖包工具支援 LINE 貼圖／Big Stickers／emoji／訊息貼圖／動態貼圖／pop-up／effect 及多平台，桌面 GUI（pywebview 載入 HTML）與 CLI 共用同一套 Python core，`python -m pytest` 80 passed。
 
 ### ✅ 已完成
 
@@ -87,6 +89,7 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 - LINE pop-up / effect stickers 已補 CLI、GUI 匯出與 `validate --popup` / `validate --effect` 檢查。
 - Windows／Computer Use 正式驗收 runbook 已建立，明確分開自動化、桌面 GUI、Release 資產與 LINE 平台證據。
 - GUI 啟動語系已由 Python bridge 決定，`--lang en` 可直接開英文介面；匯出工具列在一般視窗寬度會自動換行。
+- 依賴維護已自動化：每週 Dependabot 檢查 Python／GitHub Actions、每月 freshness 盤點直接依賴，所有更新保留人工審查並由 Python 3.11–3.14 與 Windows exe CI 驗證。
 
 詳細版本紀錄見 [`CHANGELOG.md`](CHANGELOG.md)；設計決策見 [`docs/DECISIONS.md`](docs/DECISIONS.md)。
 

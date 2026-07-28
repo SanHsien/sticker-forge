@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=69", "wheel"]
+requires = ["setuptools>=83.0.0", "wheel>=0.47.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -11,19 +11,22 @@ requires-python = ">=3.11"
 license = "MIT"
 authors = [{ name = "SanHsien" }]
 dependencies = [
-    "Pillow>=10.0",
+    "Pillow>=12.3.0",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=8.0",
+    "pytest>=9.1.1",
+]
+maintenance = [
+    "packaging>=26.2",
 ]
 gui = [
-    "pywebview>=5.0",
+    "pywebview>=6.2.1",
 ]
 packaging = [
-    "pyinstaller>=6.0",
-    "pywebview>=5.0",
+    "pyinstaller>=6.21.0",
+    "pywebview>=6.2.1",
 ]
 
 [project.scripts]

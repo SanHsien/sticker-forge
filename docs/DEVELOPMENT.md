@@ -38,7 +38,7 @@ split → cleanup → resize → preview → export ZIP
 ## 本機開發
 
 ```powershell
-python -m pip install -e ".[dev,gui,packaging]"
+python -m pip install -e ".[dev,gui,maintenance,packaging]"
 git diff --check
 python -m pytest
 ```
@@ -88,14 +88,28 @@ node --check app/app.js
 
 ## 測試涵蓋
 
-`python -m pytest`（目前 74 passed）。最小涵蓋：prompt CLI 輸出與渲染、中英文語系、GUI 初始語系 bridge contract、3x3 inset 切圖（含 1024×1024 非整除尺寸）、選圖／排序、green/magenta 去背、匯出預設去背與 `--keep-background`、main/tab image、LINE 靜態／Big／emoji／訊息／動態／pop-up／effect ZIP 結構與 validator（含透明背景檢查）、PNG-only ZIP、多平台 ZIP、Signal manifest、padding、`webapi.Api` bridge（bootstrap/prompt/split/cleanup/export/prepare_screen_animations/export_popup/export_effect）。GUI 視窗本身需依 [`WINDOWS_VALIDATION.md`](WINDOWS_VALIDATION.md) 在 Windows 桌面驗證。
+`python -m pytest`（目前 80 passed）。最小涵蓋：prompt CLI 輸出與渲染、中英文語系、GUI 初始語系 bridge contract、3x3 inset 切圖（含 1024×1024 非整除尺寸）、選圖／排序、green/magenta 去背、匯出預設去背與 `--keep-background`、main/tab image、LINE 靜態／Big／emoji／訊息／動態／pop-up／effect ZIP 結構與 validator（含透明背景檢查）、PNG-only ZIP、多平台 ZIP、Signal manifest、padding、`webapi.Api` bridge（bootstrap/prompt/split/cleanup/export/prepare_screen_animations/export_popup/export_effect），以及依賴 freshness parser／workflow 契約。GUI 視窗本身需依 [`WINDOWS_VALIDATION.md`](WINDOWS_VALIDATION.md) 在 Windows 桌面驗證。
+
+## 依賴維護
+
+- `.github/dependabot.yml`：每週一 07:00（Asia/Taipei）檢查 pip 與 GitHub Actions。
+- `.github/workflows/dependency-freshness.yml`：每月 1 日 11:00（Asia/Taipei）比較 `pyproject.toml` 直接依賴與 PyPI，並列出 open Dependabot PR。
+- `.github/workflows/ci.yml`：Python 3.11–3.14 跑 pytest；Windows 3.14 跑 JavaScript syntax、PyInstaller build、GUI `--smoke` 與 CLI help。
+- `tools/check_dependency_freshness.py`：可在本機輸出相同 freshness 報告。
+
+```powershell
+python -m pip install -e ".[dev,maintenance]"
+python tools\check_dependency_freshness.py
+```
+
+圖片處理、桌面 GUI 與打包依賴都可能改變使用者輸出，因此 Dependabot PR 一律人工審查，不啟用自動合併。freshness 發現較新版、查詢失敗或 open Dependabot PR 時會讓該次 workflow 失敗並把細節寫入 Actions summary；GitHub Issues 維持關閉。
 
 ## 打包與發行
 
 打包工具固定為 PyInstaller，設定在 `packaging/`：
 
 - `packaging/sticker-forge.spec`：同時產出 GUI 與 CLI 兩個 exe（onedir COLLECT）。
-- `packaging/build-windows.ps1`：安裝 `.[dev,packaging]` → 跑 pytest → PyInstaller build → smoke test。
+- `packaging/build-windows.ps1`：安裝 `.[dev,maintenance,packaging]` → 跑 pytest → PyInstaller build → smoke test。
 
 產物（build script 把 PyInstaller cache 與 dist 放到 `%TEMP%`，避開 OneDrive 對 repo 內 `build/`、`dist/` 的鎖檔）：
 

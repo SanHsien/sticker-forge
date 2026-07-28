@@ -1,4 +1,4 @@
-# Project Review 2026-07-26
+# Project Review 2026-07-28
 
 ## 結論
 
@@ -6,17 +6,23 @@
 local-first 邊界也仍成立：不架 hosted backend、不代管 AI API、不上傳使用者圖片、
 不自動送 LINE 審核。
 
-目前 `main` 可繼續作為 `v0.18.x` 修正版候選，但還不能切 `v1.0.0`。本輪已重跑
+目前 `main` 可繼續作為 `v0.18.x` 修正版候選，但還不能切 `v1.0.0`。2026-07-26 已重跑
 自動化、下載並檢查 `v0.18.0` Release 資產，也用 Computer Use 操作真實 Windows
 視窗。找到的 GUI 英文啟動與水平溢位問題已在 `f2fdbee`（2026-07-26）修復；
 修正版本機 PyInstaller build 與打包後英文 GUI 已通過，仍須發布新 GitHub Release，
 並完成各匯出類型與 LINE Creators Market 的平台抽驗。
 
+2026-07-28 再比對 `yt_fetch`、`gpt-ai-assistant`、`voicetype` 與 `openshelf`
+的依賴維護流程後，本 repo 已補上 Dependabot、CI 與直接依賴 freshness 排程。
+所有依賴更新維持人工審查，不會由 workflow 自動合併。
+
 ## 本輪實證
 
 - `HEAD` 與 `origin/main` 在 review 開始時同步於 `bfde266`，工作樹乾淨。
-- Python 3.14.6：修正前 73 passed；修正後 74 passed。
-- `node --check app/app.js`、`python -m compileall`、`git diff --check` 通過。
+- Python 3.14.6：GUI 修正前 73 passed；GUI 修正後 74 passed；依賴維護新增後
+  以最新穩定依賴完成 80 passed。
+- `node --check app/app.js`、`python -m compileall`、
+  `git diff --check` 通過。
 - `examples/create_line_trial_packs.py` 產生 static、Big、emoji、message、
   animated、pop-up、effect 七種 ZIP，本機 validator 全部 `OK`。
 - GitHub `v0.18.0` ZIP 下載與 Windows `Expand-Archive` 通過，共 243 entries。
@@ -27,10 +33,13 @@ local-first 邊界也仍成立：不架 hosted backend、不代管 AI API、不�
 - 修正版 source 以 `--lang en` 啟動後，英文 UI、預設欄位與英文 prompt 生效。
 - 修正版 source 匯入非侵權 3x3 範例後，自動切成 9 張、選取前 8 張，
   預覽列出 8 張貼圖與 main/tab；全體去背流程完成。
-- 修正版 `packaging/build-windows.ps1` 通過：74 tests、PyInstaller、
+- 修正版 `packaging/build-windows.ps1` 通過：80 tests、PyInstaller 6.21.0、
   GUI `--smoke`、CLI help 與 bundle 資源均正常。
 - 修正版 `%TEMP%\sticker-forge-pyinstaller-dist\sticker-forge\sticker-forge.exe
   --lang en` 已用 Computer Use 驗證英文 UI 與英文 prompt 生效。
+- 最新穩定基線 Pillow 12.3.0、pytest 9.1.1、packaging 26.2、
+  pywebview 6.2.1、PyInstaller 6.21.0、setuptools 83.0.0、wheel 0.47.0
+  已通過本機完整 build；GitHub CI 再覆蓋 Python 3.11–3.14 與 Windows exe。
 
 ## 已修復
 
