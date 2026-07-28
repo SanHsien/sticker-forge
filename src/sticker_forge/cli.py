@@ -168,6 +168,15 @@ def _parse_emoji_selection(value: str) -> list[int]:
     return selected
 
 
+def _configure_windows_output() -> None:
+    if sys.platform != "win32":
+        return
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if callable(reconfigure):
+            reconfigure(errors="replace")
+
+
 def _locale_from_argv(argv: list[str] | None) -> str:
     values = sys.argv[1:] if argv is None else argv
     parser = argparse.ArgumentParser(add_help=False)
@@ -379,6 +388,7 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    _configure_windows_output()
     locale = _locale_from_argv(argv)
     parser = build_parser(locale)
     args = parser.parse_args(argv)

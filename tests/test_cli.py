@@ -1,10 +1,27 @@
 from __future__ import annotations
 
+import io
 from zipfile import ZipFile
 
 from PIL import Image, ImageDraw
 
+from sticker_forge import cli
 from sticker_forge.cli import main
+
+
+def test_windows_cli_replaces_unencodable_output(monkeypatch) -> None:
+    stdout = io.TextIOWrapper(io.BytesIO(), encoding="cp1252")
+    stderr = io.TextIOWrapper(io.BytesIO(), encoding="cp1252")
+    monkeypatch.setattr(cli.sys, "platform", "win32")
+    monkeypatch.setattr(cli.sys, "stdout", stdout)
+    monkeypatch.setattr(cli.sys, "stderr", stderr)
+
+    cli._configure_windows_output()
+
+    assert stdout.encoding.lower() == "cp1252"
+    assert stderr.encoding.lower() == "cp1252"
+    assert stdout.errors == "replace"
+    assert stderr.errors == "replace"
 
 
 def _animated_gif(path, frames: int = 6) -> None:
