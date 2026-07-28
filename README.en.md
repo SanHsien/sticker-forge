@@ -90,7 +90,7 @@ python -m sticker_forge validate outputs\line-stickers.zip
 
 ## Roadmap
 
-The latest Release is **v0.18.0**; `main` is now the `v0.18.1` patch candidate. The local-first toolkit supports LINE stickers/Big Stickers/emoji/message/animated/pop-up/effect stickers and other platforms. The desktop GUI and CLI share one Python core. `python -m pytest` passes with 80 tests.
+The latest Release is **v0.18.0**; `main` is now the `v0.18.1` patch candidate. The local-first toolkit supports LINE stickers/Big Stickers/emoji/message/animated/pop-up/effect stickers and other platforms. The desktop GUI and CLI share one Python core. `python -m pytest` passes with 81 tests.
 
 ### ✅ Done
 

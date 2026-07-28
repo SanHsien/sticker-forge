@@ -70,7 +70,7 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 
 ## 專案狀態與路線圖
 
-目前 Release 為 **v0.18.0**；`main` 已進入 `v0.18.1` 修正版候選。local-first 貼圖包工具支援 LINE 貼圖／Big Stickers／emoji／訊息貼圖／動態貼圖／pop-up／effect 及多平台，桌面 GUI（pywebview 載入 HTML）與 CLI 共用同一套 Python core，`python -m pytest` 80 passed。
+目前 Release 為 **v0.18.0**；`main` 已進入 `v0.18.1` 修正版候選。local-first 貼圖包工具支援 LINE 貼圖／Big Stickers／emoji／訊息貼圖／動態貼圖／pop-up／effect 及多平台，桌面 GUI（pywebview 載入 HTML）與 CLI 共用同一套 Python core，`python -m pytest` 81 passed。
 
 ### ✅ 已完成
 

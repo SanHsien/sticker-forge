@@ -19,8 +19,8 @@ local-first 邊界也仍成立：不架 hosted backend、不代管 AI API、不�
 ## 本輪實證
 
 - `HEAD` 與 `origin/main` 在 review 開始時同步於 `bfde266`，工作樹乾淨。
-- Python 3.14.6：GUI 修正前 73 passed；GUI 修正後 74 passed；依賴維護新增後
-  以最新穩定依賴完成 80 passed。
+- Python 3.14.6：GUI 修正前 73 passed；GUI 修正後 74 passed；依賴維護與
+  Windows code-page 回歸測試新增後，以最新穩定依賴完成 81 passed。
 - `node --check app/app.js`、`python -m compileall`、
   `git diff --check` 通過。
 - `examples/create_line_trial_packs.py` 產生 static、Big、emoji、message、
@@ -33,13 +33,17 @@ local-first 邊界也仍成立：不架 hosted backend、不代管 AI API、不�
 - 修正版 source 以 `--lang en` 啟動後，英文 UI、預設欄位與英文 prompt 生效。
 - 修正版 source 匯入非侵權 3x3 範例後，自動切成 9 張、選取前 8 張，
   預覽列出 8 張貼圖與 main/tab；全體去背流程完成。
-- 修正版 `packaging/build-windows.ps1` 通過：80 tests、PyInstaller 6.21.0、
+- 修正版 `packaging/build-windows.ps1` 通過：81 tests、PyInstaller 6.21.0、
   GUI `--smoke`、CLI help 與 bundle 資源均正常。
 - 修正版 `%TEMP%\sticker-forge-pyinstaller-dist\sticker-forge\sticker-forge.exe
   --lang en` 已用 Computer Use 驗證英文 UI 與英文 prompt 生效。
 - 最新穩定基線 Pillow 12.3.0、pytest 9.1.1、packaging 26.2、
   pywebview 6.2.1、PyInstaller 6.21.0、setuptools 83.0.0、wheel 0.47.0
   已通過本機完整 build；GitHub CI 再覆蓋 Python 3.11–3.14 與 Windows exe。
+- [Dependency freshness run 30366971010](https://github.com/SanHsien/sticker-forge/actions/runs/30366971010)
+  已確認八筆直接依賴全為 `OK`，且沒有 open Dependabot PR。
+- [CI run 30367569318](https://github.com/SanHsien/sticker-forge/actions/runs/30367569318)
+  已在 `e7ad2ab` 通過 Python 3.11–3.14 與 Windows Server 2025 exe build／smoke。
 
 ## 已修復
 
@@ -47,6 +51,7 @@ local-first 邊界也仍成立：不架 hosted backend、不代管 AI API、不�
 | --- | --- | --- |
 | `v0.18.0` 的 `sticker-forge.exe --lang en` 仍以繁中啟動 | P1 | `f2fdbee`（2026-07-26）讓前端以 Python bridge 的 initial locale 為準，並新增回歸測試。 |
 | GUI 匯出工具列在 1180px 視窗寬度形成水平捲軸 | P2 | `f2fdbee`（2026-07-26）讓 actions 自動換行；修正版 Windows 視窗已目視確認。 |
+| 非 UTF-8 Windows console 執行繁中 CLI help 會 `UnicodeEncodeError` | P1 | `e7ad2ab`（2026-07-28）保留目前 code page 並替換無法表示的字元；cp1252 source／exe 與遠端 Windows CI 均通過。 |
 
 ## 尚未通過
 

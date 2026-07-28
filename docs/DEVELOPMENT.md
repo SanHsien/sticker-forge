@@ -88,7 +88,7 @@ node --check app/app.js
 
 ## 測試涵蓋
 
-`python -m pytest`（目前 80 passed）。最小涵蓋：prompt CLI 輸出與渲染、中英文語系、GUI 初始語系 bridge contract、3x3 inset 切圖（含 1024×1024 非整除尺寸）、選圖／排序、green/magenta 去背、匯出預設去背與 `--keep-background`、main/tab image、LINE 靜態／Big／emoji／訊息／動態／pop-up／effect ZIP 結構與 validator（含透明背景檢查）、PNG-only ZIP、多平台 ZIP、Signal manifest、padding、`webapi.Api` bridge（bootstrap/prompt/split/cleanup/export/prepare_screen_animations/export_popup/export_effect），以及依賴 freshness parser／workflow 契約。GUI 視窗本身需依 [`WINDOWS_VALIDATION.md`](WINDOWS_VALIDATION.md) 在 Windows 桌面驗證。
+`python -m pytest`（目前 81 passed）。最小涵蓋：prompt CLI 輸出與渲染、中英文語系、Windows 非 UTF-8 console、GUI 初始語系 bridge contract、3x3 inset 切圖（含 1024×1024 非整除尺寸）、選圖／排序、green/magenta 去背、匯出預設去背與 `--keep-background`、main/tab image、LINE 靜態／Big／emoji／訊息／動態／pop-up／effect ZIP 結構與 validator（含透明背景檢查）、PNG-only ZIP、多平台 ZIP、Signal manifest、padding、`webapi.Api` bridge（bootstrap/prompt/split/cleanup/export/prepare_screen_animations/export_popup/export_effect），以及依賴 freshness parser／workflow 契約。GUI 視窗本身需依 [`WINDOWS_VALIDATION.md`](WINDOWS_VALIDATION.md) 在 Windows 桌面驗證。
 
 ## 依賴維護
 
