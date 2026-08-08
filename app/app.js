@@ -62,6 +62,10 @@ const UI = {
     tuneBalanced: "平衡",
     tuneAggressive: "強力",
     tuneContinuous: "連續清理（背景優先）",
+    outline: "白色描邊",
+    outlineNone: "無",
+    outlineSimple: "白邊",
+    outlineFancy: "白邊＋陰影",
     padding: "Padding",
     exportPreview: "匯出前預覽",
     submissionTitle: "LINE Creators Market 上架",
@@ -151,6 +155,10 @@ const UI = {
     tuneBalanced: "Balanced",
     tuneAggressive: "Aggressive",
     tuneContinuous: "Continuous (background-first)",
+    outline: "White outline",
+    outlineNone: "None",
+    outlineSimple: "Outline",
+    outlineFancy: "Outline + shadow",
     padding: "Padding",
     exportPreview: "Pre-export preview",
     submissionTitle: "LINE Creators Market submission",
@@ -356,6 +364,7 @@ function options() {
   return {
     keyName: $("chroma-key").value,
     tune: $("cleanup-tune").value,
+      outline: $("cleanup-outline").value,
     padding: Number($("sticker-padding").value),
   };
 }
@@ -607,6 +616,7 @@ async function loadAnimatedFiles(files) {
     const previews = await bridge.prepare_animated(dataUrls, {
       keyName: $("chroma-key").value,
       tune: $("cleanup-tune").value,
+      outline: $("cleanup-outline").value,
     });
     state.mode = "animated";
     state.screenAnimations = [];
@@ -631,6 +641,7 @@ async function loadScreenAnimationFiles(files) {
     state.screenAnimations = await bridge.prepare_screen_animations(dataUrls, {
       keyName: $("chroma-key").value,
       tune: $("cleanup-tune").value,
+      outline: $("cleanup-outline").value,
     });
     updatePreview();
     setStatus(ui().screenAnimationImported(state.screenAnimations.length));
@@ -888,6 +899,7 @@ function bindEvents() {
   document.querySelectorAll("input, select").forEach((node) => node.addEventListener("input", renderPrompt));
   $("sticker-padding").addEventListener("input", updatePreview);
   $("cleanup-tune").addEventListener("change", updatePreview);
+  $("cleanup-outline").addEventListener("change", updatePreview);
   $("ui-language").addEventListener("change", (event) => setLocale(event.target.value));
   $("copy-prompt").addEventListener("click", copyPrompt);
   $("preset-select").addEventListener("change", (event) => {

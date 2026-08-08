@@ -1,5 +1,23 @@
 # Decisions
 
+## 2026-08-09：上游更新改為自動排程檢查；移植白色描邊
+
+- 先前只有人工 `git fetch upstream`，實際上就是「想到才看」。改為
+  `.github/workflows/upstream-check.yml` 每週一自動跑。
+- **檢查器刻意不判斷該不該移植**：上游與本 repo 無共同 git history，永遠不可能
+  直接 merge，能拿的只有概念與修正，這種判斷需要人。因此工具只回答「有沒有沒
+  看過的 commit」，並在有待 review 時讓 workflow 失敗；已看過的進度存在
+  `tools/upstream_baseline.json`。全部落在 Worker／PWA shell／行銷素材（本專案
+  依規則不可能有）的 commit 歸為 known-irrelevant 以降雜訊，但仍列出。
+- **移植 `applyOutlineAndShadow`**：白色描邊是聊天貼圖經典外觀，也解決深色角色
+  在 LINE 深色主題下看不清的問題。我方原本只在 prompt 裡請 AI「畫白色描邊」，
+  生圖模型不保證照做——改成本機後製才可靠。以 Pillow `MaxFilter`／`BoxBlur`
+  對應上游的可分離 box dilation／blur，常數（7px 描邊、2px 羽化、位移 2,3、
+  陰影上限 alpha 70）沿用上游以維持一致外觀。預設 `none`，不改變既有輸出。
+- **仍未移植且判定不值得**：上游的 `console.log` 統計（除錯用）、`fitWithPadding`
+  （我方 exporter 已有等價 padding 邏輯）。GUI 進階 tune 滑桿暫緩——自訂 profile
+  已可由 Python API 使用，先確認四個 preset 是否夠用，避免一次加太多旋鈕。
+
 ## 2026-08-09：移植上游 chroma tune 系統（strict／continuous＋erode＋自訂 profile）
 
 - 重新評估上游 JS tune 系統後判定**確實比我方完整**，因此整套移植，而非只取 gating。

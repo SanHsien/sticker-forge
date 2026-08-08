@@ -17,6 +17,7 @@ from PIL import Image
 
 from .app_launcher import app_path
 from .cleanup import remove_chroma_background
+from .decorate import apply_outline_and_shadow
 from .exporter import (
     LINE_ANIM_MAX_SIZE,
     LINE_SCREEN_ANIM_SIZE,
@@ -146,11 +147,15 @@ class Api:
         return [_encode(tile) for tile in self._cleanup_tiles(tiles, options)]
 
     def _cleanup_tiles(self, tiles: list[Image.Image], options: dict) -> list[Image.Image]:
+        outline = options.get("outline", "none")
         return [
-            remove_chroma_background(
-                tile,
-                key_name=options.get("keyName", "green"),
-                tune=options.get("tune", "balanced"),
+            apply_outline_and_shadow(
+                remove_chroma_background(
+                    tile,
+                    key_name=options.get("keyName", "green"),
+                    tune=options.get("tune", "balanced"),
+                ),
+                outline,
             )
             for tile in tiles
         ]

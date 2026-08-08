@@ -4,6 +4,15 @@
 
 ## Unreleased
 
+## v0.21.0
+
+- **上游更新自動排程檢查**：新增 `tools/check_upstream_commits.py` 與每週一 11:00（Asia/Taipei）執行的 `upstream-check` workflow。本 repo 與上游 `yazelin/line-sticker-studio` **沒有共同 git history**（概念上的 fork、Python 重寫），無法直接 merge，因此檢查器只回答「有沒有還沒看過的上游 commit」，不代為判斷是否該移植——那是人的決定。已看過的進度記在 `tools/upstream_baseline.json`。
+  - 全部落在 Worker／PWA shell／行銷素材等本專案依規則不可能有的區域的 commit 會歸類為 known-irrelevant 收在摺疊區，降低雜訊；只要有需要 review 的 commit 就讓 workflow 失敗，避免被忽略。
+- **白色描邊與陰影（移植上游 `applyOutlineAndShadow`）**：新增 `decorate.apply_outline_and_shadow()`，提供 `none`／`simple`（白邊）／`fancy`（白邊＋羽化＋陰影）。白色描邊是聊天貼圖的經典外觀，也讓深色角色在 LINE 深色聊天主題下仍清楚可見。先前只能在 prompt 裡請 AI「畫白色描邊」，結果不可靠；改在本機後製處理。
+  - CLI：所有產生貼圖的指令新增 `--outline {none,simple,fancy}`（預設 `none`，不改變既有行為）。
+  - GUI：新增「白色描邊」下拉，中英文皆有。
+- **測試**：`pytest` 116 passed，新增描邊幾何／羽化／陰影方向／參數驗證，以及上游檢查器的分類、報告、GITHUB_OUTPUT 與 workflow 契約測試。
+
 ## v0.20.0
 
 - **去背 tune 系統完整化（移植上游 `line-sticker-studio` 1b94d69）**：`ChromaTuneProfile` 補上 `mode`（`strict`／`continuous`）與 `erode`，新增 **`continuous` 連續清理 preset**（不看 pure-key、只依 key score 判定，專治 AI 生圖那種帶光暈／褪色的不純綠幕——`strict` 會整片留下來變成 LINE 退件主因），`aggressive` 依上游改為 `erode=1`。

@@ -1,0 +1,7 @@
+{
+  "repo": "https://github.com/yazelin/line-sticker-studio.git",
+  "branch": "main",
+  "reviewed_through": "515fe989ff4b6f765a715fd90112d9d6667fb94a",
+  "reviewed_date": "2026-08-09",
+  "notes": "Reviewed through 515fe98 on 2026-08-09. Outcome recorded in docs/DECISIONS.md (2026-08-08 and 2026-08-09 entries): only the chroma tune system (1b94d69) was worth porting; PWA, Worker, promo and campaign work is out of scope by project rule."
+}
