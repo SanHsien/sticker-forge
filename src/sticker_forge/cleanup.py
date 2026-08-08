@@ -73,8 +73,15 @@ def remove_chroma_background(
 
         if alpha_out == 0:
             pixels.append((red, green, blue, 0))
-        else:
+        elif key_name and _key_score(red, green, blue, chroma_key.name) > 0:
+            # Despill only pixels that actually lean toward the key colour
+            # (green/magenta spill on foreground edges). Opaque foreground that
+            # does not lean key-ward keeps its original colour — otherwise a blue
+            # or skin-tone pixel next to a magenta/green backdrop would be forced
+            # toward the key channel (e.g. blue -> black under a magenta key).
             pixels.append((*_despill(red, green, blue, active_key=key_name), alpha_out))
+        else:
+            pixels.append((red, green, blue, alpha_out))
 
     output.putdata(pixels)
     return output

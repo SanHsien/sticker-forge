@@ -1,5 +1,26 @@
 # Decisions
 
+## 2026-08-08：上游 `line-sticker-studio` 更新評估與選擇性移植
+
+- 本專案**沒有**針對上游 fork（`yazelin/line-sticker-studio`）的自動排程檢查；
+  `.github/workflows/` 的 Dependabot／freshness 只追 PyPI 直接依賴，不追上游
+  commit。上游更新以人工 `git fetch upstream` + 逐 commit 評估處理。
+- 逐一評估 2026-07-11（移除 vendored 上游後）至 2026-08-07 的上游新 commit，
+  結論多數不適用 local-first Python 架構：PWA／字型自架、promo-footer／BMC
+  抖內、OG 圖、campaigns、預付額度＋兌換碼（明確禁止的 hosted backend）、
+  Cloudflare worker prompt 皆 N/A。
+- 兩項看似相關但**本專案已正確、無需移植**：(1) 無字模式短語外洩（上游
+  `67b6975`）——我方 `## 無字版` 模板本就以 `動作：{action_N}` 驅動、零引號短語；
+  (2) 售價／審核天數／AI 勾選文案（上游 tutorial 修正）——我方 `LINE_SUBMISSION.md`
+  刻意不寫死價格與審核天數，無過期宣稱。
+- **唯一移植項**：上游 `1b94d69`「strict chroma removal」的 despill gating。
+  我方 `cleanup.py` 原本對每個保留像素無條件 despill（比上游舊碼還寬鬆——上游
+  一直是 `if pureKey` 才 despill），使藍／紅等非 key 前景被硬拉通道。改為只對
+  `_key_score > 0` 的偏 key 像素去溢色。**未**移植上游 `despillStrength`／
+  strict-vs-continuous matte 的漸層重構——那與其 JS tune 系統耦合，對我方較簡單
+  的模型屬過度設計；gating 已解決前景失真主因。以合成圖 old/new 目視 + 像素差
+  驗證（藍 30,60,220 / 紅 220,40,40 前景保色，背景仍去除）。
+
 ## 2026-07-28：依賴維護採風險分類與 guarded merge
 
 - 每週由 Dependabot 檢查 pip 與 GitHub Actions，每月由 freshness workflow

@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+## v0.19.0
+
+- **去背去溢色修正（移植上游 `line-sticker-studio` 1b94d69）**：先前 despill 會套用到**每一個**保留下來的像素，導致藍色、紅色等不偏 key 色的前景被硬拉綠／洋紅通道（藍→帶綠、紅→橘、藍在洋紅底下→黑）。改為只對「確實偏向 key 色」的像素（`_key_score > 0`，即綠／洋紅溢色邊緣）去溢色，非 key 前景維持原色；背景去除行為不變。新增前景保色回歸測試，`pytest` 93 passed。
 - **依賴維護自動化**：新增每週 Dependabot（pip／GitHub Actions）、每月直接依賴 freshness 檢查，以及 Python 3.11–3.14／Windows exe CI。
 - **低風險自動合併**：`pytest`／`packaging`／`setuptools`／`wheel` 與 GitHub Actions minor／patch 經 trusted-base 分類、綁定 head SHA 政策 check、完整 CI、序列化 rebase gate 後自動核准並 squash merge；`Pillow`／`pywebview`／`PyInstaller`、未知範圍與所有 major 維持人工審查。
 - **依賴基線更新**：以最新穩定版 Pillow 12.3.0、pytest 9.1.1、packaging 26.2、pywebview 6.2.1、PyInstaller 6.21.0、setuptools 83.0.0、wheel 0.47.0 完成本機 92 tests、PyInstaller 與 exe smoke。

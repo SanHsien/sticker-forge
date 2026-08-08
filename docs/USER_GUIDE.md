@@ -4,7 +4,7 @@
 
 ## 下載與啟動
 
-1. 到 GitHub Releases 下載 `sticker-forge-v0.18.0-windows-x64.zip`。
+1. 到 GitHub Releases 下載 `sticker-forge-v0.19.0-windows-x64.zip`。
 2. 解壓縮到本機資料夾。
 3. 雙擊 `sticker-forge.exe` 開啟桌面 GUI。
 4. 需要命令列時使用 `sticker-forge-cli.exe`。
