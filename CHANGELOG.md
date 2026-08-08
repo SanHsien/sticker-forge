@@ -4,6 +4,16 @@
 
 ## Unreleased
 
+## v0.22.0
+
+- **GUI 進階去背調整**：「去背強度」下方新增摺疊的「進階去背調整」面板，可個別調 `hard`／`soft`／`minKey`／`maxOther`／`dominance`／`erode`，並即時顯示換算出的去溢色力度。**預設收合且未啟用**，要勾「使用自訂參數」才生效，一般使用者不會碰到。
+  - 這也讓 v0.20.0 移植進來的 `make_chroma_tune()` 與漸層去溢色**第一次能從打包好的程式使用**——先前只有 Python API 進得去，等於是 binary 裡的死碼。
+  - 滑桿預設值由 Python core 經 `bootstrap().tuneProfiles` 提供，preset 數值仍只定義在 `spec`，不在 JS 複製一份。
+  - `soft` 不得大於 `hard`（會讓 alpha 漸層反向），超過會自動夾住並提示。
+  - 「重設為目前強度」把滑桿拉回目前選的 preset。
+- **bridge**：`webapi._tune_option()` 接受 preset 名稱或 GUI 傳來的 camelCase 自訂 profile，轉成 Python core 的欄位名。
+- **測試**：`pytest` 121 passed，新增自訂 profile 轉換、`bootstrap` preset 輸出、自訂參數確實改變去背結果，以及 GUI 面板契約（預設收合／未啟用、preset 來自 core、soft 夾住）。
+
 ## v0.21.0
 
 - **上游更新自動排程檢查**：新增 `tools/check_upstream_commits.py` 與每週一 11:00（Asia/Taipei）執行的 `upstream-check` workflow。本 repo 與上游 `yazelin/line-sticker-studio` **沒有共同 git history**（概念上的 fork、Python 重寫），無法直接 merge，因此檢查器只回答「有沒有還沒看過的上游 commit」，不代為判斷是否該移植——那是人的決定。已看過的進度記在 `tools/upstream_baseline.json`。

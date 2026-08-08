@@ -44,7 +44,7 @@ from .prompts import (
     normalize_locale,
     render_line_static_prompt,
 )
-from .spec import CHROMA_KEYS, LINE_STATIC_SPEC, resolve_chroma_key
+from .spec import CHROMA_KEYS, CHROMA_TUNE_PROFILES, LINE_STATIC_SPEC, resolve_chroma_key
 from .splitter import load_animated_frames
 from .splitter import split_grid_to_stickers
 
@@ -75,6 +75,34 @@ def _encode_screen_apng(frames: list[Image.Image], durations: list[int]) -> str:
     return "data:image/png;base64," + base64.b64encode(
         _apng_bytes(frames, durations, max_loops=3, max_total_ms=3000)
     ).decode("ascii")
+
+
+_TUNE_FIELDS = {
+    "hard": "hard",
+    "soft": "soft",
+    "minKey": "min_key",
+    "maxOther": "max_other",
+    "dominance": "dominance",
+    "mode": "mode",
+    "erode": "erode",
+    "base": "base",
+}
+
+
+def _tune_option(options: dict):
+    """Read the tune option, which is either a preset name or a custom profile.
+
+    The GUI's advanced panel sends a camelCase object; translate it to the
+    Python core's field names so `resolve_chroma_tune` can build a profile.
+    """
+    tune = options.get("tune", "balanced")
+    if not isinstance(tune, dict):
+        return tune
+    return {
+        _TUNE_FIELDS[key]: value
+        for key, value in tune.items()
+        if key in _TUNE_FIELDS and value is not None
+    }
 
 
 def _spec_for(options: dict) -> "LINE_STATIC_SPEC.__class__":
@@ -112,6 +140,20 @@ class Api:
             },
             "chromaKeys": {
                 name: {"label": key.label, "hex": key.hex} for name, key in CHROMA_KEYS.items()
+            },
+            # The advanced panel seeds its sliders from these, so the presets
+            # stay defined only in `spec`.
+            "tuneProfiles": {
+                name: {
+                    "hard": profile.hard,
+                    "soft": profile.soft,
+                    "minKey": profile.min_key,
+                    "maxOther": profile.max_other,
+                    "dominance": profile.dominance,
+                    "mode": profile.mode,
+                    "erode": profile.erode,
+                }
+                for name, profile in CHROMA_TUNE_PROFILES.items()
             },
         }
 
@@ -153,7 +195,7 @@ class Api:
                 remove_chroma_background(
                     tile,
                     key_name=options.get("keyName", "green"),
-                    tune=options.get("tune", "balanced"),
+                    tune=_tune_option(options),
                 ),
                 outline,
             )
@@ -228,7 +270,7 @@ class Api:
                     remove_chroma_background(
                         frame,
                         key_name=options.get("keyName", "green"),
-                        tune=options.get("tune", "balanced"),
+                        tune=_tune_option(options),
                     )
                     for frame in frames
                 ]
@@ -279,7 +321,7 @@ class Api:
                     remove_chroma_background(
                         frame,
                         key_name=options.get("keyName", "green"),
-                        tune=options.get("tune", "balanced"),
+                        tune=_tune_option(options),
                     )
                     for frame in frames
                 ]

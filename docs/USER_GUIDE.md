@@ -4,7 +4,7 @@
 
 ## 下載與啟動
 
-1. 到 GitHub Releases 下載 `sticker-forge-v0.21.0-windows-x64.zip`。
+1. 到 GitHub Releases 下載 `sticker-forge-v0.22.0-windows-x64.zip`。
 2. 解壓縮到本機資料夾。
 3. 雙擊 `sticker-forge.exe` 開啟桌面 GUI。
 4. 需要命令列時使用 `sticker-forge-cli.exe`。
@@ -151,6 +151,10 @@ GUI 會顯示 Python core 回傳的錯誤訊息。常見原因是匯入張數不
 生圖時請用純綠或純洋紅背景，並避免角色邊緣出現大量相近顏色。`export` 預設會去背；若使用 `--keep-background`，validate 可能會指出貼圖完全不透明。
 
 如果背景**只去掉一部分**、殘留一塊霧霧的或褪色的底色（AI 生圖常見：綠幕上有光暈或陰影），把「去背強度」改成 **`continuous` 連續清理（背景優先）**。預設的 `safe`／`balanced`／`aggressive` 只會去掉「夠純」的背景色以保護角色邊緣；`continuous` 改為只看顏色偏向、不要求純度，能清掉不純的背景，代價是角色邊緣如果本來就偏近背景色可能被多吃一點。CLI 同樣可用 `--tune continuous`。
+
+### 四種去背強度都調不到我要的結果
+
+展開「進階去背調整」，勾「使用自訂參數」後可以個別調整門檻。最常用的兩個方向：**背景沒清乾淨**就把 `minKey`／`dominance` 調低、`maxOther` 調高（判定放寬）；**角色邊緣被吃掉**就反過來調嚴，或把 `hard` 調高。改壞了按「重設為目前強度」回到 preset。這是進階功能，一般情況先試四種預設強度與 `continuous` 就好。
 
 ### 角色在深色聊天背景看不清楚
 

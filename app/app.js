@@ -66,6 +66,18 @@ const UI = {
     outlineNone: "無",
     outlineSimple: "白邊",
     outlineFancy: "白邊＋陰影",
+    advancedTune: "進階去背調整",
+    advancedTuneHint: "預設的四種強度調不到理想結果時再用。勾選後才會生效。",
+    advancedTuneEnable: "使用自訂參數",
+    advHard: "完全去除門檻 (hard)",
+    advSoft: "開始去除門檻 (soft)",
+    advMinKey: "背景色最低純度 (minKey)",
+    advMaxOther: "其他通道上限 (maxOther)",
+    advDominance: "背景色主導比 (dominance)",
+    advErode: "邊緣侵蝕 (erode)",
+    advReset: "重設為目前強度",
+    advDespill: (value) => `去溢色力度：${value}（比「平衡」保守的設定會自動放輕）`,
+    advSoftTooHigh: "soft 不能大於 hard，已自動夾住",
     padding: "Padding",
     exportPreview: "匯出前預覽",
     submissionTitle: "LINE Creators Market 上架",
@@ -159,6 +171,18 @@ const UI = {
     outlineNone: "None",
     outlineSimple: "Outline",
     outlineFancy: "Outline + shadow",
+    advancedTune: "Advanced cleanup tuning",
+    advancedTuneHint: "For when none of the four presets get the result you want. Only applies once enabled.",
+    advancedTuneEnable: "Use custom values",
+    advHard: "Full-removal threshold (hard)",
+    advSoft: "Removal-starts threshold (soft)",
+    advMinKey: "Minimum key purity (minKey)",
+    advMaxOther: "Other-channel ceiling (maxOther)",
+    advDominance: "Key dominance ratio (dominance)",
+    advErode: "Edge erosion (erode)",
+    advReset: "Reset to current strength",
+    advDespill: (value) => `Despill strength: ${value} (settings more conservative than Balanced ease off automatically)`,
+    advSoftTooHigh: "soft cannot exceed hard; clamped",
     padding: "Padding",
     exportPreview: "Pre-export preview",
     submissionTitle: "LINE Creators Market submission",
@@ -200,6 +224,8 @@ const state = {
   screenAnimations: [],
   zoomIndex: -1,
   mode: "static",
+  // Cleanup tune presets, supplied by the Python core (see webapi bootstrap).
+  tuneProfiles: {},
 };
 // bootstrap data (defaults, suggestions, spec) per locale, from Python
 const boots = {};
@@ -250,6 +276,8 @@ function applyLocale(previousLocale = state.locale) {
   populateDatalists();
   populatePresets();
   $("ui-language").value = state.locale;
+  // The despill note is generated, not a data-i18n node, so refresh it here.
+  syncAdvOutputs();
   setStatus(data.statusReady);
   renderPrompt();
 }
@@ -360,11 +388,66 @@ async function copyPrompt() {
   setStatus(ui().copied);
 }
 
+const ADV_FIELDS = [
+  ["adv-hard", "hard", 2],
+  ["adv-soft", "soft", 2],
+  ["adv-minkey", "minKey", 0],
+  ["adv-maxother", "maxOther", 0],
+  ["adv-dominance", "dominance", 2],
+  ["adv-erode", "erode", 0],
+];
+
+function advEnabled() {
+  return $("adv-enabled").checked;
+}
+
+// Mirrors spec.chroma_despill_strength so the panel can explain itself without
+// a round-trip; the Python core remains the value actually applied.
+function despillStrength(profile) {
+  const minNorm = Math.max(0, Math.min(1, (profile.minKey - 20) / 70));
+  const domNorm = Math.max(0, Math.min(1, (profile.dominance - 1.2) / 1));
+  const balanced = ((50 - 20) / 70 + (1.7 - 1.2)) / 2;
+  const conservative = Math.max(0, Math.min(1, ((minNorm + domNorm) / 2 - balanced) / (1 - balanced)));
+  return 1 - 0.35 * conservative;
+}
+
+function advProfile() {
+  const profile = { mode: (state.tuneProfiles[$("cleanup-tune").value] || {}).mode || "strict" };
+  for (const [id, key] of ADV_FIELDS) profile[key] = Number($(id).value);
+  // hard must stay above soft or the ramp inverts.
+  if (profile.soft > profile.hard) {
+    profile.soft = profile.hard;
+    $("adv-soft").value = profile.hard;
+    setStatus(ui().advSoftTooHigh, true);
+  }
+  return profile;
+}
+
+function tuneValue() {
+  return advEnabled() ? advProfile() : $("cleanup-tune").value;
+}
+
+function syncAdvOutputs() {
+  for (const [id, , digits] of ADV_FIELDS) {
+    $(`${id}-value`).textContent = Number($(id).value).toFixed(digits);
+  }
+  $("adv-despill-note").textContent = advEnabled()
+    ? ui().advDespill(despillStrength(advProfile()).toFixed(2))
+    : "";
+}
+
+function resetAdvToPreset() {
+  const preset = state.tuneProfiles[$("cleanup-tune").value];
+  if (!preset) return;
+  for (const [id, key] of ADV_FIELDS) $(id).value = preset[key];
+  syncAdvOutputs();
+}
+
 function options() {
   return {
     keyName: $("chroma-key").value,
-    tune: $("cleanup-tune").value,
-      outline: $("cleanup-outline").value,
+    tune: tuneValue(),
+    outline: $("cleanup-outline").value,
     padding: Number($("sticker-padding").value),
   };
 }
@@ -615,7 +698,7 @@ async function loadAnimatedFiles(files) {
     const dataUrls = await Promise.all(list.map(readFileAsDataURL));
     const previews = await bridge.prepare_animated(dataUrls, {
       keyName: $("chroma-key").value,
-      tune: $("cleanup-tune").value,
+      tune: tuneValue(),
       outline: $("cleanup-outline").value,
     });
     state.mode = "animated";
@@ -640,7 +723,7 @@ async function loadScreenAnimationFiles(files) {
     const dataUrls = await Promise.all(list.map(readFileAsDataURL));
     state.screenAnimations = await bridge.prepare_screen_animations(dataUrls, {
       keyName: $("chroma-key").value,
-      tune: $("cleanup-tune").value,
+      tune: tuneValue(),
       outline: $("cleanup-outline").value,
     });
     updatePreview();
@@ -898,8 +981,16 @@ function setupDropzone() {
 function bindEvents() {
   document.querySelectorAll("input, select").forEach((node) => node.addEventListener("input", renderPrompt));
   $("sticker-padding").addEventListener("input", updatePreview);
-  $("cleanup-tune").addEventListener("change", updatePreview);
+  $("cleanup-tune").addEventListener("change", () => {
+    if (!advEnabled()) resetAdvToPreset();
+    updatePreview();
+  });
   $("cleanup-outline").addEventListener("change", updatePreview);
+  $("adv-enabled").addEventListener("change", () => { syncAdvOutputs(); updatePreview(); });
+  $("adv-reset").addEventListener("click", () => { resetAdvToPreset(); updatePreview(); });
+  for (const [id] of ADV_FIELDS) {
+    $(id).addEventListener("input", () => { syncAdvOutputs(); updatePreview(); });
+  }
   $("ui-language").addEventListener("change", (event) => setLocale(event.target.value));
   $("copy-prompt").addEventListener("click", copyPrompt);
   $("preset-select").addEventListener("change", (event) => {
@@ -963,7 +1054,9 @@ async function init() {
   boots["zh-Hant"] = initial.locale === "zh-Hant" ? initial : await bridge.bootstrap("zh-Hant");
   boots.en = initial.locale === "en" ? initial : await bridge.bootstrap("en");
   state.locale = UI[initial.locale] ? initial.locale : "zh-Hant";
+  state.tuneProfiles = initial.tuneProfiles || {};
   $("ui-language").value = state.locale;
+  resetAdvToPreset();
   setupSlots();
   bindEvents();
   applyLocale();

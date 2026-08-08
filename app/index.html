@@ -150,6 +150,43 @@
         <output id="padding-value">10 px</output>
       </div>
 
+      <details class="advanced-tune">
+        <summary data-i18n="advancedTune">進階去背調整</summary>
+        <p class="hint" data-i18n="advancedTuneHint">預設的四種強度調不到理想結果時再用。勾選後才會生效。</p>
+        <label class="check">
+          <input id="adv-enabled" type="checkbox">
+          <span data-i18n="advancedTuneEnable">使用自訂參數</span>
+        </label>
+        <div class="adv-grid">
+          <label><span data-i18n="advHard">完全去除門檻 (hard)</span>
+            <input id="adv-hard" type="range" min="0.05" max="0.60" step="0.01" value="0.25">
+            <output id="adv-hard-value">0.25</output>
+          </label>
+          <label><span data-i18n="advSoft">開始去除門檻 (soft)</span>
+            <input id="adv-soft" type="range" min="0.00" max="0.40" step="0.01" value="0.05">
+            <output id="adv-soft-value">0.05</output>
+          </label>
+          <label><span data-i18n="advMinKey">背景色最低純度 (minKey)</span>
+            <input id="adv-minkey" type="range" min="20" max="120" step="1" value="50">
+            <output id="adv-minkey-value">50</output>
+          </label>
+          <label><span data-i18n="advMaxOther">其他通道上限 (maxOther)</span>
+            <input id="adv-maxother" type="range" min="60" max="180" step="1" value="110">
+            <output id="adv-maxother-value">110</output>
+          </label>
+          <label><span data-i18n="advDominance">背景色主導比 (dominance)</span>
+            <input id="adv-dominance" type="range" min="1.10" max="2.40" step="0.05" value="1.70">
+            <output id="adv-dominance-value">1.70</output>
+          </label>
+          <label><span data-i18n="advErode">邊緣侵蝕 (erode)</span>
+            <input id="adv-erode" type="range" min="0" max="3" step="1" value="0">
+            <output id="adv-erode-value">0</output>
+          </label>
+        </div>
+        <p class="hint" id="adv-despill-note"></p>
+        <button id="adv-reset" type="button" data-i18n="advReset">重設為目前強度</button>
+      </details>
+
       <div class="export-controls">
         <label><span data-i18n="platformLabel">其他平台</span>
           <select id="platform-target">

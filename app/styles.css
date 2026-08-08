@@ -460,3 +460,47 @@ textarea {
     grid-template-columns: 1fr;
   }
 }
+
+/* Advanced cleanup tuning: collapsed by default so casual users never meet it. */
+.advanced-tune {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line, #d8d8de);
+  border-radius: 8px;
+}
+
+.advanced-tune > summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.advanced-tune .hint {
+  margin: 8px 0;
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.adv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px 16px;
+  margin: 10px 0;
+}
+
+.adv-grid label {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 4px 8px;
+  font-size: 12px;
+}
+
+.adv-grid input[type="range"] {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.adv-grid output {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+}

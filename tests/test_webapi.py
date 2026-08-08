@@ -154,3 +154,99 @@ def test_write_line_zip_is_valid(tmp_path) -> None:
     output = api._write_line_zip(selected, tmp_path / "pack.zip", {"padding": 10, "mainIndex": 2, "tabIndex": 3})
     assert ZipFile(output).namelist()
     assert validate_line_zip(output) == []
+
+
+def test_tune_option_passes_preset_names_through() -> None:
+    from sticker_forge.webapi import _tune_option
+
+    assert _tune_option({"tune": "continuous"}) == "continuous"
+    assert _tune_option({}) == "balanced"
+
+
+def test_tune_option_translates_custom_profile_from_the_gui() -> None:
+    from sticker_forge.webapi import _tune_option
+    from sticker_forge.spec import resolve_chroma_tune
+
+    payload = {
+        "tune": {
+            "hard": 0.3,
+            "soft": 0.1,
+            "minKey": 85,
+            "maxOther": 100,
+            "dominance": 2.1,
+            "mode": "strict",
+            "erode": 1,
+            "bogus": "ignored",
+        }
+    }
+
+    translated = _tune_option(payload)
+    assert translated == {
+        "hard": 0.3,
+        "soft": 0.1,
+        "min_key": 85,
+        "max_other": 100,
+        "dominance": 2.1,
+        "mode": "strict",
+        "erode": 1,
+    }
+    # It must actually build a usable profile.
+    profile = resolve_chroma_tune(translated)
+    assert profile.min_key == 85
+    assert profile.erode == 1
+
+
+def test_bootstrap_exposes_tune_profiles_for_the_advanced_panel() -> None:
+    from sticker_forge.spec import CHROMA_TUNE_PROFILES
+    from sticker_forge.webapi import Api
+
+    profiles = Api().bootstrap()["tuneProfiles"]
+
+    assert set(profiles) == set(CHROMA_TUNE_PROFILES)
+    balanced = profiles["balanced"]
+    # camelCase, because the GUI reads these straight into its sliders.
+    assert balanced["minKey"] == CHROMA_TUNE_PROFILES["balanced"].min_key
+    assert balanced["maxOther"] == CHROMA_TUNE_PROFILES["balanced"].max_other
+    assert profiles["continuous"]["mode"] == "continuous"
+    assert profiles["aggressive"]["erode"] == 1
+
+
+def test_custom_tune_from_the_gui_changes_cleanup_output() -> None:
+    import base64
+    from io import BytesIO
+
+    from PIL import Image, ImageDraw
+
+    from sticker_forge.webapi import Api
+
+    size = 120
+    image = Image.new("RGBA", (size, size))
+    for y in range(size):
+        for x in range(size):
+            ratio = x / size * 0.6 + y / size * 0.4
+            image.putpixel(
+                (x, y),
+                (int(120 * ratio), int(255 - 65 * ratio), int(120 * ratio), 255),
+            )
+    ImageDraw.Draw(image).ellipse((36, 30, 84, 78), fill=(225, 90, 70, 255))
+    buffer = BytesIO()
+    image.save(buffer, format="PNG")
+    url = "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode()
+
+    api = Api()
+
+    def kept(tune) -> int:
+        result = api.cleanup([url], {"keyName": "green", "tune": tune})
+        decoded = Image.open(
+            BytesIO(base64.b64decode(result[0].split(",", 1)[1]))
+        ).convert("RGBA")
+        return sum(1 for pixel in decoded.get_flattened_data() if pixel[3] > 0)
+
+    preset = kept("balanced")
+    conservative = kept(
+        {"hard": 0.4, "soft": 0.3, "minKey": 90, "maxOther": 80, "dominance": 2.2}
+    )
+
+    # A conservative custom profile must keep visibly more than the preset,
+    # otherwise the sliders are not reaching the core.
+    assert conservative > preset
