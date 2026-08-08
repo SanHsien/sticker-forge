@@ -4,7 +4,7 @@
 
 ## 下載與啟動
 
-1. 到 GitHub Releases 下載 `sticker-forge-v0.19.0-windows-x64.zip`。
+1. 到 GitHub Releases 下載 `sticker-forge-v0.20.0-windows-x64.zip`。
 2. 解壓縮到本機資料夾。
 3. 雙擊 `sticker-forge.exe` 開啟桌面 GUI。
 4. 需要命令列時使用 `sticker-forge-cli.exe`。
@@ -149,6 +149,8 @@ GUI 會顯示 Python core 回傳的錯誤訊息。常見原因是匯入張數不
 ### 背景沒有變透明
 
 生圖時請用純綠或純洋紅背景，並避免角色邊緣出現大量相近顏色。`export` 預設會去背；若使用 `--keep-background`，validate 可能會指出貼圖完全不透明。
+
+如果背景**只去掉一部分**、殘留一塊霧霧的或褪色的底色（AI 生圖常見：綠幕上有光暈或陰影），把「去背強度」改成 **`continuous` 連續清理（背景優先）**。預設的 `safe`／`balanced`／`aggressive` 只會去掉「夠純」的背景色以保護角色邊緣；`continuous` 改為只看顏色偏向、不要求純度，能清掉不純的背景，代價是角色邊緣如果本來就偏近背景色可能被多吃一點。CLI 同樣可用 `--tune continuous`。
 
 ### 可以自動送 LINE 審核嗎
 

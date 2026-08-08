@@ -22,7 +22,7 @@ split → cleanup → resize → preview → export ZIP
 
 | 模組 | 職責 |
 |------|------|
-| `spec` | LINE 尺寸、張數、chroma-key 與去背 tune profile 的單一來源 |
+| `spec` | LINE 尺寸、張數、chroma-key 與去背 tune profile 的單一來源（`safe`／`balanced`／`aggressive`／`continuous` 四個 preset，含 `mode`（strict／continuous）與 `erode`；`make_chroma_tune()` 建自訂 profile、`chroma_despill_strength()` 決定去溢色力度） |
 | `prompts` | 提示詞欄位渲染（中英文模板、有字／無字）、`SUGGESTIONS` 下拉建議、`PROMPT_PRESETS` 主題預設包 |
 | `splitter` | 3x3 grid 切圖，3% inset；尺寸不整除時向下取整丟餘數；`load_animated_frames` 讀單一動態檔（GIF/APNG）→ 影格＋時間 |
 | `cleanup` | green / magenta chroma-key 去背 + despill |

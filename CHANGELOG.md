@@ -4,6 +4,16 @@
 
 ## Unreleased
 
+## v0.20.0
+
+- **去背 tune 系統完整化（移植上游 `line-sticker-studio` 1b94d69）**：`ChromaTuneProfile` 補上 `mode`（`strict`／`continuous`）與 `erode`，新增 **`continuous` 連續清理 preset**（不看 pure-key、只依 key score 判定，專治 AI 生圖那種帶光暈／褪色的不純綠幕——`strict` 會整片留下來變成 LINE 退件主因），`aggressive` 依上游改為 `erode=1`。
+- **邊緣侵蝕（erode）**：對「接觸全透明鄰居的半透明像素」做侵蝕，只有 `aggressive` 與自訂 profile 會啟用；其餘 preset 保留半透明邊緣，避免鋸齒狀輪廓。
+- **自訂 tune profile**：新增 `make_chroma_tune()`（可只覆寫部分欄位，其餘沿用 preset；含 soft≤hard／erode≥0／mode 合法性驗證）與 `chroma_despill_strength()`。
+- **漸層去溢色（despillStrength）**：比 `balanced` 更保守的**自訂** profile 會自動降低去溢色力度（最低 0.65），避免「保守的 matte 卻仍粗暴改寫邊緣顏色」。四個 preset 一律 1.0（與上游一致）。
+- **來源透明度修正**：去背後的 alpha 改為 `key_alpha × 來源 alpha`，半透明來源（例如 APNG 影格）不會再被去背變得比原本更不透明。
+- **CLI／GUI**：所有 `--tune` 選項改由 `CHROMA_TUNE_NAMES` 產生（自動含 `continuous`）；GUI「去背強度」下拉補上「連續清理（背景優先）」，中英文皆有。
+- **測試**：`pytest` 98 passed，新增 strict vs continuous、來源 alpha 合成、erode 侵蝕、自訂 profile 去溢色力度與驗證錯誤等回歸測試。
+
 ## v0.19.0
 
 - **去背去溢色修正（移植上游 `line-sticker-studio` 1b94d69）**：先前 despill 會套用到**每一個**保留下來的像素，導致藍色、紅色等不偏 key 色的前景被硬拉綠／洋紅通道（藍→帶綠、紅→橘、藍在洋紅底下→黑）。改為只對「確實偏向 key 色」的像素（`_key_score > 0`，即綠／洋紅溢色邊緣）去溢色，非 key 前景維持原色；背景去除行為不變。新增前景保色回歸測試，`pytest` 93 passed。

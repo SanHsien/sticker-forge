@@ -1,5 +1,27 @@
 # Decisions
 
+## 2026-08-09：移植上游 chroma tune 系統（strict／continuous＋erode＋自訂 profile）
+
+- 重新評估上游 JS tune 系統後判定**確實比我方完整**，因此整套移植，而非只取 gating。
+- 比對發現我方四個數值 preset 與上游**完全相同**（safe 0.32/0.12/60/100/1.9、
+  balanced 0.25/0.05/50/110/1.7、aggressive 0.20/0.04/40/125/1.45）；缺的是
+  **結構**：`mode`、`erode`、`continuous` preset 與自訂 profile。
+- **`continuous` 是真正的能力補強**：`strict` 只對通過 pure-key 測試的像素去背，
+  遇到 AI 生圖常見的「帶光暈／褪色的不純綠幕」會整片保留 → 正是 LINE 退件主因。
+  已用合成圖驗證：hazy 綠幕在 `balanced` 下殘留一塊灰色三角（kept 20%），
+  `continuous` 與 `aggressive` 清乾淨（kept 19%）。
+- **`despillStrength` 的真相**：上游公式 `1 - 0.35 * conservativeNorm` 中，
+  `conservativeNorm` 只在 `customTune`（物件）時非 0，四個 preset 一律得 1.0
+  ——**對 preset 而言與舊的硬去溢色完全等價**。所以「移植漸層去溢色」必然要
+  一併實作自訂 profile，否則是死碼。已一併實作 `make_chroma_tune()`。
+- **順帶修掉一個我方獨有的 bug**：原本 partial-alpha 分支直接覆寫 alpha，
+  忽略來源透明度；半透明來源（APNG 影格）會被去背變得**更不透明**。改為
+  `key_alpha × 來源 alpha` 合成（上游一直是這樣）。
+- **未移植**：上游的 `console.log` 統計、`applyOutlineAndShadow`、
+  `fitWithPadding`（我方 exporter 已有等價 padding 邏輯）與 GUI 進階滑桿 UI。
+  自訂 profile 目前只開放 Python API，CLI／GUI 仍只給 preset——先確認 preset
+  夠用再決定要不要加滑桿，避免一次塞太多旋鈕。
+
 ## 2026-08-08：上游 `line-sticker-studio` 更新評估與選擇性移植
 
 - 本專案**沒有**針對上游 fork（`yazelin/line-sticker-studio`）的自動排程檢查；
