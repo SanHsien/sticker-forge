@@ -35,6 +35,9 @@
 - Windows Release、Computer Use GUI 與 LINE 平台抽驗依
   [`docs/WINDOWS_VALIDATION.md`](docs/WINDOWS_VALIDATION.md) 執行。
 - 修復 [`REVIEW.md`](REVIEW.md) 的問題後，回註修復 commit 與日期。
+- 上游 `yazelin/line-sticker-studio` 與本 repo 無共同 git history，永遠不能直接
+  merge，只移植概念與修正；`upstream-check` workflow 只負責回報。triage 後更新
+  `tools/upstream_baseline.json` 並把結論寫進 [`docs/DECISIONS.md`](docs/DECISIONS.md)。
 
 ## 回覆要求
 

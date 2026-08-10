@@ -109,6 +109,17 @@ python -m sticker_forge effect examples\generated\static-grid.png `
 python -m sticker_forge validate outputs\line-effect.zip --effect
 ```
 
+## 去背強度與白色描邊
+
+背景是 AI 生圖常見的「帶光暈／褪色綠幕」而 `balanced` 清不乾淨時，改用 `--tune continuous`。
+想要聊天貼圖常見的白色描邊，加 `--outline simple` 或 `--outline fancy`（預設 `none`）。
+
+```powershell
+python -m sticker_forge export examples\generated\static-grid.png -o outputs\line-stickers.zip --tune continuous
+python -m sticker_forge export examples\generated\static-grid.png -o outputs\line-outlined.zip --outline fancy
+python -m sticker_forge validate outputs\line-outlined.zip
+```
+
 ## Signal
 
 ```powershell

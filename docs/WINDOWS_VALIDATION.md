@@ -196,12 +196,14 @@ emoji、訊息、動態、pop-up、effect。每一類記錄：
 
 | 項目 | 結果 | 證據或阻塞原因 |
 | --- | --- | --- |
-| pytest / node / diff | PASS | 74 passed；node/diff clean |
+| pytest / node / diff | PASS | <N> passed；node/diff clean |
 | Windows build | PASS | GUI smoke 0；CLI help 0 |
 | Release SHA-256 / Expand-Archive | PASS | <sha256> |
 | 繁中 GUI | PASS | <觀察> |
 | 英文 GUI | PASS | <觀察> |
 | 靜態匯入→去背→ZIP | PASS | <path + validator> |
 | 動態 / pop-up / effect | PASS/FAIL/BLOCKED | <證據> |
+| 去背強度（含 continuous）／進階面板 | PASS/FAIL/BLOCKED | <觀察> |
+| 白色描邊 none / simple / fancy | PASS/FAIL/BLOCKED | <觀察> |
 | LINE 手動上傳 | PASS/FAIL/BLOCKED | <平台訊息> |
 ```

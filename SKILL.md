@@ -11,7 +11,7 @@ description: 維護 SanHsien/sticker-forge。本專案目標是本機聊天貼�
 
 - 產生給 ChatGPT / Gemini / 其他工具使用的貼圖 prompt。
 - 匯入使用者生成的 3x3 grid 或多個動態 GIF/APNG。
-- 切圖、選圖／排序、去背、尺寸整理。
+- 切圖、選圖／排序、去背（strict／continuous、邊緣侵蝕、自訂 profile）、白色描邊／陰影、尺寸整理。
 - 匯出 LINE 靜態貼圖、Big Stickers、emoji、訊息貼圖、動態貼圖、pop-up、
   effect 或多平台 ZIP。
 - 建立 Windows exe 打包流程。
@@ -32,10 +32,13 @@ description: 維護 SanHsien/sticker-forge。本專案目標是本機聊天貼�
 - `NOTICE.md`：fork 來源與授權聲明。
 - `AGENTS.md` / `CLAUDE.md`：AI 接手規則。
 - `src/sticker_forge/`：本機工具主程式。
+- `tools/`：維護腳本（依賴 freshness、Dependabot 分類、上游 commit 檢查）。
 - `prompts/`：提示詞模板。
 - `docs/DEVELOPMENT.md`：架構、本機指令、打包發行。
 - `docs/WINDOWS_VALIDATION.md`：Windows Release、Computer Use GUI 與 LINE 平台驗收。
 - `docs/DECISIONS.md`：決策紀錄。
+- `docs/USER_GUIDE.md`：一般使用者指南。
+- `docs/LINE_SUBMISSION.md`：LINE 手動上架與送審說明。
 - `app/`：pywebview 載入的本機 HTML GUI。
 - `packaging/`：PyInstaller 打包與 release 腳本。
 

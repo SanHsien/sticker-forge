@@ -7,6 +7,7 @@
 [![Tests: pytest](https://img.shields.io/badge/tests-pytest-blueviolet.svg)](tests)
 [![CI](https://github.com/SanHsien/sticker-forge/actions/workflows/ci.yml/badge.svg)](https://github.com/SanHsien/sticker-forge/actions/workflows/ci.yml)
 [![Dependency freshness](https://github.com/SanHsien/sticker-forge/actions/workflows/dependency-freshness.yml/badge.svg)](https://github.com/SanHsien/sticker-forge/actions/workflows/dependency-freshness.yml)
+[![Upstream check](https://github.com/SanHsien/sticker-forge/actions/workflows/upstream-check.yml/badge.svg)](https://github.com/SanHsien/sticker-forge/actions/workflows/upstream-check.yml)
 
 [繁體中文](README.md) | English
 
@@ -33,6 +34,8 @@ The current scope covers LINE static stickers, Big Stickers, emoji, message stic
 - Sticker selection, ordering, and main/tab image selection.
 - LINE static sticker, Big Stickers, emoji, message sticker, animated sticker, pop-up sticker, and effect sticker ZIP exports.
 - 9 PNG-only ZIP export and multi-platform ZIP exports for non-LINE use.
+- Cleanup strengths: `safe`/`balanced`/`aggressive` strict mattes plus `continuous`, which clears the hazy, desaturated green screens image models tend to produce. The GUI adds a collapsed advanced panel for per-threshold tuning.
+- Optional white sticker outline: `simple` (keyline) or `fancy` (keyline, feathered edge, drop shadow), keeping dark characters legible on LINE's dark chat themes.
 - ZIP structure validation and pre-export preview metadata.
 - Native Windows desktop GUI (a pywebview window rendering the HTML UI, backed by the Python core) plus a separate CLI executable.
 
@@ -90,7 +93,7 @@ python -m sticker_forge validate outputs\line-stickers.zip
 
 ## Roadmap
 
-The latest Release is **v0.18.0**; `main` is now the `v0.18.1` patch candidate. The local-first toolkit supports LINE stickers/Big Stickers/emoji/message/animated/pop-up/effect stickers and other platforms. The desktop GUI and CLI share one Python core. `python -m pytest` passes with 92 tests.
+The latest Release is **v0.22.0**. The local-first toolkit supports LINE stickers/Big Stickers/emoji/message/animated/pop-up/effect stickers and other platforms. The desktop GUI and CLI share one Python core. `python -m pytest` passes with 121 tests.
 
 ### ✅ Done
 
@@ -98,7 +101,7 @@ The latest Release is **v0.18.0**; `main` is now the `v0.18.1` patch candidate. 
 - Prompt templates (Chinese/English, text/no-text, green/magenta, risk reminders).
 - Image core: 3x3 split, cleanup, resize/padding, main/tab image, preview metadata.
 - Export: LINE static sticker, Big Stickers, emoji, message sticker, animated sticker, pop-up sticker, and effect sticker ZIPs, PNG-only ZIP, platform ZIPs, `validate` and `preview` commands.
-- PyInstaller Windows packaging and releases through `v0.18.0` (GitHub Releases with SHA256 checksums).
+- PyInstaller Windows packaging and releases; the current release is `v0.22.0` (a GitHub Release with a SHA256 checksum). Full version history is in [`CHANGELOG.md`](CHANGELOG.md).
 - Desktop drag-and-drop import (the webview's HTML dropzone); WebView2 runs with `private_mode`, an ephemeral profile, so nothing persistent is written.
 - User guide and reproducible local sample asset generator (generated images and ZIPs are not committed).
 - LINE manual-upload trial pack generator (generated images and ZIPs are not committed).
@@ -108,14 +111,17 @@ The latest Release is **v0.18.0**; `main` is now the `v0.18.1` patch candidate. 
 - A Windows/Computer Use validation runbook now separates automated, desktop GUI, release-asset, and LINE platform evidence.
 - GUI startup now honors the Python bridge locale, so `--lang en` opens the English UI; export actions wrap at normal window widths.
 - Dependency maintenance is automated with weekly Dependabot, monthly freshness, Python 3.11–3.14, and Windows EXE CI. Low-risk maintenance tools and GitHub Actions minor/patch updates are squash-merged only after a head-bound policy check and all required CI pass; image, GUI, packaging, and all major updates remain under human review.
+- Upstream checking is automated: a weekly job reports whether the fork source `yazelin/line-sticker-studio` has commits nobody has reviewed yet. The two repositories share no git history (this is a conceptual fork, rewritten in Python), so the tool only reports — whether to port anything stays a human call.
+- Cleanup gained the `continuous` matte and edge erosion; the GUI advanced panel allows custom thresholds, collapsed and opt-in by default.
+- White outline and drop shadow post-processing (`none`/`simple`/`fancy`) in both the CLI and GUI.
 
 Detailed version history is in [`CHANGELOG.md`](CHANGELOG.md); design decisions are in [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
 ### Next
 
-- Rebuild and validate the patched Windows ZIP with [`docs/WINDOWS_VALIDATION.md`](docs/WINDOWS_VALIDATION.md), then release `v0.18.1`.
-- Run `python examples\create_line_trial_packs.py`, then manually upload the generated non-infringing trial ZIPs to LINE Creators Market, especially for animated / pop-up / effect APNG stickers.
-- Cut `v1.0.0` only after the complete GUI export matrix, the main LINE upload trials, Windows release-asset checks, and documentation consistency review pass.
+- **Manual LINE platform trials — the main gap before `v1.0.0`.** Run `python examples\create_line_trial_packs.py`, then manually upload the generated non-infringing trial ZIPs to LINE Creators Market, especially to confirm APNG playback and looping for animated / pop-up / effect stickers. A local validator cannot stand in for the platform's own verdict.
+- Complete the full GUI export matrix per [`docs/WINDOWS_VALIDATION.md`](docs/WINDOWS_VALIDATION.md); the native save dialog does not hold focus reliably under Computer Use, so GUI ZIP writes are not yet marked PASS.
+- Cut `v1.0.0` only after both of the above pass.
 
 ### ⏳ Decided
 

@@ -7,6 +7,7 @@
 [![Tests: pytest](https://img.shields.io/badge/tests-pytest-blueviolet.svg)](tests)
 [![CI](https://github.com/SanHsien/sticker-forge/actions/workflows/ci.yml/badge.svg)](https://github.com/SanHsien/sticker-forge/actions/workflows/ci.yml)
 [![Dependency freshness](https://github.com/SanHsien/sticker-forge/actions/workflows/dependency-freshness.yml/badge.svg)](https://github.com/SanHsien/sticker-forge/actions/workflows/dependency-freshness.yml)
+[![Upstream check](https://github.com/SanHsien/sticker-forge/actions/workflows/upstream-check.yml/badge.svg)](https://github.com/SanHsien/sticker-forge/actions/workflows/upstream-check.yml)
 
 [繁體中文](README.md) | [English](README.en.md)
 
@@ -37,6 +38,8 @@ Local-first toolkit for making chat sticker packs: prompt templates, image clean
 
 - **提示詞**：依 LINE 規格產生 3x3 grid prompt，支援主題／角色／語氣／語言／8 句文字／8 個動作，有字與無字兩版，可複製微調。
 - **圖片加工**：匯入 3x3 grid 或多個動態 GIF/APNG、切圖、選圖、排序、green/magenta chroma-key 去背、尺寸與 padding 整理、main/tab image、逐張預覽。
+- **去背強度**：`safe`／`balanced`／`aggressive` 三種嚴格模式，加上 `continuous` 連續清理（專治 AI 生圖那種帶光暈、褪色的不純綠幕）。GUI 另有收合的進階面板可個別調門檻。
+- **白色描邊**：可選 `simple`（白邊）或 `fancy`（白邊＋羽化＋陰影），讓深色角色在 LINE 深色聊天主題下仍清楚可見。
 - **匯出**：LINE 靜態貼圖、Big Stickers、emoji、訊息貼圖、動態貼圖、pop-up stickers、effect stickers ZIP，9 張獨立 PNG 的一般貼圖 ZIP，多平台尺寸 ZIP，尺寸／張數／檔名／結構檢查、簡短上架說明。
 
 ## 使用入口
@@ -70,7 +73,7 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 
 ## 專案狀態與路線圖
 
-目前 Release 為 **v0.18.0**；`main` 已進入 `v0.18.1` 修正版候選。local-first 貼圖包工具支援 LINE 貼圖／Big Stickers／emoji／訊息貼圖／動態貼圖／pop-up／effect 及多平台，桌面 GUI（pywebview 載入 HTML）與 CLI 共用同一套 Python core，`python -m pytest` 92 passed。
+目前 Release 為 **v0.22.0**。local-first 貼圖包工具支援 LINE 貼圖／Big Stickers／emoji／訊息貼圖／動態貼圖／pop-up／effect 及多平台，桌面 GUI（pywebview 載入 HTML）與 CLI 共用同一套 Python core，`python -m pytest` 121 passed。
 
 ### ✅ 已完成
 
@@ -79,7 +82,7 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 - 圖片處理核心：3x3 切圖、去背、尺寸／padding、main/tab image、預覽 metadata 與選圖檢查。
 - 匯出：LINE 靜態貼圖／Big Stickers／emoji／訊息貼圖／動態貼圖／pop-up／effect ZIP、9 張 PNG-only ZIP、多平台 ZIP、`validate` 與 `preview` 指令、上架說明。
 - 桌面 GUI（pywebview HTML）與 CLI 共用 Python core（`--lang` 中英）。
-- PyInstaller Windows 打包與發行，已發行到 `v0.18.0`（正式 GitHub Release，含 SHA256 checksum）。
+- PyInstaller Windows 打包與發行；最新發行為 `v0.22.0`（正式 GitHub Release，含 SHA256 checksum）。完整版本紀錄見 [`CHANGELOG.md`](CHANGELOG.md)。
 - 桌面拖放匯入（webview 的 HTML dropzone 內建）；WebView2 用 `private_mode` 臨時 profile，不寫持久隱藏資料。
 - 中英文 README。
 - 使用者指南與本機範例素材產生器（不提交生成圖片或 ZIP）。
@@ -90,14 +93,17 @@ GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge
 - Windows／Computer Use 正式驗收 runbook 已建立，明確分開自動化、桌面 GUI、Release 資產與 LINE 平台證據。
 - GUI 啟動語系已由 Python bridge 決定，`--lang en` 可直接開英文介面；匯出工具列在一般視窗寬度會自動換行。
 - 依賴維護已自動化：每週 Dependabot、每月 freshness、Python 3.11–3.14 與 Windows exe CI；低風險維護工具及 GitHub Actions minor／patch 通過 head SHA 政策與完整 CI 後自動 squash merge，圖片／GUI／打包依賴及所有 major 維持人工審查。
+- 上游更新檢查已自動化：每週比對 fork 來源 `yazelin/line-sticker-studio` 有無尚未 review 的 commit。因為兩邊沒有共同 git history（概念上的 fork、Python 重寫），工具只負責回報，是否移植由人判斷。
+- 去背強度補上 `continuous` 連續清理與邊緣侵蝕；GUI 進階面板可自訂門檻，且預設收合、需另外啟用。
+- 白色描邊／陰影後製（`none`／`simple`／`fancy`），CLI 與 GUI 皆可用。
 
 詳細版本紀錄見 [`CHANGELOG.md`](CHANGELOG.md)；設計決策見 [`docs/DECISIONS.md`](docs/DECISIONS.md)。
 
 ### 下一步
 
-- 依 [`docs/WINDOWS_VALIDATION.md`](docs/WINDOWS_VALIDATION.md) 重建並驗收修正版 Windows ZIP，發布 `v0.18.1`。
-- 執行 `python examples\create_line_trial_packs.py` 產生非侵權 LINE 抽驗 ZIP，並到 LINE Creators Market 手動上傳抽驗，特別是動態／pop-up／effect APNG。
-- `v1.0.0` 正式版門檻：完成完整 GUI 匯出矩陣、主要 LINE 類型手動上傳抽驗、Windows Release 資產檢查與文件一致性覆核後再切。
+- **LINE 平台手動抽驗（`v1.0.0` 的主要缺口）**：執行 `python examples\create_line_trial_packs.py` 產生非侵權抽驗 ZIP，到 LINE Creators Market 手動上傳，特別是動態／pop-up／effect 的 APNG 播放與循環。本機 validator 不能代替平台判定。
+- 依 [`docs/WINDOWS_VALIDATION.md`](docs/WINDOWS_VALIDATION.md) 完成完整 GUI 匯出矩陣（原生存檔對話框在 Computer Use 下焦點不穩，尚未列為 PASS）。
+- `v1.0.0` 正式版門檻：上述兩項全部通過後再切。
 
 ### ⏳ 已定案
 

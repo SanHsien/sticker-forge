@@ -1,109 +1,104 @@
-# Project Review 2026-07-28
+# Project Review 2026-08-09
 
 ## 結論
 
 `sticker-forge` 的 Python core、CLI、pywebview GUI 與 Windows onedir 打包架構一致，
-local-first 邊界也仍成立：不架 hosted backend、不代管 AI API、不上傳使用者圖片、
+local-first 邊界仍然成立：不架 hosted backend、不代管 AI API、不上傳使用者圖片、
 不自動送 LINE 審核。
 
-目前 `main` 可繼續作為 `v0.18.x` 修正版候選，但還不能切 `v1.0.0`。2026-07-26 已重跑
-自動化、下載並檢查 `v0.18.0` Release 資產，也用 Computer Use 操作真實 Windows
-視窗。找到的 GUI 英文啟動與水平溢位問題已在 `f2fdbee`（2026-07-26）修復；
-修正版本機 PyInstaller build 與打包後英文 GUI 已通過，仍須發布新 GitHub Release，
-並完成各匯出類型與 LINE Creators Market 的平台抽驗。
+本輪（`v0.19.0`–`v0.22.0`）把上游 `yazelin/line-sticker-studio` 的 chroma tune 系統
+整套移植完成、補上白色描邊／陰影後製，並把上游更新檢查自動化。自動化測試
+121 passed，Windows 打包與打包後 exe 抽驗通過。
 
-2026-07-28 再比對 `yt_fetch`、`gpt-ai-assistant`、`voicetype` 與 `openshelf`
-的依賴維護流程後，本 repo 已補上 Dependabot、CI 與直接依賴 freshness 排程。
-後續再補 guarded merge：只自動處理四個 CI 維護工具與 GitHub Actions 的
-minor／patch；圖片、GUI、打包、未知範圍與 major 更新維持人工審查。
+**但還不能切 `v1.0.0`**，而且發現一個必須先處理的發行面問題：GitHub 上目前
+只剩 `v0.22.0` 一個 tag 與一個 Release，`v0.18.0`–`v0.21.0` 都不在遠端（本機 tag
+完好）。詳見「尚未通過」。
 
 ## 本輪實證
 
-- `HEAD` 與 `origin/main` 在 review 開始時同步於 `bfde266`，工作樹乾淨。
-- Python 3.14.6：GUI 修正前 73 passed；GUI 修正後 74 passed；依賴維護、
-  Windows code-page 與 guarded merge 政策測試新增後完成 92 passed。
-- `node --check app/app.js`、`python -m compileall`、
-  `git diff --check` 通過。
-- `examples/create_line_trial_packs.py` 產生 static、Big、emoji、message、
-  animated、pop-up、effect 七種 ZIP，本機 validator 全部 `OK`。
-- GitHub `v0.18.0` ZIP 下載與 Windows `Expand-Archive` 通過，共 243 entries。
-- Release ZIP SHA-256 與 sidecar 一致：
-  `720c9678f487ad4f15f9c4a7b24c0d6c9fdde5f110b16abc747fb7e379cb2b94`。
-- Release CLI `--help`、`--lang en --help` exit 0；GUI `--smoke` exit 0。
-- `v0.18.0` 真實 GUI 可啟動，繁中控制項、prompt 與 WebView2 視窗可見。
-- 修正版 source 以 `--lang en` 啟動後，英文 UI、預設欄位與英文 prompt 生效。
-- 修正版 source 匯入非侵權 3x3 範例後，自動切成 9 張、選取前 8 張，
-  預覽列出 8 張貼圖與 main/tab；全體去背流程完成。
-- 修正版 `packaging/build-windows.ps1` 通過：81 tests、PyInstaller 6.21.0、
-  GUI `--smoke`、CLI help 與 bundle 資源均正常。
-- 修正版 `%TEMP%\sticker-forge-pyinstaller-dist\sticker-forge\sticker-forge.exe
-  --lang en` 已用 Computer Use 驗證英文 UI 與英文 prompt 生效。
-- 最新穩定基線 Pillow 12.3.0、pytest 9.1.1、packaging 26.2、
-  pywebview 6.2.1、PyInstaller 6.21.0、setuptools 83.0.0、wheel 0.47.0
-  已通過本機完整 build；GitHub CI 再覆蓋 Python 3.11–3.14 與 Windows exe。
-- [Dependency freshness run 30374819214](https://github.com/SanHsien/sticker-forge/actions/runs/30374819214)
-  已確認八筆直接依賴全為 `OK`，且沒有 open Dependabot PR。
-- [CI run 30374819314](https://github.com/SanHsien/sticker-forge/actions/runs/30374819314)
-  已在 `1cde070` 通過 Python 3.11–3.14、92 tests 與 Windows Server 2025
-  exe build／smoke。
-- [Guarded merge run 30374963568](https://github.com/SanHsien/sticker-forge/actions/runs/30374963568)
-  已由上述 CI 的 `workflow_run` 自動觸發；token 只有 Actions write、Checks read、
-  Contents write、Pull requests write，無候選 PR 時正確安全退出。
-- repo 已設定 `default_workflow_permissions=write` 與
-  `can_approve_pull_request_reviews=true`，三個政策 label 已預建；GitHub Issues
-  仍維持關閉。
-- guarded merge 本機測試涵蓋安全工具、圖片／GUI／打包套件、major、混合群組、
-  超出範圍檔案、GitHub Actions 與未知 metadata；workflow 契約另檢查 trusted
-  base、head SHA、五個 CI job、rebase、squash 與 `--match-head-commit`。
+- `HEAD`、`origin/main` 與 `v0.22.0` 同步於 `006aee2`。
+- Python 3.14：`python -m pytest` **121 passed**。
+- `node --check app/app.js`、`git diff --check` 通過。
+- `packaging/build-windows.ps1` 通過：121 tests、PyInstaller、GUI `--smoke`、CLI help。
+- 打包後 exe 抽驗：`--tune {safe,balanced,aggressive,continuous}`、
+  `--outline {none,simple,fancy}` 都在；`_internal/app` 內含進階面板的
+  HTML／JS／CSS 資源。
+- 去背修正以合成圖與像素差驗證：
+  - despill gating——藍 `(30,60,220)`、紅 `(220,40,40)` 前景保色，背景仍去除。
+  - strict vs continuous——霧狀綠幕在 `balanced` 殘留（kept 20%），
+    `continuous`／`aggressive` 清乾淨（kept 19%）。
+  - 來源 alpha 合成——半透明紅前景維持 alpha 128，不再被拉成 255。
+  - erode——12 個 partial-alpha fringe 像素在 `erode=1` 歸零，角色不受損。
+- 描邊 CLI 端到端：`--outline fancy` 的 `01.png` 白色不透明像素 1527 → 20122，
+  且 `validate` 仍回報 `OK`（背景維持透明，未違反 LINE 規格）。
+- GUI 進階面板實機驗證：bridge 供 4 個 preset、預設未啟用、啟用後送出完整自訂
+  profile、`soft=0.39/hard=0.12` 正確夾成 `0.12`、無水平溢位、滑桿吃到
+  `balanced` 值（0.25 / 0.05 / 50 / 110 / 1.70 / 0）。
+- 自訂 profile 確實改變結果（同一張霧狀綠幕）：`balanced` 保留 14.0%、
+  寬鬆自訂 12.9%、保守自訂 34.6%——是 preset 到不了的範圍。
+- [Upstream check run 31269260345](https://github.com/SanHsien/sticker-forge/actions/runs/31269260345)
+  已在 GitHub 實際執行並成功；workflow 以 `Upstream commit check` 註冊為 active。
+- 上游檢查器以「把 baseline 倒退 12 個 commit」實測：正確把 `1b94d69`
+  列入需 review，並把 worker／campaigns／PWA 的 commit 歸入 known-irrelevant。
 
-## 已修復
+## 本輪修復
 
 | 問題 | 嚴重度 | 修復 |
 | --- | --- | --- |
-| `v0.18.0` 的 `sticker-forge.exe --lang en` 仍以繁中啟動 | P1 | `f2fdbee`（2026-07-26）讓前端以 Python bridge 的 initial locale 為準，並新增回歸測試。 |
-| GUI 匯出工具列在 1180px 視窗寬度形成水平捲軸 | P2 | `f2fdbee`（2026-07-26）讓 actions 自動換行；修正版 Windows 視窗已目視確認。 |
-| 非 UTF-8 Windows console 執行繁中 CLI help 會 `UnicodeEncodeError` | P1 | `e7ad2ab`（2026-07-28）保留目前 code page 並替換無法表示的字元；cp1252 source／exe 與遠端 Windows CI 均通過。 |
+| despill 套用到每個保留像素，非 key 前景被硬拉通道（藍→帶綠、紅→橘、藍在洋紅底下→黑） | P1 | `12cc80c`（`v0.19.0`）改為只對 `_key_score > 0` 的偏 key 像素去溢色。 |
+| partial-alpha 分支直接覆寫 alpha，忽略來源透明度；半透明 APNG 影格會變得更不透明 | P1 | `007408b`（`v0.20.0`）改為 `key_alpha × 來源 alpha` 合成。 |
+| 不純綠幕（AI 生圖的光暈／褪色背景）在 strict 模式整片保留，是 LINE 退件主因 | P1 | `007408b`（`v0.20.0`）新增 `continuous` preset。 |
+| 上游更新只靠人工想到才看 | P2 | `9d0bd44`（`v0.21.0`）新增每週 `upstream-check` workflow 與 baseline。 |
+| 深色角色在 LINE 深色聊天主題下看不清；prompt 要求白色描邊不可靠 | P2 | `9d0bd44`（`v0.21.0`）新增本機描邊／陰影後製。 |
+| `make_chroma_tune()` 與漸層去溢色在出貨 exe 中無使用者路徑（死碼） | P2 | `006aee2`（`v0.22.0`）新增 GUI 進階去背面板。 |
 
 ## 尚未通過
 
-### P1：正式 Release 尚未包含 `f2fdbee`
+### P1：GitHub 上只剩 `v0.22.0` 一個 tag 與 Release
 
-最新 Release 仍是 `v0.18.0`，其 Windows exe 帶有英文啟動 bug。本機修正版 build
-已通過，但仍必須發布 `v0.18.1` 或下一個版本，再從 GitHub Release 重新下載驗證，
-不能用本機 dist 代替正式資產。
+`git ls-remote --tags origin` 與 GitHub Releases API 都只回報 `v0.22.0`；
+`v0.18.0`–`v0.21.0`（以及更早的 `v0.1.0`–`v0.17.0`）都不在遠端。本機 23 個 tag
+完好，且指向的 commit 全都仍在 `origin/main` 歷史中，因此可以還原。
+
+還原前需要先確認原因，避免把使用者刻意移除的東西又推回去。在確認之前，
+不應對外宣稱這些版本「有正式 Release」。
 
 ### P1：LINE Creators Market 平台抽驗仍未完成
 
 本機 validator 不能代替 LINE 平台判定。靜態、Big、emoji、訊息、動態、pop-up、
-effect 都要以非侵權抽驗包做手動上傳；動態、pop-up、effect 還要確認 APNG
-播放、循環與平台預覽。
+effect 都要以非侵權抽驗包（`python examples\create_line_trial_packs.py`）手動
+上傳；動態、pop-up、effect 還要確認 APNG 播放、循環與平台預覽。這是 `v1.0.0`
+的主要缺口。
 
 ### P2：完整 GUI 匯出矩陣仍待真實檔案對話框驗證
 
-本輪已驗啟動、英文 locale、匯入、切圖、選取、預覽與去背。原生儲存對話框的
-焦點在 Computer Use 下不穩定，因此未把 GUI 寫出 ZIP 列為 PASS。要依
-[`docs/WINDOWS_VALIDATION.md`](docs/WINDOWS_VALIDATION.md) 逐項驗靜態大套組、
-Big、emoji、訊息、動態、pop-up、effect 與多平台輸出。
+已驗啟動、語系、匯入、切圖、選取、預覽、去背、進階面板與錯誤顯示。原生儲存
+對話框的焦點在 Computer Use 下不穩定，因此 GUI 寫出 ZIP 尚未列為 PASS。依
+[`docs/WINDOWS_VALIDATION.md`](docs/WINDOWS_VALIDATION.md) 逐項補齊。
 
 ### P2：WebView2 與 Windows 安全提示是外部環境 gate
 
 少數 Windows 10/11 可能缺 WebView2 Runtime；SmartScreen、Defender 或 runtime
-安裝提示也不能由自動測試代替。這些項目須由維護者在旁監督並記錄
-`PASS`、`FAIL` 或 `BLOCKED`。
+安裝提示不能由自動測試代替，須由維護者在旁監督並記錄 `PASS`／`FAIL`／`BLOCKED`。
 
 ### P2：guarded merge 尚待第一個真實低風險 Dependabot PR
 
 分類器、workflow 契約、遠端 CI 與無 PR queue 的安全退出都可自動驗證，但實際
-label、head-bound policy check、自動核准與 squash merge 必須等 Dependabot
-提出符合政策的 minor／patch PR 後才能取得端到端證據。在此之前不能宣稱真實
-PR lifecycle 已完成驗收。
+label、head-bound policy check、自動核准與 squash merge 必須等 Dependabot 提出
+符合政策的 minor／patch PR 後才能取得端到端證據。
+
+### P2：CLI 無自訂 tune 逃生口（刻意）
+
+自訂 profile 目前只有 GUI 進階面板與 Python API 能用。CLI 的價值在可重現的
+腳本化，逐張視覺微調本來就該在 GUI 做。若日後有腳本化需求，加單一
+`--tune-json`，不要加六個旗標。
 
 ## 發行判定
 
-- `v0.18.1`：修正版 build、GitHub Release 重新下載、繁中/英文 GUI 與靜態
-  匯出主流程通過後即可發布。
-- `v1.0.0`：上述項目，加上完整 GUI 匯出矩陣與 LINE Creators Market
-  七種類型手動上傳證據全部通過後才發布。
+- 下一個 patch／minor：本機驗證與打包已足夠，但需先解決上面的 Release／tag
+  問題，確保發行歷史一致。
+- `v1.0.0`：需完成 LINE Creators Market 七種類型手動上傳抽驗、完整 GUI 匯出
+  矩陣，並確認 Release 資產齊備後才發布。
 
 ## 不做
 

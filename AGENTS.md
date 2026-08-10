@@ -4,7 +4,7 @@
 
 ## 專案宗旨
 
-`sticker-forge` 是 local-first 的聊天貼圖包製作工具，支援 LINE 靜態貼圖、emoji、訊息貼圖、動態貼圖與多平台尺寸匯出。目標是做成使用者可下載的本機程式，例如 Windows `.exe`。
+`sticker-forge` 是 local-first 的聊天貼圖包製作工具，支援 LINE 靜態貼圖、Big Stickers、emoji、訊息貼圖、動態貼圖、pop-up、effect 與多平台尺寸匯出。已以 Windows `.exe` 發行（onedir，解壓即用）。
 
 核心流程：
 
@@ -28,14 +28,16 @@
 
 本 repo 已移除 upstream web app / Worker 的 vendored reference source。保留 `yazelin/line-sticker-studio` 的 MIT attribution 與歷史決策紀錄，但後續不再依賴 repo 內的 upstream reference 目錄。
 
-後續應往這個結構整理：
+目前結構：
 
-- `src/sticker_forge/`：本機工具主程式。
+- `src/sticker_forge/`：本機工具主程式（`spec` / `prompts` / `splitter` / `cleanup` / `decorate` / `exporter` / `preview` / `cli` / `webapi` / `gui`）。
 - `prompts/`：提示詞模板。
 - `packaging/`：exe 打包與發行流程。
 - `tests/`：切圖、去背、ZIP 檢查等測試。
 - `examples/`：範例說明，不放侵權素材。
-- `docs/`：架構、規劃、交接文件。
+- `app/`：pywebview GUI 載入的 HTML/CSS/JS，純畫面，透過 bridge 呼叫 Python。
+- `tools/`：維護腳本（依賴 freshness、Dependabot 分類、上游 commit 檢查）。
+- `docs/`：使用、開發、Windows 驗收、決策與 LINE 送審文件。
 
 ## 開發原則
 
@@ -55,11 +57,14 @@ git diff --check
 python -m pytest
 ```
 
-最小涵蓋：prompt CLI 輸出與渲染、3x3 切圖（含非整除尺寸）、green/magenta 去背、ZIP 結構與 validator、exe smoke test。
+最小涵蓋：prompt CLI 輸出與渲染、3x3 切圖（含非整除尺寸）、green/magenta 去背（含 strict／continuous、erode、自訂 profile）、白色描邊／陰影、ZIP 結構與 validator、`webapi` bridge、維護 workflow 契約、exe smoke test。
+
+上游 `yazelin/line-sticker-studio` 與本 repo **沒有共同 git history**，永遠不能直接 merge；只移植概念與修正。triage 後要更新 `tools/upstream_baseline.json` 並把結論寫進 `docs/DECISIONS.md`。
 
 ## 文件入口
 
 - `README.md` / `README.en.md`：使用者入口、產品方向與簡化路線圖。
+- `docs/USER_GUIDE.md`：一般使用者指南（安裝、各類型匯出、常見問題）。
 - `CHANGELOG.md`：版本變更紀錄。
 - `REVIEW.md`：最新專案 review。**修 bug 必回註（適用所有 AI agent：Claude、Codex 等，維護者 2026-07-19 指示）**：每修復 REVIEW.md 列出的問題，須回到對應項目標註修復 commit hash 與日期；修復過程中額外發現並修掉的 bug 也要補註。REVIEW 維持 latest-only，但修復狀態必須跟上現況。
 - `docs/DEVELOPMENT.md`：架構、本機指令、打包發行、legacy 邊界。

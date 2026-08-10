@@ -31,9 +31,11 @@ When redistributing this project or substantial parts of it:
 Current output targets:
 
 - LINE Creators Market static sticker packs (8/16/24/32/40).
+- LINE Big Stickers (396x660).
 - LINE emoji packs (8-40).
 - LINE message sticker packs (8/16/24).
 - LINE animated sticker packs (8/16/24 APNG stickers).
+- LINE pop-up and effect stickers (static stickers plus 480x480 APNG screen animations).
 - Other chat platforms via resize/reformat: Telegram, WhatsApp, Discord, and Signal.
 
 LINE Creators Market requirements remain the primary validation target unless the roadmap explicitly changes.
@@ -41,6 +43,8 @@ LINE Creators Market requirements remain the primary validation target unless th
 ## Credits and Acknowledgments
 
 `sticker-forge` is a fork of `yazelin/line-sticker-studio` (MIT). This repository keeps the required attribution above. The old upstream vendored reference source has been removed because the maintained application now lives in `src/sticker_forge/`, `app/`, and the project documentation; historical source context remains available through git history and the upstream repository link.
+
+Parts of the image pipeline are independent Python reimplementations of behaviour from that upstream MIT source — specifically the chroma-key tune system (strict/continuous mattes, edge erosion, graded despill) and the white outline / drop shadow decoration. These are derivative of MIT-licensed work by `yazelin` and are covered by the attribution and [`LICENSE`](LICENSE) above.
 
 Beyond the fork base, the projects below informed the design. **No source code from these projects is included in `sticker-forge`** — they are credited for concepts and publicly documented format specifications only, which were implemented independently. For the GPL / unlicensed projects, that license incompatibility with this repository's MIT license is an additional reason no code was copied.
 
