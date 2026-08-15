@@ -1,52 +1,55 @@
 ---
 name: sticker-forge
-description: 維護 SanHsien/sticker-forge。本專案目標是本機聊天貼圖包製作工具：產生提示詞，讓使用者自行生圖或動態 GIF/APNG，再匯回程式做切圖、去背、尺寸整理與 ZIP 匯出；不架 server、不代管 AI API，長期以 Windows exe 發行。
+description: 維護 SanHsien/sticker-forge：Windows-first、local-first 的聊天貼圖製作工具。使用者自行選擇 AI 生圖服務，再把 grid / PNG / GIF / APNG 匯回本機程式做切圖、去背、描邊、尺寸整理、驗證與 LINE／多平台匯出。
 ---
 
-# sticker-forge
+# Sticker Forge
 
-## 何時使用
+## 適用任務
 
-使用者要維護 `SanHsien/sticker-forge`，或開發本機貼圖包製作流程：
-
-- 產生給 ChatGPT / Gemini / 其他工具使用的貼圖 prompt。
-- 匯入使用者生成的 3x3 grid 或多個動態 GIF/APNG。
-- 切圖、選圖／排序、去背（strict／continuous、邊緣侵蝕、自訂 profile）、白色描邊／陰影、尺寸整理。
-- 匯出 LINE 靜態貼圖、Big Stickers、emoji、訊息貼圖、動態貼圖、pop-up、
-  effect 或多平台 ZIP。
-- 建立 Windows exe 打包流程。
+- 維護 prompt templates 與貼圖文案流程。
+- 處理 3×3 grid、PNG、GIF、APNG 匯入。
+- 維護切圖、去背、邊緣清理、描邊、尺寸與排序。
+- 維護 LINE 靜態／Big／emoji／訊息／動態／pop-up／effect export。
+- 維護 Telegram、WhatsApp、Discord、Signal export。
+- 維護 pywebview GUI、CLI、validator 或 Windows PyInstaller 發行。
 
 ## 不適用
 
-- 架 Cloudflare Worker、Turnstile、quota、Gemini proxy 或任何 hosted backend。
-- 代管使用者圖片或 API key。
-- 自動送審 LINE Creators Market。
-- 宣稱官方背書或保證上架通過。
-- 鼓勵侵權 IP、商標、真人肖像、政治、色情、仇恨、暴力、個資等高風險內容。
+- 建立 hosted backend、Cloudflare Worker、Turnstile quota 或集中式 AI proxy。
+- 代管 API key、token 或使用者圖片。
+- 自動操作 LINE Creators Market 送審。
+- 宣稱 LINE 官方、認證或保證平台審核結果。
 
-## 快速定位
+## 主要入口
 
-- `README.md` / `README.en.md`：產品方向與簡化路線圖。
-- `CHANGELOG.md`：版本變更紀錄。
-- `REVIEW.md`：最新專案 review。
-- `NOTICE.md`：fork 來源與授權聲明。
-- `AGENTS.md` / `CLAUDE.md`：AI 接手規則。
-- `src/sticker_forge/`：本機工具主程式。
-- `tools/`：維護腳本（依賴 freshness、Dependabot 分類、上游 commit 檢查）。
-- `prompts/`：提示詞模板。
-- `docs/DEVELOPMENT.md`：架構、本機指令、打包發行。
-- `docs/WINDOWS_VALIDATION.md`：Windows Release、Computer Use GUI 與 LINE 平台驗收。
-- `docs/DECISIONS.md`：決策紀錄。
-- `docs/USER_GUIDE.md`：一般使用者指南。
-- `docs/LINE_SUBMISSION.md`：LINE 手動上架與送審說明。
-- `app/`：pywebview 載入的本機 HTML GUI。
-- `packaging/`：PyInstaller 打包與 release 腳本。
+- `README.md` / `README.en.md`：產品首頁。
+- `AGENTS.md`：主要維護規則與硬性邊界。
+- `src/sticker_forge/`：Python core、CLI 與 GUI bridge。
+- `app/`：pywebview 前端。
+- `prompts/`：prompt templates。
+- `packaging/`：Windows build / smoke test。
+- `tests/`：回歸測試。
+- `docs/USER_GUIDE.md`：使用說明。
+- `docs/DEVELOPMENT.md`：架構與開發。
+- `docs/WINDOWS_VALIDATION.md`：Windows / LINE 實機驗收。
+- `docs/LINE_SUBMISSION.md`：LINE 手動送審。
+- `NOTICE.md`：MIT fork 來源與 attribution。
 
-## 完成回報
+## 工作規則
 
-回報時列出：
+- 一般修改使用 branch → PR → CI → merge。
+- 圖片處理與 export 規則放在 Python core，不在 JavaScript 複製第二套。
+- 改圖片處理、ZIP 結構、validator 或 GUI bridge 時補測試。
+- 純文件或 metadata 調整不需要 bump version / Release。
+- 測試不要使用真實 secrets、個人圖片或生成 ZIP。
+- 上游 `yazelin/line-sticker-studio` 只選擇性移植適合 local-first 方向的概念／修正，不把 hosted Worker 路線帶回來。
 
-- 修改了哪些檔案。
-- 是否改到產品方向、prompt、圖片處理、ZIP 規格或打包流程。
-- 執行過哪些驗證。
-- 是否仍引用 legacy web/worker 內容或已重新引入 hosted backend 方向。
+## 最小驗證
+
+```powershell
+git diff --check
+python -m pytest
+```
+
+Windows GUI、packaging 或 LINE 特殊格式需要額外實機判定時，依 `docs/WINDOWS_VALIDATION.md` 執行並只回報實際完成的驗證。
