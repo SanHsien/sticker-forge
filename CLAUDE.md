@@ -1,46 +1,46 @@
 # CLAUDE.md
 
-給 Claude Code 在本專案工作時的指引。主要規則同 [`AGENTS.md`](AGENTS.md)。
+本檔補充 Claude Code 在 **SanHsien/sticker-forge** 工作時的快速指引；共通規則以 [`AGENTS.md`](AGENTS.md) 為準。
 
-## 專案定位
+## 產品定位
 
-`sticker-forge` 是本機聊天貼圖包製作工具，支援 LINE 靜態貼圖、Big Stickers、emoji、訊息貼圖、動態貼圖、pop-up、effect 與多平台尺寸匯出，使用 CLI + pywebview GUI 共用 Python core，並以 Windows `.exe` 發行。
+Sticker Forge 是 Windows-first、local-first 的聊天貼圖製作工具。使用者自行在外部 AI 服務產圖，再把 grid / PNG / GIF / APNG 匯回本機程式，由 Python core 完成切圖、去背、描邊、尺寸整理、預覽、驗證與 LINE／多平台匯出。
 
-固定流程：
+固定邊界：
 
-1. 程式產生提示詞。
-2. 使用者自行用 ChatGPT / Gemini / 其他工具生圖或動態 GIF/APNG。
-3. 使用者把圖匯回程式。
-4. 程式本機切圖、去背、整理尺寸、打包 LINE 或其他平台 ZIP。
+- 不架 Sticker Forge hosted backend。
+- 不代管 AI API key / token。
+- 不上傳或保存使用者圖片。
+- 不自動操作 LINE Creators Market。
+- 不宣稱 LINE 官方或保證審核通過。
+- 保留 MIT `LICENSE`、`NOTICE.md` 與上游 attribution。
 
-不架 server，不代管 AI API，不做線上服務。
+## 架構
 
-## 不可違反
+- `src/sticker_forge/`：產品核心與 CLI / GUI bridge。
+- `app/`：pywebview HTML / CSS / JS UI；產品規則不要在 JS 重複實作。
+- `prompts/`：prompt templates。
+- `packaging/`：Windows PyInstaller build。
+- `tests/`：圖片處理、export、validator、bridge 與 workflow contract。
+- `docs/`：使用、開發、Windows / LINE 驗收與決策。
 
-- 不新增 Cloudflare Worker / Turnstile / quota / Gemini proxy 服務。
-- 不提交 secrets、使用者圖片、生成 ZIP 或本機暫存檔。
-- 不移除 MIT 授權與原作者 attribution。
-- 不宣稱 LINE 官方或保證上架通過。
-- 不做 LINE 自動送審。
+上游 [`yazelin/line-sticker-studio`](https://github.com/yazelin/line-sticker-studio) 只作 fork 來源與概念參考。不要把已移除的 Worker、Turnstile、quota 或集中式 Gemini proxy 重新接回正式產品。
 
-## 目前 legacy
+## 工作方式
 
-- upstream web app / Worker 的 vendored reference source 已移除。
-- 保留 `yazelin/line-sticker-studio` 的 MIT attribution 與歷史決策紀錄。
-- upstream Cloudflare `worker/`、campaign-checker CI、Turnstile、quota、Gemini proxy 不符合 local-first；不要重建。
+一般變更使用 **branch → PR → CI → merge**。優先最小修改並補針對性測試；純文件或 metadata 變更不用 bump version 或製造 Release。
 
-## 驗證
+程式修改至少驗證：
 
-- 程式修改至少跑 `git diff --check` 與 `python -m pytest`。
-- Windows Release、Computer Use GUI 與 LINE 平台抽驗依
-  [`docs/WINDOWS_VALIDATION.md`](docs/WINDOWS_VALIDATION.md) 執行。
-- 修復 [`REVIEW.md`](REVIEW.md) 的問題後，回註修復 commit 與日期。
-- 上游 `yazelin/line-sticker-studio` 與本 repo 無共同 git history，永遠不能直接
-  merge，只移植概念與修正；`upstream-check` workflow 只負責回報。triage 後更新
-  `tools/upstream_baseline.json` 並把結論寫進 [`docs/DECISIONS.md`](docs/DECISIONS.md)。
+```powershell
+git diff --check
+python -m pytest
+```
 
-## 回覆要求
+PR CI 另會跑 Python 3.11–3.14，並在 Windows 建置 / smoke-test EXE。GUI、packaging 或 LINE 特殊格式的實機判定依 [`docs/WINDOWS_VALIDATION.md`](docs/WINDOWS_VALIDATION.md) 執行。
 
-- 使用繁體中文。
-- 直接說修改、驗證、剩餘事項。
-- 不要把簡單任務寫成冗長架構分析。
+`REVIEW.md` 只有在修到既有 review 項目或新發現改變整體風險結論時更新；不要把它當成每個 bug 都必須回填的流水帳。
+
+## 回覆
+
+使用繁體中文，直接列出修改、驗證與仍存在的限制。沒有實際驗證過的 LINE 平台、Windows GUI 或 Release 行為，不要宣稱已通過。
