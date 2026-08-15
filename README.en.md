@@ -1,150 +1,112 @@
-# sticker-forge
+# Sticker Forge
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
-[![Local-first](https://img.shields.io/badge/local--first-no_backend-brightgreen.svg)](docs/DEVELOPMENT.md)
-[![LINE sticker packs](https://img.shields.io/badge/LINE-sticker_packs-00B900.svg)](prompts/line-static-3x3.md)
-[![Tests: pytest](https://img.shields.io/badge/tests-pytest-blueviolet.svg)](tests)
+[![Release](https://img.shields.io/github/v/release/SanHsien/sticker-forge?sort=semver)](https://github.com/SanHsien/sticker-forge/releases/latest)
 [![CI](https://github.com/SanHsien/sticker-forge/actions/workflows/ci.yml/badge.svg)](https://github.com/SanHsien/sticker-forge/actions/workflows/ci.yml)
-[![Dependency freshness](https://github.com/SanHsien/sticker-forge/actions/workflows/dependency-freshness.yml/badge.svg)](https://github.com/SanHsien/sticker-forge/actions/workflows/dependency-freshness.yml)
-[![Upstream check](https://github.com/SanHsien/sticker-forge/actions/workflows/upstream-check.yml/badge.svg)](https://github.com/SanHsien/sticker-forge/actions/workflows/upstream-check.yml)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
+[![Local-first](https://img.shields.io/badge/architecture-local--first-2E7D32.svg)](#privacy-and-product-boundaries)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-[繁體中文](README.md) | English
+**Turn AI-generated character art into deliverable chat sticker packs.**
 
-`sticker-forge` is a local-first toolkit for making chat sticker packs. It supports LINE static stickers, Big Stickers, emoji, message stickers, animated stickers, pop-up stickers, effect stickers, and exports for Telegram, WhatsApp, Discord and Signal sizes/formats. It does not run an AI server, host API keys, upload user images, or automate submission. Users generate sticker assets with ChatGPT, Gemini, or another image tool, then import them back into the local app for cleanup and export.
+[繁體中文](README.md) · English
 
-## Workflow
+Sticker Forge is a Windows-first, local-processing sticker production tool. It does not manage your AI accounts or upload images to a Sticker Forge server. Generate artwork with ChatGPT, Gemini, or another tool of your choice, then bring the result back into Sticker Forge for slicing, background cleanup, outlining, sizing, preview, validation, and multi-platform export.
 
-1. Choose a sticker theme, character, tone, text, and output settings in `sticker-forge`.
-2. Copy the generated prompt.
-3. Generate a 3x3 sticker grid, or multiple GIF/APNG files for animated stickers, in an external AI image tool.
-4. Import the generated image back into `sticker-forge`.
-5. Split, clean up, preview, select/reorder stickers, and prepare animated files locally.
-6. Export a ZIP for LINE Creators Market or another supported platform.
+## Quick start
 
-The current scope covers LINE static stickers, Big Stickers, emoji, message stickers, animated stickers, pop-up stickers, effect stickers, and multi-platform size exports. This project does not auto-submit to LINE and does not guarantee review approval.
+1. Download the Windows ZIP from [Latest Release](https://github.com/SanHsien/sticker-forge/releases/latest).
+2. Extract it and run `sticker-forge.exe`.
+3. Build a prompt in the GUI, or import images / GIF / APNG files you already generated.
+4. Slice, clean, order, decorate, preview, and validate everything locally.
+5. Export ZIPs or image assets for LINE or other chat platforms.
 
-## Features
+No hosted backend is required, and Sticker Forge never asks you to hand over an AI API key.
 
-- Traditional Chinese and English CLI/app language support.
-- 3x3 LINE sticker prompt templates, with text and no-text variants.
-- Local 3x3 grid splitting with 3% inset (handles non-divisible sizes like 1024×1024).
-- Multiple animated GIF/APNG import for LINE animated stickers.
-- Green or magenta chroma-key background cleanup with despill.
-- Sticker selection, ordering, and main/tab image selection.
-- LINE static sticker, Big Stickers, emoji, message sticker, animated sticker, pop-up sticker, and effect sticker ZIP exports.
-- 9 PNG-only ZIP export and multi-platform ZIP exports for non-LINE use.
-- Cleanup strengths: `safe`/`balanced`/`aggressive` strict mattes plus `continuous`, which clears the hazy, desaturated green screens image models tend to produce. The GUI adds a collapsed advanced panel for per-threshold tuning.
-- Optional white sticker outline: `simple` (keyline) or `fancy` (keyline, feathered edge, drop shadow), keeping dark characters legible on LINE's dark chat themes.
-- ZIP structure validation and pre-export preview metadata.
-- Native Windows desktop GUI (a pywebview window rendering the HTML UI, backed by the Python core) plus a separate CLI executable.
-
-## Entry Points
-
-| Entry | Notes |
-|-------|-------|
-| `sticker-forge.exe` | Desktop GUI: a pywebview window rendering the `app/` HTML UI; split/cleanup/export all run in the local Python core. No console. |
-| `sticker-forge-cli.exe` / `python -m sticker_forge` | Command line, `--lang zh-Hant\|en` |
-
-General usage is documented in [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md) (Traditional Chinese). Source install and packaging notes are in [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md). The Windows release and supervised Computer Use runbook is in [`docs/WINDOWS_VALIDATION.md`](docs/WINDOWS_VALIDATION.md) (Traditional Chinese).
-
-## Install From Source
-
-```powershell
-python -m pip install -e ".[dev,maintenance,packaging]"
-python -m pytest
-python -m sticker_forge --lang en prompt
-sticker-forge-gui --lang en
-```
-
-## Build Windows Executable
-
-```powershell
-.\packaging\build-windows.ps1
-```
-
-The script installs `.[dev,maintenance,packaging]`, runs tests, builds with PyInstaller, and smoke-tests `sticker-forge.exe --smoke` / `sticker-forge-cli.exe --help`. It uses `%TEMP%` for PyInstaller build/dist folders to avoid OneDrive file-locking in the repo directory. See [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) for details.
-
-## CLI
-
-```powershell
-python -m sticker_forge --lang en prompt
-python -m sticker_forge split examples\grid.png -o outputs\cells --inset-ratio 0.03
-python -m sticker_forge cleanup examples\cell.png -o outputs\cell-clean.png --chroma-key green
-python -m sticker_forge preview examples\grid.png --select 1,2,3,4,5,6,7,8
-python -m sticker_forge export examples\grid.png -o outputs\line-stickers.zip --select 1,2,3,4,5,6,7,8
-python -m sticker_forge stickers examples\grid.png -o outputs\transparent-stickers.zip
-python -m sticker_forge validate outputs\line-stickers.zip
-```
-
-## Project Structure
+## Core workflow
 
 ```text
-.
-├── src/sticker_forge/      # Local toolkit core
-├── app/                    # HTML/CSS/JS frontend assets loaded by the pywebview GUI
-├── prompts/                # Prompt templates
-├── packaging/              # Windows exe build scripts
-├── tests/                  # Automated tests
-├── examples/               # Input location, no infringing assets
-├── docs/                   # User, development, Windows validation, decision, and LINE submission docs
-├── README.md / README.en.md / CHANGELOG.md / REVIEW.md
+Theme / character / copy
+        │
+        ▼
+ Sticker Forge builds a prompt
+        │
+        ▼
+User chooses an external AI image tool
+        │
+        ▼
+Import grid / PNG / GIF / APNG
+        │
+        ▼
+Slice → clean → outline → order → preview → validate
+        │
+        ▼
+LINE / Telegram / WhatsApp / Discord / Signal
 ```
 
-## Roadmap
+This separation is intentional: image generation happens in the service you choose; Sticker Forge focuses on turning the results into production-ready assets. There is no hosted AI backend, shared quota, or centralized key management.
 
-The latest Release is **v0.22.0**. The local-first toolkit supports LINE stickers/Big Stickers/emoji/message/animated/pop-up/effect stickers and other platforms. The desktop GUI and CLI share one Python core. `python -m pytest` passes with 121 tests.
+## What it does
 
-### ✅ Done
+- **Prompt generation** — build editable sticker prompts from a character, theme, tone, language, text, and actions, with text and no-text variants.
+- **3×3 grid slicing** — split common AI sticker grids into individual assets, including non-even dimensions, selection, and ordering.
+- **Background and edge cleanup** — green / magenta chroma key, `safe` / `balanced` / `aggressive` / `continuous` modes, plus advanced GUI tuning.
+- **Outline and shadow** — `simple` white outline or `fancy` outline + feathering + shadow for better contrast on dark chat themes.
+- **LINE export** — static stickers, Big Stickers, emoji, message stickers, animated stickers, pop-up stickers, and effect stickers.
+- **Multi-platform export** — Telegram, WhatsApp, Discord, and Signal sizing and package structures.
+- **Validation and preview** — check dimensions, counts, filenames, ZIP structure, main / tab images, and per-sticker previews.
+- **GUI + CLI** — the desktop GUI and `python -m sticker_forge` / `sticker-forge` share the same Python core.
 
-- Local-first direction; the needed fork-source concepts have been folded into the local Python core, pywebview GUI, and project docs.
-- Prompt templates (Chinese/English, text/no-text, green/magenta, risk reminders).
-- Image core: 3x3 split, cleanup, resize/padding, main/tab image, preview metadata.
-- Export: LINE static sticker, Big Stickers, emoji, message sticker, animated sticker, pop-up sticker, and effect sticker ZIPs, PNG-only ZIP, platform ZIPs, `validate` and `preview` commands.
-- PyInstaller Windows packaging and releases; the current release is `v0.22.0` (a GitHub Release with a SHA256 checksum). Full version history is in [`CHANGELOG.md`](CHANGELOG.md).
-- Desktop drag-and-drop import (the webview's HTML dropzone); WebView2 runs with `private_mode`, an ephemeral profile, so nothing persistent is written.
-- User guide and reproducible local sample asset generator (generated images and ZIPs are not committed).
-- LINE manual-upload trial pack generator (generated images and ZIPs are not committed).
-- Signal platform export now includes `cover.png`, `signal_manifest.json`, and `validate --signal`.
-- LINE Big Stickers export now includes CLI / GUI support and `validate --big`.
-- LINE pop-up / effect stickers now include CLI/GUI export and `validate --popup` / `validate --effect`.
-- A Windows/Computer Use validation runbook now separates automated, desktop GUI, release-asset, and LINE platform evidence.
-- GUI startup now honors the Python bridge locale, so `--lang en` opens the English UI; export actions wrap at normal window widths.
-- Dependency maintenance is automated with weekly Dependabot, monthly freshness, Python 3.11–3.14, and Windows EXE CI. Low-risk maintenance tools and GitHub Actions minor/patch updates are squash-merged only after a head-bound policy check and all required CI pass; image, GUI, packaging, and all major updates remain under human review.
-- Upstream checking is automated: a weekly job reports whether the fork source `yazelin/line-sticker-studio` has commits nobody has reviewed yet. The two repositories share no git history (this is a conceptual fork, rewritten in Python), so the tool only reports — whether to port anything stays a human call.
-- Cleanup gained the `continuous` matte and edge erosion; the GUI advanced panel allows custom thresholds, collapsed and opt-in by default.
-- White outline and drop shadow post-processing (`none`/`simple`/`fancy`) in both the CLI and GUI.
+## Privacy and product boundaries
 
-Detailed version history is in [`CHANGELOG.md`](CHANGELOG.md); design decisions are in [`docs/DECISIONS.md`](docs/DECISIONS.md).
+Sticker Forge processes and exports images locally:
 
-### Next
+- It does not operate a Sticker Forge image-upload service.
+- It does not hold API keys for ChatGPT, Gemini, or other AI services.
+- User images, generated ZIPs, and local temporary data do not belong in this repository.
+- You choose the external image-generation service. Data sent to that service is governed by that service's own policies.
+- Sticker Forge does not automatically upload or submit packs to LINE Creators Market.
 
-- **Manual LINE platform trials — the main gap before `v1.0.0`.** Run `python examples\create_line_trial_packs.py`, then manually upload the generated non-infringing trial ZIPs to LINE Creators Market, especially to confirm APNG playback and looping for animated / pop-up / effect stickers. A local validator cannot stand in for the platform's own verdict.
-- Complete the full GUI export matrix per [`docs/WINDOWS_VALIDATION.md`](docs/WINDOWS_VALIDATION.md); the native save dialog does not hold focus reliably under Computer Use, so GUI ZIP writes are not yet marked PASS.
-- Cut `v1.0.0` only after both of the above pass.
+Sticker Forge is not an official LINE product and cannot guarantee platform approval. Users remain responsible for trademarks, copyright, likeness rights, and other content rights.
 
-### ⏳ Decided
+## LINE and multi-platform support
 
-- **Decided against** (see [`docs/DECISIONS.md`](docs/DECISIONS.md)): auto-update (needs an update server, conflicts with local-first) and an installer (the portable unzip-and-run zip fits local-first better than an install flow).
+| Type | Support |
+|---|---|
+| LINE static stickers | ✅ |
+| LINE Big Stickers | ✅ |
+| LINE emoji | ✅ |
+| LINE message stickers | ✅ |
+| LINE animated stickers | ✅ |
+| LINE pop-up / effect stickers | ✅ |
+| Telegram / WhatsApp / Discord / Signal | ✅ |
 
-## Credits
+The local validator checks known file rules but cannot replace LINE Creators Market's actual platform validation. See [`docs/LINE_SUBMISSION.md`](docs/LINE_SUBMISSION.md) and [`docs/WINDOWS_VALIDATION.md`](docs/WINDOWS_VALIDATION.md) for manual submission and validation.
 
-These projects informed the design as references only, not runtime dependencies. The fork source `yazelin/line-sticker-studio` is preserved through MIT attribution, external links, and git history; this repo no longer vendors upstream reference source. GPL / unlicensed projects can't be merged into an MIT repo, so they are credited for concepts only. Full credits in [`NOTICE.md`](NOTICE.md).
+## Run from source
 
-| Project | License | What it informed |
-| --- | --- | --- |
-| [LINE Creators Market](https://creator.line.me/) / [LINE Sticker Maker](https://creator.line.me/en/stickermaker/) | Official | Static sticker specs, pack sizes, transparency, submission flow. |
-| [LINE Big Stickers guideline](https://creator.line.me/en/guideline/bigsticker/) | Official spec | Big Stickers pack sizes, 396x660 maximum size, main/tab images, and transparent-background requirements. |
-| [LINE Pop-up Stickers guideline](https://creator.line.me/en/guideline/popupsticker/) | Official spec | Pop-up sticker 480x480 APNG, 5-20 frame, 1-3 loop, and pack-size requirements. |
-| [LINE Effect Stickers guideline](https://creator.line.me/en/guideline/effectsticker/) | Official spec | Effect sticker 480x480 APNG, 5-20 frame, 1-3 loop, and pack-size requirements. |
-| [Signal Stickers Support](https://support.signal.org/hc/en-us/articles/360031836512-Stickers) | Official support docs | Signal sticker size, format, cover, title, author, and emoji-assignment requirements. |
-| [yazelin/line-sticker-studio](https://github.com/yazelin/line-sticker-studio) | MIT (**fork source**) | 3x3 grid, chroma-key, ZIP structure, submission notes, UI flow; provenance kept through attribution and git history, no longer vendored. |
-| [laggykiller/sticker-convert](https://github.com/laggykiller/sticker-convert) | GPL-2.0 | The multi-platform export concept; implemented independently from public specs. |
-| [MarvNC/StampNyaa](https://github.com/MarvNC/StampNyaa) | Unlicensed | The "use LINE stickers on other platforms" desktop workflow. |
-| [ittner/signal-sticker-tool](https://github.com/ittner/signal-sticker-tool) | GPL-3.0 | Signal sticker-pack packaging (possible future feature). |
-| [suchipi/line-sticker-downloader](https://github.com/suchipi/line-sticker-downloader) | MIT | Fetching existing LINE packs (possible future import feature). |
-| [curegit/line-sticker-downloader](https://github.com/curegit/line-sticker-downloader) | WTFPL | Browser/CLI download and ZIP output patterns. |
+Requires Python 3.11+.
 
-## License
+```powershell
+python -m pip install -e ".[dev,gui]"
+python -m sticker_forge
+python -m pytest
+```
 
-This project keeps the original MIT License from the upstream fork. See [`LICENSE`](LICENSE) and [`NOTICE.md`](NOTICE.md).
+Windows releases are built with PyInstaller. CI tests Python 3.11–3.14 and also builds and smoke-tests the Windows EXE on a Windows runner.
+
+See [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) for architecture, packaging, and contributor details.
+
+## Documentation
+
+- [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md) — normal usage, export modes, and troubleshooting.
+- [`docs/LINE_SUBMISSION.md`](docs/LINE_SUBMISSION.md) — manual LINE Creators Market submission.
+- [`docs/WINDOWS_VALIDATION.md`](docs/WINDOWS_VALIDATION.md) — Windows GUI, Release, and platform validation.
+- [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) — architecture, tests, and packaging.
+- [`docs/DECISIONS.md`](docs/DECISIONS.md) — important product and engineering decisions.
+- [`CHANGELOG.md`](CHANGELOG.md) — version history.
+
+## Origin and license
+
+This repository is an MIT-licensed fork of [`yazelin/line-sticker-studio`](https://github.com/yazelin/line-sticker-studio). The upstream project started from a one-image → AI-generated LINE sticker workflow; this fork has moved toward a Windows local-first Python / pywebview production tool and removed the original web app / Worker vendored reference source.
+
+See [`NOTICE.md`](NOTICE.md) for upstream attribution, modification history, and third-party notices. Sticker Forge is released under the [MIT License](LICENSE).
