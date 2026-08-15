@@ -1,74 +1,73 @@
 # AGENTS.md
 
-給 Codex 與其他 AI coding agents 在本專案工作時的指引。
+本檔是 **SanHsien/sticker-forge** 的主要 AI coding agent 維護規則。產品與使用方式先讀 [`README.md`](README.md)；架構、打包與測試細節見 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)。
 
-## 專案宗旨
+## 專案定位
 
-`sticker-forge` 是 local-first 的聊天貼圖包製作工具，支援 LINE 靜態貼圖、Big Stickers、emoji、訊息貼圖、動態貼圖、pop-up、effect 與多平台尺寸匯出。已以 Windows `.exe` 發行（onedir，解壓即用）。
+Sticker Forge 是 Windows-first、local-first 的聊天貼圖製作工具：產生 prompt，讓使用者自行選擇 AI 生圖工具，再把 grid / PNG / GIF / APNG 匯回本機程式，完成切圖、去背、描邊、尺寸整理、預覽、驗證與 LINE／多平台匯出。
 
-核心流程：
+GUI（pywebview）與 CLI 共用 `src/sticker_forge/` 的 Python core；正式 Windows 發行版以 PyInstaller 打包。
 
-1. 程式提供提示詞模板。
-2. 使用者自行到 ChatGPT / Gemini / 其他生圖工具產生 3x3 貼圖 grid 或多個動態 GIF/APNG。
-3. 使用者把生成圖匯回本機程式。
-4. 程式在本機切圖、去背、整理尺寸、預覽、匯出 LINE 或其他平台貼圖 ZIP。
-
-本專案不打算架 server、不代管 AI API、不處理使用者圖片上傳服務。
+本 repo 是 [`yazelin/line-sticker-studio`](https://github.com/yazelin/line-sticker-studio) 的 MIT fork。來源與 attribution 以 [`NOTICE.md`](NOTICE.md) 為準。
 
 ## 硬性邊界
 
-- 不新增 hosted backend、Cloudflare Worker 服務、Turnstile quota 或集中式 Gemini proxy。
-- 不提交 API key、token、`.dev.vars`、使用者圖片、生成 ZIP 或本機暫存資料。
-- 不宣稱本工具為 LINE 官方、LINE 認證或保證上架通過。
-- 不移除 MIT 授權與原作者 `yazelin` attribution；見 `NOTICE.md`。
-- 不鼓勵生成侵害 IP、商標、真人肖像、政治人物、色情、仇恨、暴力、詐騙、個資等高風險內容。
-- 不做 LINE Creators Market 自動上架或送審自動化。
+- **不新增 hosted backend**：不要重建 Cloudflare Worker、Turnstile quota、集中式 Gemini proxy 或任何 Sticker Forge 圖片上傳服務。
+- **不代管 AI credential**：不要要求、保存或集中管理 ChatGPT / Gemini / 其他 AI 服務的 API key、token 或登入資料。
+- **不提交使用者內容**：圖片、生成 ZIP、真實人物素材、API key、token、本機 cache / temp 不得進 Git。
+- **不自動送審 LINE**：可產生符合已知規格的檔案與說明，但不自動操作 LINE Creators Market。
+- **不誇大平台保證**：不得宣稱 LINE 官方、認證或保證審核通過。
+- **保留授權與來源**：不得移除 MIT `LICENSE`、`NOTICE.md` 或上游 attribution。
+- **內容權利保守**：不要把侵權 IP、商標、真人肖像、政治人物、色情、仇恨、暴力、詐騙或個資內容包裝成「可安全送審」。
 
-## 目前狀態
+## 主要結構
 
-本 repo 已移除 upstream web app / Worker 的 vendored reference source。保留 `yazelin/line-sticker-studio` 的 MIT attribution 與歷史決策紀錄，但後續不再依賴 repo 內的 upstream reference 目錄。
-
-目前結構：
-
-- `src/sticker_forge/`：本機工具主程式（`spec` / `prompts` / `splitter` / `cleanup` / `decorate` / `exporter` / `preview` / `cli` / `webapi` / `gui`）。
-- `prompts/`：提示詞模板。
-- `packaging/`：exe 打包與發行流程。
-- `tests/`：切圖、去背、ZIP 檢查等測試。
-- `examples/`：範例說明，不放侵權素材。
-- `app/`：pywebview GUI 載入的 HTML/CSS/JS，純畫面，透過 bridge 呼叫 Python。
-- `tools/`：維護腳本（依賴 freshness、Dependabot 分類、上游 commit 檢查）。
-- `docs/`：使用、開發、Windows 驗收、決策與 LINE 送審文件。
+- `src/sticker_forge/`：prompt、切圖、cleanup、decorate、export、preview、CLI、GUI bridge。
+- `app/`：pywebview 載入的 HTML / CSS / JavaScript UI。
+- `prompts/`：貼圖 prompt templates。
+- `packaging/`：Windows PyInstaller build / smoke test。
+- `tests/`：Python core、webapi、workflow contract、packaging 回歸測試。
+- `tools/`：dependency freshness、Dependabot 分類、upstream 檢查。
+- `docs/`：使用、開發、LINE 送審、Windows 驗收與決策文件。
 
 ## 開發原則
 
-- 先把產品路線改清楚，再搬功能。
-- 優先保留可本地化的能力：prompt、切圖、去背、尺寸整理、ZIP 匯出。
-- Worker、quota、Turnstile、線上 API proxy 只作為歷史背景，不要當成新架構延伸。
-- 若選技術棧，優先考慮易打包 Windows exe 的方案。
-- 新增圖片處理邏輯時要補測試。
-- 使用繁體中文回覆與撰寫維護文件；程式命名維持英文。
+- 一般修改使用 **branch → PR → CI → merge**，不要直接在 `main` 做正常維護。
+- 優先最小修補；不要為了「整理架構」把穩定的圖片處理核心大規模重寫。
+- GUI 與 CLI 應共用 Python core；不要在 JavaScript 再複製第二套尺寸、去背或 export 規則。
+- 新增或修改圖片處理、ZIP 結構、validator、GUI bridge 行為時要補對應測試。
+- 純文件、註解或 metadata 調整不需要自動 bump version 或建立 Release。
+- 只有真的發行新版本時才同步 `pyproject.toml`、CHANGELOG、tag、Release 與對應資產。
+- `REVIEW.md` 是專案健康快照，不是每個 bug 的強制流水帳；只有修到既有 review 項目或新發現改變整體風險結論時才更新。
 
-## 驗證方向
+## 上游處理
 
-本機工具已建立（CLI + pywebview 桌面 GUI，共用同一套 Python core + PyInstaller 打包）。改動後至少確認：
+本 repo 與上游目前沒有可直接 merge 的共同工作流；`upstream-check` 只負責提醒有新 commit。
+
+需要採用上游內容時：
+
+1. 先判斷是否符合 local-first / Windows-first 方向。
+2. 只移植適用的概念或修正，不把 hosted Worker / quota / proxy 路線帶回來。
+3. 完成 triage 後依既有流程更新 `tools/upstream_baseline.json`；有重要產品取捨時記錄到 `docs/DECISIONS.md`。
+
+## 驗證
+
+一般程式修改至少：
 
 ```powershell
 git diff --check
 python -m pytest
 ```
 
-最小涵蓋：prompt CLI 輸出與渲染、3x3 切圖（含非整除尺寸）、green/magenta 去背（含 strict／continuous、erode、自訂 profile）、白色描邊／陰影、ZIP 結構與 validator、`webapi` bridge、維護 workflow 契約、exe smoke test。
+PR CI 會測試 Python 3.11–3.14，並在 Windows runner 建置與 smoke-test EXE。改到 GUI / packaging / LINE 特殊格式時，依 [`docs/WINDOWS_VALIDATION.md`](docs/WINDOWS_VALIDATION.md) 補相應實機驗證；沒有實際做過的平台驗證，不要宣稱已通過。
 
-上游 `yazelin/line-sticker-studio` 與本 repo **沒有共同 git history**，永遠不能直接 merge；只移植概念與修正。triage 後要更新 `tools/upstream_baseline.json` 並把結論寫進 `docs/DECISIONS.md`。
+## 文件責任
 
-## 文件入口
-
-- `README.md` / `README.en.md`：使用者入口、產品方向與簡化路線圖。
-- `docs/USER_GUIDE.md`：一般使用者指南（安裝、各類型匯出、常見問題）。
-- `CHANGELOG.md`：版本變更紀錄。
-- `REVIEW.md`：最新專案 review。**修 bug 必回註（適用所有 AI agent：Claude、Codex 等，維護者 2026-07-19 指示）**：每修復 REVIEW.md 列出的問題，須回到對應項目標註修復 commit hash 與日期；修復過程中額外發現並修掉的 bug 也要補註。REVIEW 維持 latest-only，但修復狀態必須跟上現況。
-- `docs/DEVELOPMENT.md`：架構、本機指令、打包發行、legacy 邊界。
-- `docs/WINDOWS_VALIDATION.md`：Windows Release、Computer Use GUI 與 LINE 平台驗收。
-- `docs/DECISIONS.md`：決策紀錄。
-- `docs/LINE_SUBMISSION.md`：LINE 手動上架與送審說明。
-- `NOTICE.md`：fork 來源、MIT 授權與第三方聲明。
+- `README.md` / `README.en.md`：產品首頁與核心使用流程。
+- `docs/USER_GUIDE.md`：一般操作與 troubleshooting。
+- `docs/DEVELOPMENT.md`：架構、測試、打包與維護。
+- `docs/WINDOWS_VALIDATION.md`：Windows GUI / Release / LINE 實機驗收。
+- `docs/LINE_SUBMISSION.md`：LINE 手動送審。
+- `docs/DECISIONS.md`：重要取捨。
+- `CHANGELOG.md`：已發行版本變更。
+- `NOTICE.md`：fork、授權與第三方來源。
