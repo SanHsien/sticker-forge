@@ -1,145 +1,112 @@
-# sticker-forge
+# Sticker Forge
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
-[![Local-first](https://img.shields.io/badge/local--first-no_backend-brightgreen.svg)](docs/DEVELOPMENT.md)
-[![LINE sticker packs](https://img.shields.io/badge/LINE-sticker_packs-00B900.svg)](prompts/line-static-3x3.md)
-[![Tests: pytest](https://img.shields.io/badge/tests-pytest-blueviolet.svg)](tests)
+[![Release](https://img.shields.io/github/v/release/SanHsien/sticker-forge?sort=semver)](https://github.com/SanHsien/sticker-forge/releases/latest)
 [![CI](https://github.com/SanHsien/sticker-forge/actions/workflows/ci.yml/badge.svg)](https://github.com/SanHsien/sticker-forge/actions/workflows/ci.yml)
-[![Dependency freshness](https://github.com/SanHsien/sticker-forge/actions/workflows/dependency-freshness.yml/badge.svg)](https://github.com/SanHsien/sticker-forge/actions/workflows/dependency-freshness.yml)
-[![Upstream check](https://github.com/SanHsien/sticker-forge/actions/workflows/upstream-check.yml/badge.svg)](https://github.com/SanHsien/sticker-forge/actions/workflows/upstream-check.yml)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
+[![Local-first](https://img.shields.io/badge/architecture-local--first-2E7D32.svg)](#隱私與產品邊界)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-[繁體中文](README.md) | [English](README.en.md)
+**把 AI 產出的角色圖，整理成可交付的聊天貼圖包。**
 
-Local-first toolkit for making chat sticker packs: prompt templates, image cleanup, slicing, and export for LINE, Telegram, WhatsApp, Discord and Signal.
+繁體中文 · [English](README.en.md)
 
-`sticker-forge` 是本機優先的貼圖包製作工具。支援 LINE 靜態貼圖、Big Stickers、emoji、訊息貼圖、動態貼圖、pop-up stickers、effect stickers，也能一鍵匯出成 Telegram、WhatsApp、Discord、Signal 的尺寸與格式。它不架 AI server、不代管 API key，也不收集使用者圖片；使用者自行用 ChatGPT、Gemini 或其他生圖工具產圖，再把圖片匯回本機程式加工與匯出。
+Sticker Forge 是 Windows 優先、本機處理的貼圖製作工具。它不替你經營 AI 帳號，也不把圖片送到自己的伺服器；你可以用 ChatGPT、Gemini 或其他生圖工具產圖，再把結果匯回 Sticker Forge，完成切圖、去背、描邊、尺寸整理、預覽與多平台匯出。
 
-## 目標流程
+## 快速開始
 
-1. 在 `sticker-forge` 選擇貼圖主題、語氣、角色設定、文字與輸出規格。
-2. 程式產生可複製的提示詞。
-3. 使用者自行到外部 AI 生圖工具產生 3x3 貼圖 grid，或為動態貼圖產生多個 GIF/APNG。
-4. 使用者把生成好的圖片匯回 `sticker-forge`。
-5. 程式在本機切圖、去背、整理尺寸、預覽。
-6. 程式匯出符合 LINE Creators Market 或其他平台規格的 ZIP。
+1. 從 [Latest Release](https://github.com/SanHsien/sticker-forge/releases/latest) 下載 Windows ZIP。
+2. 解壓後執行 `sticker-forge.exe`。
+3. 在 GUI 建立提示詞，或直接匯入已生成的圖片／GIF／APNG。
+4. 本機完成切圖、去背、排序、後製與格式檢查。
+5. 匯出 LINE 或其他聊天平台需要的 ZIP／圖片檔。
 
-目前範圍涵蓋 LINE 靜態貼圖、Big Stickers、emoji、訊息貼圖、動態貼圖、pop-up stickers、effect stickers 與多平台尺寸匯出。不做 LINE 自動上架，也不保證審核通過。
+不需要安裝服務端，也不需要把 AI API key 交給 Sticker Forge。
 
-## 產品原則
-
-- 本機處理：不新增 hosted backend。
-- 使用者自備 AI：不集中管理 ChatGPT / Gemini / 其他生圖服務的帳號或 API key。
-- 隱私優先：不收集、上傳或保存使用者圖片。
-- 可下載發行：長期目標是 Windows `.exe`。
-- 上架保守：提示詞與檢查流程要提醒使用者避開侵權、商標、真人肖像、政治、色情、暴力、仇恨、個資等高風險內容。
-
-## 功能範圍
-
-- **提示詞**：依 LINE 規格產生 3x3 grid prompt，支援主題／角色／語氣／語言／8 句文字／8 個動作，有字與無字兩版，可複製微調。
-- **圖片加工**：匯入 3x3 grid 或多個動態 GIF/APNG、切圖、選圖、排序、green/magenta chroma-key 去背、尺寸與 padding 整理、main/tab image、逐張預覽。
-- **去背強度**：`safe`／`balanced`／`aggressive` 三種嚴格模式，加上 `continuous` 連續清理（專治 AI 生圖那種帶光暈、褪色的不純綠幕）。GUI 另有收合的進階面板可個別調門檻。
-- **白色描邊**：可選 `simple`（白邊）或 `fancy`（白邊＋羽化＋陰影），讓深色角色在 LINE 深色聊天主題下仍清楚可見。
-- **匯出**：LINE 靜態貼圖、Big Stickers、emoji、訊息貼圖、動態貼圖、pop-up stickers、effect stickers ZIP，9 張獨立 PNG 的一般貼圖 ZIP，多平台尺寸 ZIP，尺寸／張數／檔名／結構檢查、簡短上架說明。
-
-## 使用入口
-
-| 入口 | 說明 |
-|------|------|
-| `sticker-forge.exe` | 桌面 GUI：pywebview 原生視窗載入 `app/` 的 HTML 介面，切圖/去背/匯出全由本機 Python core 處理，無 console，雙擊即用 |
-| `sticker-forge-cli.exe` / `python -m sticker_forge` | 命令列，支援 `--lang zh-Hant\|en` |
-
-GUI 與 CLI 共用同一套 Python core（`app/` 只負責畫面，透過 bridge 呼叫 Python）。一般使用流程見 [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md)，從原始碼安裝與打包步驟見 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)，正式 Windows／Computer Use 驗收見 [`docs/WINDOWS_VALIDATION.md`](docs/WINDOWS_VALIDATION.md)。
-
-## 目前狀態
-
-本 repo 來自 [`yazelin/line-sticker-studio`](https://github.com/yazelin/line-sticker-studio) 的 MIT fork。原專案 web app / Worker 的 vendored reference source 已移除；後續維護以本 repo 的 Python core、pywebview GUI、文件決策與 git history 為準。
-
-## 專案結構
+## 核心流程
 
 ```text
-.
-├── src/sticker_forge/      # 本機工具主程式
-├── app/                    # pywebview GUI 載入的 HTML/CSS/JS 前端資源
-├── prompts/                # 提示詞模板
-├── packaging/              # exe 打包設定與發行流程
-├── tests/                  # 自動化測試
-├── examples/               # 範例輸入位置，不放侵權素材
-├── docs/                   # 使用、開發、Windows 驗收、決策與 LINE 送審文件
-├── README.md / README.en.md / CHANGELOG.md / REVIEW.md
-├── AGENTS.md / CLAUDE.md / SKILL.md          # AI 接手指引
-└── NOTICE.md / LICENSE
+主題 / 角色 / 文案
+        │
+        ▼
+ Sticker Forge 產生 prompt
+        │
+        ▼
+使用者自行選擇 AI 生圖工具
+        │
+        ▼
+匯回 grid / PNG / GIF / APNG
+        │
+        ▼
+切圖 → 去背 → 描邊 → 排序 → 預覽 → 驗證
+        │
+        ▼
+LINE / Telegram / WhatsApp / Discord / Signal
 ```
 
-## 專案狀態與路線圖
+這個分工刻意把「生成圖片」和「整理可交付資產」拆開：Sticker Forge 專注在後者，因此沒有 hosted AI backend、共享 quota 或集中式金鑰管理。
 
-目前 Release 為 **v0.22.0**。local-first 貼圖包工具支援 LINE 貼圖／Big Stickers／emoji／訊息貼圖／動態貼圖／pop-up／effect 及多平台，桌面 GUI（pywebview 載入 HTML）與 CLI 共用同一套 Python core，`python -m pytest` 121 passed。
+## 能做什麼
 
-### ✅ 已完成
+- **提示詞產生**：依角色、主題、語氣、語言、文字與動作產生可複製的貼圖 prompt，支援有字／無字版本。
+- **3×3 grid 切圖**：把常見 AI 貼圖九宮格拆成獨立素材，處理非整除尺寸並支援選圖與排序。
+- **去背與邊緣修整**：green / magenta chroma key、`safe` / `balanced` / `aggressive` / `continuous` 模式，以及 GUI 進階參數。
+- **描邊與陰影**：`simple` 白邊或 `fancy` 白邊＋羽化＋陰影，改善深色聊天背景上的辨識度。
+- **LINE 匯出**：靜態貼圖、Big Stickers、emoji、訊息貼圖、動態貼圖、pop-up stickers、effect stickers。
+- **多平台匯出**：Telegram、WhatsApp、Discord、Signal 的尺寸與檔案結構。
+- **驗證與預覽**：檢查尺寸、張數、命名與 ZIP 結構，並提供 main / tab image 與逐張預覽資料。
+- **GUI + CLI**：桌面 GUI 與 `python -m sticker_forge` / `sticker-forge` 共用同一套 Python core。
 
-- 產品方向固定為 local-first；已把需要的 fork 來源概念收斂成本機 Python core、pywebview GUI 與規格文件。
-- prompt 模板：中英文、有字／無字、green/magenta 背景、高風險內容提醒。
-- 圖片處理核心：3x3 切圖、去背、尺寸／padding、main/tab image、預覽 metadata 與選圖檢查。
-- 匯出：LINE 靜態貼圖／Big Stickers／emoji／訊息貼圖／動態貼圖／pop-up／effect ZIP、9 張 PNG-only ZIP、多平台 ZIP、`validate` 與 `preview` 指令、上架說明。
-- 桌面 GUI（pywebview HTML）與 CLI 共用 Python core（`--lang` 中英）。
-- PyInstaller Windows 打包與發行；最新發行為 `v0.22.0`（正式 GitHub Release，含 SHA256 checksum）。完整版本紀錄見 [`CHANGELOG.md`](CHANGELOG.md)。
-- 桌面拖放匯入（webview 的 HTML dropzone 內建）；WebView2 用 `private_mode` 臨時 profile，不寫持久隱藏資料。
-- 中英文 README。
-- 使用者指南與本機範例素材產生器（不提交生成圖片或 ZIP）。
-- LINE 手動上傳抽驗包產生器（不提交生成圖片或 ZIP）。
-- Signal 多平台匯出已補 `cover.png`、`signal_manifest.json` 與 `validate --signal` 檢查。
-- LINE Big Stickers 已補 CLI / GUI 匯出與 `validate --big` 檢查。
-- LINE pop-up / effect stickers 已補 CLI、GUI 匯出與 `validate --popup` / `validate --effect` 檢查。
-- Windows／Computer Use 正式驗收 runbook 已建立，明確分開自動化、桌面 GUI、Release 資產與 LINE 平台證據。
-- GUI 啟動語系已由 Python bridge 決定，`--lang en` 可直接開英文介面；匯出工具列在一般視窗寬度會自動換行。
-- 依賴維護已自動化：每週 Dependabot、每月 freshness、Python 3.11–3.14 與 Windows exe CI；低風險維護工具及 GitHub Actions minor／patch 通過 head SHA 政策與完整 CI 後自動 squash merge，圖片／GUI／打包依賴及所有 major 維持人工審查。
-- 上游更新檢查已自動化：每週比對 fork 來源 `yazelin/line-sticker-studio` 有無尚未 review 的 commit。因為兩邊沒有共同 git history（概念上的 fork、Python 重寫），工具只負責回報，是否移植由人判斷。
-- 去背強度補上 `continuous` 連續清理與邊緣侵蝕；GUI 進階面板可自訂門檻，且預設收合、需另外啟用。
-- 白色描邊／陰影後製（`none`／`simple`／`fancy`），CLI 與 GUI 皆可用。
+## 隱私與產品邊界
 
-詳細版本紀錄見 [`CHANGELOG.md`](CHANGELOG.md)；設計決策見 [`docs/DECISIONS.md`](docs/DECISIONS.md)。
+Sticker Forge 的圖片處理與匯出在本機執行：
 
-### 下一步
+- 不架設 Sticker Forge 圖片上傳服務。
+- 不代管 ChatGPT、Gemini 或其他 AI 服務的 API key。
+- 不把使用者圖片、生成 ZIP 或本機暫存資料提交到本專案。
+- 使用哪個 AI 生圖服務由使用者自行決定；當你把內容交給第三方 AI 服務時，資料處理由該服務自己的政策決定。
+- 不自動上傳或送審 LINE Creators Market。
 
-- **LINE 平台手動抽驗（`v1.0.0` 的主要缺口）**：執行 `python examples\create_line_trial_packs.py` 產生非侵權抽驗 ZIP，到 LINE Creators Market 手動上傳，特別是動態／pop-up／effect 的 APNG 播放與循環。本機 validator 不能代替平台判定。
-- 依 [`docs/WINDOWS_VALIDATION.md`](docs/WINDOWS_VALIDATION.md) 完成完整 GUI 匯出矩陣（原生存檔對話框在 Computer Use 下焦點不穩，尚未列為 PASS）。
-- `v1.0.0` 正式版門檻：上述兩項全部通過後再切。
+本工具不是 LINE 官方產品，也不保證任何貼圖一定通過平台審核。商標、著作權、真人肖像與其他內容權利仍由使用者自行確認。
 
-### ⏳ 已定案
+## LINE 與多平台支援
 
-- **已決定不做**（見 [`docs/DECISIONS.md`](docs/DECISIONS.md)）：自動更新（需更新伺服器，違反 local-first）、installer（下載 zip 解壓即用，portable 比安裝流程更符合 local-first）。
+| 類型 | 支援 |
+|---|---|
+| LINE 靜態貼圖 | ✅ |
+| LINE Big Stickers | ✅ |
+| LINE emoji | ✅ |
+| LINE 訊息貼圖 | ✅ |
+| LINE 動態貼圖 | ✅ |
+| LINE pop-up / effect | ✅ |
+| Telegram / WhatsApp / Discord / Signal | ✅ |
 
-## 維護文件
+本機 validator 能檢查已知規格，但不能取代 LINE Creators Market 的實際平台判定。送審流程與手動抽驗見 [`docs/LINE_SUBMISSION.md`](docs/LINE_SUBMISSION.md) 與 [`docs/WINDOWS_VALIDATION.md`](docs/WINDOWS_VALIDATION.md)。
 
-- [`REVIEW.md`](REVIEW.md)：最新專案 review（僅保留最新版）。
-- [`CHANGELOG.md`](CHANGELOG.md)：版本變更紀錄。
-- [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md)：一般使用者指南。
-- [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)：架構、本機指令、打包發行、legacy 邊界。
-- [`docs/WINDOWS_VALIDATION.md`](docs/WINDOWS_VALIDATION.md)：Windows Release、Computer Use 與 LINE 平台實機驗收。
-- [`docs/DECISIONS.md`](docs/DECISIONS.md)：重要決策紀錄。
-- [`docs/LINE_SUBMISSION.md`](docs/LINE_SUBMISSION.md)：LINE Creators Market 手動上架與送審說明。
-- [`NOTICE.md`](NOTICE.md)：授權、fork 來源與第三方聲明。
-- [`AGENTS.md`](AGENTS.md) / [`CLAUDE.md`](CLAUDE.md) / [`SKILL.md`](SKILL.md)：AI 接手規則與硬性邊界。
+## 從原始碼執行
 
-## 其他可參考專案
+需求：Python 3.11+
 
-這些服務與專案只作概念、格式或流程參考，不是 `sticker-forge` 的執行依賴。fork 來源 `yazelin/line-sticker-studio` 以 MIT attribution、外部連結與 git history 保留來源脈絡；本 repo 不再保留 upstream vendored source。GPL／無授權的專案無法併入 MIT repo，只作概念參考。完整 credit 見 [`NOTICE.md`](NOTICE.md)。
+```powershell
+python -m pip install -e ".[dev,gui]"
+python -m sticker_forge
+python -m pytest
+```
 
-| 名稱 | 授權 | 可參考點 |
-| --- | --- | --- |
-| [LINE Creators Market](https://creator.line.me/) | 官方平台 | LINE 貼圖規格、套組張數、透明背景與送審流程。 |
-| [LINE Sticker Maker](https://creator.line.me/en/stickermaker/) | 官方手機 app | 手機製作與送審流程；本專案只保留手動送審說明，不代送審。 |
-| [LINE Big Stickers guideline](https://creator.line.me/en/guideline/bigsticker/) | 官方規格 | Big Stickers 的張數、396x660 最大尺寸、main/tab image 與透明背景要求。 |
-| [LINE Pop-up Stickers guideline](https://creator.line.me/en/guideline/popupsticker/) | 官方規格 | Pop-up stickers 的 480x480 APNG、5-20 影格、1-3 loops 與張數要求。 |
-| [LINE Effect Stickers guideline](https://creator.line.me/en/guideline/effectsticker/) | 官方規格 | Effect stickers 的 480x480 APNG、5-20 影格、1-3 loops 與張數要求。 |
-| [Signal Stickers Support](https://support.signal.org/hc/en-us/articles/360031836512-Stickers) | 官方支援文件 | Signal 貼圖尺寸、格式、封面、title、author 與 emoji 指派需求。 |
-| [yazelin/line-sticker-studio](https://github.com/yazelin/line-sticker-studio) | MIT（**fork 來源**） | 3x3 grid、chroma-key、ZIP 結構、上架說明與 UI 流程；來源脈絡保留於 attribution 與 git history，不再 vendored。 |
-| [laggykiller/sticker-convert](https://github.com/laggykiller/sticker-convert) | GPL-2.0 | 「一組貼圖匯出到多平台」的概念；本專案多平台匯出照公開規格自行實作。 |
-| [MarvNC/StampNyaa](https://github.com/MarvNC/StampNyaa) | 未宣告 | 「LINE 貼圖轉用到其他平台」的桌面流程。 |
-| [ittner/signal-sticker-tool](https://github.com/ittner/signal-sticker-tool) | GPL-3.0 | Signal 貼圖包打包（未來功能參考）。 |
-| [suchipi/line-sticker-downloader](https://github.com/suchipi/line-sticker-downloader) | MIT | 從 LINE Store 下載既有貼圖（未來匯入功能參考）。 |
-| [curegit/line-sticker-downloader](https://github.com/curegit/line-sticker-downloader) | WTFPL | browser / CLI 下載與 ZIP 輸出方式。 |
+Windows 發行版由 PyInstaller 建置；CI 同時測試 Python 3.11–3.14，並在 Windows runner 實際建置與 smoke-test EXE。
 
-## 授權
+開發、打包與架構細節見 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)。
 
-本專案保留原始 fork 的 MIT License。授權與完整 attribution／credit 見 [`LICENSE`](LICENSE) 與 [`NOTICE.md`](NOTICE.md)。
+## 文件
+
+- [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md)：一般操作、各類匯出與常見問題。
+- [`docs/LINE_SUBMISSION.md`](docs/LINE_SUBMISSION.md)：LINE Creators Market 手動送審流程。
+- [`docs/WINDOWS_VALIDATION.md`](docs/WINDOWS_VALIDATION.md)：Windows GUI、Release 與平台抽驗。
+- [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)：架構、測試與打包。
+- [`docs/DECISIONS.md`](docs/DECISIONS.md)：重要產品與工程取捨。
+- [`CHANGELOG.md`](CHANGELOG.md)：版本變更。
+
+## 專案來源與授權
+
+本 repo 是 [`yazelin/line-sticker-studio`](https://github.com/yazelin/line-sticker-studio) 的 MIT fork。原專案以「單張圖片 → AI 生成 LINE 貼圖」為起點；本 fork 已轉向 Windows local-first 的 Python / pywebview 工具，並移除原本 web app / Worker 的 vendored reference source。
+
+上游 attribution、修改脈絡與第三方聲明見 [`NOTICE.md`](NOTICE.md)。本專案依 [MIT License](LICENSE) 發布。
