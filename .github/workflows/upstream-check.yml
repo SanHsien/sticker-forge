@@ -1,0 +1,59 @@
+name: Upstream commit check
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - tools/check_upstream_commits.py
+      - tools/upstream_baseline.json
+      - .github/workflows/upstream-check.yml
+  schedule:
+    # Weekly on Monday at 11:00 Asia/Taipei.
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: upstream-check
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PYTHONUTF8: "1"
+      PYTHONIOENCODING: "utf-8"
+
+    steps:
+      - name: Check out main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: main
+          # Upstream shares no history with this repo, so the checker fetches
+          # the upstream branch itself; full history keeps `git log A..B` valid.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.14"
+
+      - name: Check upstream for unreviewed commits
+        id: upstream
+        run: >-
+          python tools/check_upstream_commits.py
+          --github-output
+          --output upstream-review-report.md
+
+      - name: Publish report
+        run: cat upstream-review-report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Mark upstream review as required
+        if: steps.upstream.outputs.needs_attention == 'true'
+        run: |
+          echo "::error::Upstream has commits that have not been reviewed. See the workflow summary, then update tools/upstream_baseline.json."
+          exit 1

@@ -1,0 +1,39 @@
+# Python / local app
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+*.egg-info/
+
+# Build / packaging
+build/
+dist/
+*.spec
+!packaging/*.spec
+*.exe
+*.msi
+*.zip
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Local test artifacts
+/tmp/
+test-output/
+outputs/
+generated/
+examples/generated/

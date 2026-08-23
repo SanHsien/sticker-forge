@@ -1,0 +1,9 @@
+{
+  "repo": "https://github.com/yazelin/line-sticker-studio.git",
+  "branch": "main",
+  "reviewed_through": "1c5d44887720a5f7434c50191022110ac3ff7283",
+  "reviewed_date": "2026-08-23",
+  "notes": "Reviewed through 515fe98 on 2026-08-09. Outcome recorded in docs/DECISIONS.md (2026-08-08 and 2026-08-09 entries): only the chroma tune system (1b94d69) was worth porting; PWA, Worker, promo and campaign work is out of scope by project rule. 2026-08-22 續審 515fe98 之後的 5 個 commit：全部落在 PWA shell／SEO／店面素材，本 fork 無對應層，全數不採用。其中 1c5d448 原本被判為需要審查，只因為截圖 .webp 放在 repo 根目錄而不是 assets/；分類器已補上副檔名規則。 2026-08-23 複查：1c5d448 之後 0 個新 commit，PR（0）與 issue（#62）水位未動，上游 3 條分支的獨佔 commit 仍是同兩條，結論不變。 2026-08-23（補）：上一輪 PR 盤點只查 --state open（當時 0 筆）。--state all 顯示上游有 55 個 PR、最大 #76，且全部 merged——沒有任何未合併就關閉的 PR，因此全部都已成為 main 的 commit，落在 commit 水位 1c5d448（= upstream/main tip）的稽核範圍內。水位改記 #76。",
+  "reviewed_pr_through": 76,
+  "reviewed_issue_through": 62
+}

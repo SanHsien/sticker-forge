@@ -1,0 +1,76 @@
+# LINE Creators Market 上架與送審
+
+本文件保留 upstream `line-sticker-studio` 的上架說明，改寫為 `sticker-forge` 的 local-first 流程。
+
+本專案不做自動送審、不代登入 LINE、不操作使用者帳號，也不保證審核通過。
+
+## 支援的 LINE 類型
+
+- 靜態貼圖：8／16／24／32／40 張。
+- Big Stickers：8／16／24／32／40 張。
+- LINE emoji：8–40 張。
+- 訊息貼圖：8／16／24 張，文字位置與字型在 LINE 編輯器設定。
+- 動態貼圖：8／16／24 張 APNG。
+- Pop-up stickers：8／16／24 張靜態貼圖 + 8／16／24 個 480 x 480 APNG 畫面動畫。
+- Effect stickers：8／16／24 張靜態貼圖 + 8／16／24 個 480 x 480 APNG 畫面動畫。
+
+## 手動上傳抽驗包
+
+正式切 `v1.0.0` 前，先用非侵權範例素材做一次 LINE Creators Market 上傳表單抽驗：
+
+```powershell
+python examples\create_line_trial_packs.py
+```
+
+產物會放在 `examples\generated\line-trial-packs\`，包含靜態、Big、emoji、訊息、動態、pop-up、effect 的 ZIP。這些 ZIP 只用來確認 LINE 上傳表單是否接受檔案結構與尺寸；腳本不會登入 LINE、不會自動送審，也不會把素材提交進 Git。
+
+## 靜態貼圖 ZIP 內容
+
+- `main.png`：主要圖片，240 x 240，對應 LINE Creators Market「主要圖片」欄。
+- `tab.png`：聊天室標籤圖，96 x 74，對應「聊天室標籤」欄。
+- `01.png` 到 `NN.png`：貼圖本體，370 x 320；`NN` 依套組張數為 08／16／24／32／40。
+- `README.txt`：本機產生的上架提醒。
+
+不同貼圖類型會有不同欄位與檔名要求：
+
+- Big Stickers：貼圖本體為 396 x 660。
+- LINE emoji：`001.png` 到 `0NN.png` 為 180 x 180，另有 `chat-thumbnail.png`。
+- 動態貼圖：`01.png` 到 `NN.png` 與 `main.png` 為 APNG，`tab.png` 為靜態 PNG。
+- Pop-up stickers：靜態 `01.png` 到 `NN.png`，另有 `popup-01.png` 到 `popup-NN.png` 與 `popup-main.png` APNG。
+- Effect stickers：靜態 `01.png` 到 `NN.png`，另有 `effect-01.png` 到 `effect-NN.png` 與 `effect-main.png` APNG。
+
+## 手動上架流程
+
+1. 到 `https://creator.line.me/zh-hant/`，用 LINE 帳號登入。
+2. 第一次使用時填寫創作者名稱、Email，並同意條款。
+3. 進入「個人頁面 → 我的貼圖」，點「新增 → Sticker（貼圖）」。
+4. 填寫三個區段：
+   - 「貼圖介紹」：貼圖標題、簡介、創作者名稱、著作權標示。
+   - 「貼圖管理 → 圖片編輯」：上傳 ZIP 或逐張上傳圖片。
+   - 「販售資訊」：價格、銷售區域、主要使用語言、特輯活動 tag。
+5. 在「貼圖管理 → 圖片編輯」可選：
+   - 方法 A：把 `sticker-forge` 產生的 ZIP 整包拖入「上傳壓縮檔 (ZIP)」。
+   - 方法 B：解壓後逐張上傳 `main.png`、`tab.png`、`01.png` 到 `NN.png`。
+6. 三個區段都填好後，點「申請販售」送審。
+7. LINE 回覆審核結果後，若通過且狀態變成「可發售」，再手動點「上架」。
+
+## Metadata 提醒
+
+- 貼圖標題：40 字內。
+- 貼圖簡介：160 字內。
+- 創作者名稱：50 字內。
+- 著作權標示：50 字內，限英數，例如 `© 2026 yourname`。
+
+## 特輯活動 tag
+
+若要投稿 LINE Creators Market 特輯活動，需在「販售資訊」最下面的「特輯活動」勾選對應活動 tag。
+
+原 upstream 曾保留活動清單與投稿截止資訊，但這類資訊會過期。`sticker-forge` 只保留流程，不把舊活動資料當成目前有效資訊。
+
+## 常見退件原因
+
+- 肖像權：使用他人照片或可識別真人但沒有授權。
+- 商標：包含 LINE 自家或其他品牌、藝人、卡通角色、商標圖案或品牌字樣。
+- 文字過多：貼圖以圖為主，整片都是字容易被退。
+- 解析度不符：貼圖本體需 370 x 320、主要圖片 240 x 240、聊天室標籤 96 x 74。
+- 背景不透明：LINE 需要透明 PNG；使用 chroma-key 背景時必須先去背。
