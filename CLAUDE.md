@@ -28,7 +28,7 @@ Sticker Forge 是 Windows-first、local-first 的聊天貼圖製作工具。使�
 
 ## 工作方式
 
-一般變更直接推 `origin/main`，不開功能分支、不開維護 PR（主人 2026-08-22 指示）；需要他人審查或高風險改動才退回 **branch → PR → CI → merge**。優先最小修改並補針對性測試；純文件或 metadata 變更不用 bump version 或製造 Release。
+一般變更直接推 `origin/main`，不開功能分支、不開維護 PR（2026-08-22 起）；需要他人審查或高風險改動才退回 **branch → PR → CI → merge**。優先最小修改並補針對性測試；純文件或 metadata 變更不用 bump version 或製造 Release。
 
 程式修改至少驗證：
 

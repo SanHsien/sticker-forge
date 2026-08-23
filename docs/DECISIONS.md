@@ -260,7 +260,7 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 - 相依：`pywebview`（Windows 用系統內建 WebView2，Win10/11 預裝）。已驗證 Python 3.14 可裝可跑。
 - 取捨：**放棄「純瀏覽器離線開 index.html」的能力**——前端現在需要 pywebview bridge，直接用 file:// 開會顯示「請用 sticker-forge.exe 開啟」。移除了 CLI `app` 指令與 `app_launcher.open_local_app`。
 - 驗證：`webapi.Api` 全 unit test（36 passed）＋實際驅動 pywebview 視窗確認 bootstrap/prompt/split/locale 端到端可用；exe 打包後的視窗需在 Windows 桌面實跑確認。
-- pywebview 選型見上一則 GUI 決策（主人 2026-07-07 指示「收斂成一套，直接做」）。
+- pywebview 選型見上一則 GUI 決策（維護者 2026-07-07 指示「收斂成一套，直接做」）。
 
 ## 2026-07-07：v0.6.0 GUI 細節與「已決定不做」再評估
 
@@ -320,11 +320,11 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 
 - **訊息貼圖**（creator.line.me/en/guideline/messagesticker/）：**8／16／24 張**、貼圖 max 370×320、main 240×240、tab 96×74、PNG 透明、**不需留邊（LINE 自動加邊）→ padding 0**。結構同一般貼圖（main/tab/NN），差別是張數 8/16/24＋padding 0＋送審類型。實作把 `export_line_zip` 參數化（`pack_sizes`、`readme`），`export_message_zip` 復用它（padding 0 spec、訊息貼圖 README）。CLI `message`（多 grid、`--select` 8/16/24、`--main/--tab`）、webapi `Api.export_message`、GUI「匯出訊息貼圖」按鈕。文字位置/字型於 LINE 編輯器設定，不在 ZIP。驗證：unit（結構/validate/拒絕 32）＋CLI＋live pywebview（8 張呼叫、7 張被擋）。55 passed。
 
-- **動態貼圖再評估**（creator.line.me/en/guideline/animationsticker/，主人問「最小 8 張是否可申請」）：查證結果 quantity 最小 **8（成立）**，但每張是 **APNG、5–20 影格、≤320×270、loop 4000ms**。→ **「最小 8 張」不是卡點；卡點是每張需 5–20 影格動畫，而本工具產靜態圖。** 要做動態貼圖必須「程序化動畫」（給靜圖套內建循環效果生成影格，Pillow 可寫 APNG）或改支援動畫來源匯入。這是設計取捨（canned 效果可能是 gimmick），待與主人確認方向再做，不硬上。DECISIONS 依主人指示可改，但實作卡在「動畫內容從何來」。
+- **動態貼圖再評估**（creator.line.me/en/guideline/animationsticker/，維護者問「最小 8 張是否可申請」）：查證結果 quantity 最小 **8（成立）**，但每張是 **APNG、5–20 影格、≤320×270、loop 4000ms**。→ **「最小 8 張」不是卡點；卡點是每張需 5–20 影格動畫，而本工具產靜態圖。** 要做動態貼圖必須「程序化動畫」（給靜圖套內建循環效果生成影格，Pillow 可寫 APNG）或改支援動畫來源匯入。這是設計取捨（canned 效果可能是 gimmick），待與維護者確認方向再做，不硬上。DECISIONS 依維護者指示可改，但實作卡在「動畫內容從何來」。
 
 ## 2026-07-07：LINE 動態貼圖 CLI（v0.12.0）
 
-主人選「匯入動畫來源」。先查證完整官方規格（creator.line.me/en/guideline/animationsticker/）：貼圖 **8/16/24、≤320×270、APNG、每格 5–20 影格、一邊 ≥270、loop 1–4 次總長 ≤4 秒**；**main 240×240 也是 APNG（動畫）**，**tab 96×74 靜態 PNG**；**所有影格相同會被拒**。
+維護者選「匯入動畫來源」。先查證完整官方規格（creator.line.me/en/guideline/animationsticker/）：貼圖 **8/16/24、≤320×270、APNG、每格 5–20 影格、一邊 ≥270、loop 1–4 次總長 ≤4 秒**；**main 240×240 也是 APNG（動畫）**，**tab 96×74 靜態 PNG**；**所有影格相同會被拒**。
 
 實作（採「動態 3×3 grid」輸入，最貼合本工具、重用切圖管線）：
 
@@ -333,11 +333,11 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 - CLI `animated`（**單一動態 grid → 8 張**；`--main/--tab`、去背選項）。
 - 驗證：unit（split→去背→APNG，`is_animated`/`n_frames`/尺寸一邊≥270≤320；拒絕 <5 影格）＋CLI＋小圖放大/大圖縮小尺寸實測。58 passed。
 
-**範圍**：v0.12.0 **CLI-only**。GUI 動畫匯入/預覽（APNG 在 webview 可動，但要避免和現有靜態 tile UI 糾纏，需獨立 flow）＋16/24（多 grid）為下一增量。若主人其實想要「多個 GIF 各一張」的輸入形狀，看成品再調整。
+**範圍**：v0.12.0 **CLI-only**。GUI 動畫匯入/預覽（APNG 在 webview 可動，但要避免和現有靜態 tile UI 糾纏，需獨立 flow）＋16/24（多 grid）為下一增量。若維護者其實想要「多個 GIF 各一張」的輸入形狀，看成品再調整。
 
 ## 2026-07-07：動態貼圖改「匯入多個 GIF」＋GUI（v0.13.0）
 
-**主人指正**：非專業使用者用 AI 生圖，結果是**每張一個動態 GIF**（一次生一個主體），不是「動態 3×3 grid」（那是專業/罕見產物）。v0.12.0 的 grid 輸入模型錯了。→ 改為**匯入多個動態 GIF/APNG（每個檔＝一張動態貼圖）**。這也順解 16/24（匯入更多檔即可，不用多 grid）。
+**維護者指正**：非專業使用者用 AI 生圖，結果是**每張一個動態 GIF**（一次生一個主體），不是「動態 3×3 grid」（那是專業/罕見產物）。v0.12.0 的 grid 輸入模型錯了。→ 改為**匯入多個動態 GIF/APNG（每個檔＝一張動態貼圖）**。這也順解 16/24（匯入更多檔即可，不用多 grid）。
 
 - `splitter.split_animated_grid` 換成 `load_animated_frames(source)`（讀單一動態檔→影格＋時間）。`export_animated_zip` 的 `durations` 改成每張各自的時間 list（不同檔可不同影格數）。
 - CLI `animated` 改 `nargs='+'`（8/16/24 個檔）、去 `--select`、`--main/--tab` 指向檔。

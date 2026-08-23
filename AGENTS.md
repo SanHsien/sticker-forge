@@ -32,7 +32,7 @@ GUI（pywebview）與 CLI 共用 `src/sticker_forge/` 的 Python core；正式 W
 
 ## 開發原則
 
-- 一般變更直接推 `origin/main`，不開功能分支、不開維護 PR（主人 2026-08-22 指示）。只有在需要他人審查、或改動風險高到值得先讓 CI 在 PR 上跑一輪時，才退回 **branch → PR → CI → merge**。
+- 一般變更直接推 `origin/main`，不開功能分支、不開維護 PR（2026-08-22 起）。只有在需要他人審查、或改動風險高到值得先讓 CI 在 PR 上跑一輪時，才退回 **branch → PR → CI → merge**。
 - 優先最小修補；不要為了「整理架構」把穩定的圖片處理核心大規模重寫。
 - GUI 與 CLI 應共用 Python core；不要在 JavaScript 再複製第二套尺寸、去背或 export 規則。
 - 新增或修改圖片處理、ZIP 結構、validator、GUI bridge 行為時要補對應測試。
@@ -76,7 +76,7 @@ PR CI 會測試 Python 3.11–3.14，並在 Windows runner 建置與 smoke-test 
 ## 對外邊界：PR 只打本 fork
 
 - **PR、push、release 一律指向 `SanHsien/sticker-forge`。** 對上游 `yazelin/line-sticker-studio` 開 PR、push 或發 release
-  需要主人在當次對話明確同意回貢；「fork 一份」「建開發環境」「比照其他 repo」都不是同意。
+  需要維護者在當次對話明確同意回貢；「fork 一份」「建開發環境」「比照其他 repo」都不是同意。
 - 根因是機制不是粗心：`gh` 在 fork clone 的**預設 repo 就是上游**（`gh repo set-default --view` 會回
   `yazelin/line-sticker-studio`），裸跑 `gh pr create` 必然打上去。每個 clone 先跑一次
   `gh repo set-default SanHsien/sticker-forge`。
