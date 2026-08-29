@@ -454,3 +454,37 @@ v0.17.0 已有 pop-up / effect 的核心與 CLI，但一般使用者不應被迫
 - `fix/selfhost-fonts`（ahead 1）：把 Google Fonts CDN 換成自架 woff2，動的是 `index.html`、`sw.js`
   與 `assets/fonts/`。**方向與本 fork 的離線優先一致，但本 fork 沒有 PWA 層**（無 `index.html`／
   `sw.js`），`grep` 也確認本 repo 沒有任何 `fonts.googleapis` 引用，因此沒有東西可移植。
+
+## 2026-08-29：上游檢查補上 PR 與 issue 兩個面向
+
+**決定**：`check_upstream_updates.py` 補上以 `--state all` 收集上游 PR／issue 的邏輯，
+`upstream-check.yml` 補 `GH_TOKEN: ${{ github.token }}`，新增 `tests/test_upstream_updates.py`。
+Baseline 既有的水位不動。
+
+**理由**：`docs/UPSTREAM.md` 早就寫著「四個面向都要看」，`upstream_baseline.json` 也記著
+`reviewed_pr_through` 與 `reviewed_issue_through`——但**沒有任何程式讀那兩個欄位**，檢查器只比對
+commit 水位。那兩個面向不是「查過沒發現」，是根本沒查，而每週的排程報告長得跟查過一樣綠。
+這是艦隊層級的問題：24 個 fork 裡 21 個都這樣（`SanHsien/repo-fleet-ops` 的 `docs/INCIDENTS.md`
+第十條）。參考實作是 `SanHsien/harness-guard`。
+
+三個性質，缺一不可：
+
+- **`--state all`**：只查 `open` 看不到「開了又關、沒有合併」的 PR，而那正是「上游拒收、但可能對
+  本 fork 有價值」的一類——已合併的遲早會經由 commit 抵達，被關掉的永遠不會。
+- **`gh` 失敗時回 `None` 不回 `[]`**，報告寫 `Not checked` 並 **fail closed**（exit 2）。
+  「沒查到」和「沒有」在綠色報告裡長得一樣，只有一個是真的。
+- **`GH_TOKEN`**：`gh` 在 Actions 裡沒有憑證就列舉不到，配上 fail closed 會讓紅燈的意思變成
+  「檢查器壞了」而不是「上游有東西」。
+
+**證據**：落地後實跑 `python tools/check_upstream_updates.py`，三個面向都印出水位與待辦數；
+本 repo 的 gate 全綠。
+
+**已知代價**：水位以上真的有東西時，每週的 upstream-check 會回 exit 1。那是它該做的事——先前的
+綠燈不是「沒有待辦」，是沒有人看。
+
+**觸發條件**：報告列出項目時逐筆讀 diff、把採用／略過理由寫進本檔，然後才推進 baseline 的水位。
+
+**本 repo 額外一點**：這支檢查器不是用 exit code 表達紅燈，而是寫 `needs_attention` 到
+GITHUB_OUTPUT 讓 workflow 判斷。所以 ticket 數要加進 `to_review`，`gh` 列舉不到時要併進
+`check_failed`——否則 commit 軸安靜的那幾週，報告照樣是綠的。ticket 沒有 relevant/irrelevant
+之分：本 fork 從沒 triage 過，水位以上每一筆都還要人讀。
