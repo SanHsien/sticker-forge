@@ -37,3 +37,6 @@ test-output/
 outputs/
 generated/
 examples/generated/
+
+# 上游檢查器產生的報告（workflow 讀它寫進 job summary），不進版控
+upstream-review-report.md
