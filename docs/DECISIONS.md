@@ -488,3 +488,31 @@ commit 水位。那兩個面向不是「查過沒發現」，是根本沒查，�
 GITHUB_OUTPUT 讓 workflow 判斷。所以 ticket 數要加進 `to_review`，`gh` 列舉不到時要併進
 `check_failed`——否則 commit 軸安靜的那幾週，報告照樣是綠的。ticket 沒有 relevant/irrelevant
 之分：本 fork 從沒 triage 過，水位以上每一筆都還要人讀。
+
+
+## 2026-08-30：上游 #77–#80 四筆全部不適用
+
+commit 水位 1c5d448 → 0506621（upstream/main tip）、PR 水位 76 → 80；issue 水位維持 62（實查為空）。
+commit 軸上的四筆（4c97c24／4ea049d／446b931／0506621）就是同樣那四個 PR，結論一致，理由在下面。
+
+### 共同的根因：本 fork 沒有 Worker 那一層
+
+上游是「瀏覽器 app + Cloudflare Worker」架構，`app.js` 用 `fetch()` 打自家 Worker，錯誤處理、
+Turnstile、配額都在那條線上。**本 fork 不是**：`app/app.js` 第 2 行就寫著
+`// Python core via window.pywebview.api (see src/sticker_forge/webapi.py)`，
+`grep "fetch(\|https://"` 在該檔 0 命中——它透過 pywebview 直接呼叫本機 Python，沒有 HTTP、
+沒有 Worker、沒有 Turnstile。`worker/` 早就列在
+`tools/check_upstream_commits.py` 的 `IRRELEVANT_PREFIXES` 裡。
+
+| PR | 上游做了什麼 | 為什麼不適用 |
+| --- | --- | --- |
+| `#77` | 新增 `errorMessage(resp)`，把 Worker 回的 JSON 錯誤取出那句人話，取不到才退回 HTTP 狀態碼 | 那個函式的參數是 `Response`，整段只在 `fetchGrid` 的 HTTP 路徑上用。本 fork 沒有 HTTP 呼叫，也沒有 `resp.status` 可讀 |
+| `#80` | 同一條線的收斂：上游錯誤只留一句話 | 同上 |
+| `#78` | README 的部署說明措辭改成「對外 IP 變動」＋ `worker/src/index.js` 註解 | 兩個檔案本 fork 都沒有對應內容；README 是本線自己的版本 |
+| `#79` | 撤掉誤提交進 README 的**管理員腳本說明**（`lss-reg`／`lss-code`、`ADMIN_TOKEN` 讀取路徑、Cloudflare D1 查詢） | **實查本 fork README／README.en：0 命中**。那段從來沒有進到本線，沒有東西要撤 |
+
+`#79` 特別查過而不是只看標題——它撤掉的是含管理員 token 讀取路徑的內容，如果本 fork 也有就要
+一起清掉。查過確認沒有。
+
+**觸發條件**：本 fork 若哪天加上遠端服務呼叫（目前架構是本機 Python core），`#77`／`#80` 的
+「錯誤訊息只給人話、不要把原始 JSON 丟到畫面上」這個做法值得回來取用。
