@@ -1,0 +1,186 @@
+name: Dependabot guarded merge
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "Dependabot PR number to recheck"
+        required: false
+        type: number
+
+permissions:
+  actions: write
+  checks: read
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: dependabot-merge-queue
+  cancel-in-progress: false
+
+jobs:
+  approve-and-merge:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+
+    steps:
+      - name: Select first eligible pull request
+        id: queue
+        run: |
+          pr_number="$(gh pr list \
+            --state open \
+            --author app/dependabot \
+            --label dependencies-auto-merge \
+            --json number \
+            --jq 'sort_by(.number) | .[0].number // empty')"
+          if [ -z "$pr_number" ]; then
+            echo "No eligible Dependabot pull request is waiting."
+            exit 0
+          fi
+          echo "pr_number=$pr_number" >> "$GITHUB_OUTPUT"
+
+      - name: Verify identity, head policy, and required CI
+        id: gate
+        if: steps.queue.outputs.pr_number != ''
+        env:
+          PR_NUMBER: ${{ steps.queue.outputs.pr_number }}
+        run: |
+          pr_json="$(gh pr view "$PR_NUMBER" \
+            --json author,baseRefName,headRefOid,labels,mergeable,mergeStateStatus,reviewDecision,state)"
+          author="$(jq -r '.author.login' <<< "$pr_json")"
+          base="$(jq -r '.baseRefName' <<< "$pr_json")"
+          state="$(jq -r '.state' <<< "$pr_json")"
+          if [[ "$author" != "app/dependabot" || "$base" != "main" || "$state" != "OPEN" ]]; then
+            echo "The pull request is not an open Dependabot PR targeting main."
+            exit 0
+          fi
+
+          for attempt in {1..6}; do
+            mergeable="$(jq -r '.mergeable' <<< "$pr_json")"
+            [[ "$mergeable" != "UNKNOWN" ]] && break
+            sleep 5
+            pr_json="$(gh pr view "$PR_NUMBER" \
+              --json author,baseRefName,headRefOid,labels,mergeable,mergeStateStatus,reviewDecision,state)"
+          done
+
+          head_sha="$(jq -r '.headRefOid' <<< "$pr_json")"
+          mergeable="$(jq -r '.mergeable' <<< "$pr_json")"
+          merge_state="$(jq -r '.mergeStateStatus' <<< "$pr_json")"
+          auto_label="$(jq -r '[.labels[].name == "dependencies-auto-merge"] | any' <<< "$pr_json")"
+          rebase_requested="$(
+            jq -r '[.labels[].name == "dependencies-rebase-requested"] | any' <<< "$pr_json"
+          )"
+
+          if [[ "$auto_label" != "true" ]]; then
+            echo "The pull request no longer has the auto-merge policy label."
+            exit 0
+          fi
+          if [[ "$mergeable" == "CONFLICTING" || "$merge_state" == "DIRTY" || "$merge_state" == "BEHIND" ]]; then
+            if [[ "$rebase_requested" != "true" ]]; then
+              gh pr edit "$PR_NUMBER" --add-label dependencies-rebase-requested
+              gh pr comment "$PR_NUMBER" --body "@dependabot rebase"
+            fi
+            echo "A rebase is required; wait for synchronize and fresh checks."
+            exit 0
+          fi
+          if [[ "$mergeable" != "MERGEABLE" ]]; then
+            echo "GitHub cannot confirm mergeability ($mergeable / $merge_state)."
+            exit 0
+          fi
+
+          policy_conclusion="$(gh api \
+            "repos/$GITHUB_REPOSITORY/commits/$head_sha/check-runs?per_page=100" \
+            --jq '
+              .check_runs
+              | map(select(.name == "Dependabot policy" and .app.slug == "github-actions"))
+              | sort_by(.started_at)
+              | reverse
+              | .[0].conclusion // "MISSING"
+            ')"
+          if [[ "$policy_conclusion" != "success" ]]; then
+            echo "No trusted successful policy check exists for this head ($policy_conclusion)."
+            exit 0
+          fi
+
+          checks_json="$(gh pr checks "$PR_NUMBER" --json name,state 2>/dev/null || true)"
+          required_checks=(
+            "Python 3.11"
+            "Python 3.12"
+            "Python 3.13"
+            "Python 3.14"
+            "Windows EXE"
+          )
+          for check_name in "${required_checks[@]}"; do
+            check_state="$(jq -r \
+              --arg name "$check_name" \
+              '[.[] | select(.name == $name)][0].state // "MISSING"' \
+              <<< "$checks_json")"
+            if [[ "$check_state" != "SUCCESS" ]]; then
+              echo "$check_name is not successful ($check_state)."
+              exit 0
+            fi
+          done
+
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+          echo "head_sha=$head_sha" >> "$GITHUB_OUTPUT"
+          echo "review_decision=$(jq -r '.reviewDecision // ""' <<< "$pr_json")" >> "$GITHUB_OUTPUT"
+
+      - name: Approve pull request
+        if: steps.gate.outputs.ready == 'true' && steps.gate.outputs.review_decision != 'APPROVED'
+        env:
+          PR_NUMBER: ${{ steps.queue.outputs.pr_number }}
+        run: >-
+          gh pr review "$PR_NUMBER" --approve
+          --body "Low-risk dependency update passed policy classification and all required CI checks."
+
+      - name: Prevent merge after head or policy changes
+        if: steps.gate.outputs.ready == 'true'
+        env:
+          EXPECTED_HEAD: ${{ steps.gate.outputs.head_sha }}
+          PR_NUMBER: ${{ steps.queue.outputs.pr_number }}
+        run: |
+          current_json="$(gh pr view "$PR_NUMBER" --json headRefOid,labels)"
+          current_head="$(jq -r '.headRefOid' <<< "$current_json")"
+          auto_label="$(jq -r '[.labels[].name == "dependencies-auto-merge"] | any' <<< "$current_json")"
+          manual_label="$(jq -r '[.labels[].name == "dependencies-manual-review"] | any' <<< "$current_json")"
+          test "$current_head" = "$EXPECTED_HEAD"
+          test "$auto_label" = "true"
+          test "$manual_label" = "false"
+
+          policy_conclusion="$(gh api \
+            "repos/$GITHUB_REPOSITORY/commits/$current_head/check-runs?per_page=100" \
+            --jq '
+              .check_runs
+              | map(select(.name == "Dependabot policy" and .app.slug == "github-actions"))
+              | sort_by(.started_at)
+              | reverse
+              | .[0].conclusion // "MISSING"
+            ')"
+          test "$policy_conclusion" = "success"
+
+      - name: Squash merge and delete branch
+        if: steps.gate.outputs.ready == 'true'
+        env:
+          PR_NUMBER: ${{ steps.queue.outputs.pr_number }}
+        run: |
+          gh pr merge "$PR_NUMBER" \
+            --squash \
+            --delete-branch \
+            --match-head-commit "${{ steps.gate.outputs.head_sha }}"
+
+          merged_json="$(gh pr view "$PR_NUMBER" --json state,closedAt)"
+          test "$(jq -r '.state' <<< "$merged_json")" = "MERGED"
+          test "$(jq -r '.closedAt // empty' <<< "$merged_json")" != ""
+
+      - name: Refresh freshness after merge
+        if: steps.gate.outputs.ready == 'true'
+        run: gh workflow run dependency-freshness.yml --ref main

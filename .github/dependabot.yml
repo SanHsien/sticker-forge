@@ -1,0 +1,52 @@
+version: 2
+updates:
+  # Image runtime, desktop GUI, tests, maintenance, and Windows packaging.
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:00"
+      timezone: "Asia/Taipei"
+    versioning-strategy: "increase"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "python"
+    groups:
+      ci-tooling-minor-and-patch:
+        patterns:
+          - "pytest"
+          - "packaging"
+          - "setuptools"
+          - "wheel"
+        update-types: ["minor", "patch"]
+      runtime-gui-and-packaging-minor-and-patch:
+        patterns:
+          - "pillow"
+          - "pywebview"
+          - "pyinstaller"
+        update-types: ["minor", "patch"]
+      major-updates:
+        patterns:
+          - "*"
+        update-types: ["major"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:00"
+      timezone: "Asia/Taipei"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "github-actions"
+    groups:
+      # init 與 analyze 必須跑同一個版本——拆開升會出現
+      # "Loaded a configuration file for version X, but running version Y"，
+      # 兩個 PR 各自都是紅的。放同一組讓它們一起升。
+      codeql-action:
+        patterns:
+          - "github/codeql-action*"
