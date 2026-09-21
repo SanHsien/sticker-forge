@@ -15,6 +15,7 @@ GUI（pywebview）與 CLI 共用 `src/sticker_forge/` 的 Python core；正式 W
 - **不新增 hosted backend**：不要重建 Cloudflare Worker、Turnstile quota、集中式 Gemini proxy 或任何 Sticker Forge 圖片上傳服務。
 - **不代管 AI credential**：不要要求、保存或集中管理 ChatGPT / Gemini / 其他 AI 服務的 API key、token 或登入資料。
 - **不提交使用者內容**：圖片、生成 ZIP、真實人物素材、API key、token、本機 cache / temp 不得進 Git。
+- **不上傳或保存使用者圖片**：產品本身（不只是 Git 提交範圍）不得將使用者圖片上傳或保存到本機以外的地方。
 - **不自動送審 LINE**：可產生符合已知規格的檔案與說明，但不自動操作 LINE Creators Market。
 - **不誇大平台保證**：不得宣稱 LINE 官方、認證或保證審核通過。
 - **保留授權與來源**：不得移除 MIT `LICENSE`、`NOTICE.md` 或上游 attribution。
@@ -84,6 +85,10 @@ PR CI 會測試 Python 3.11–3.14，並在 Windows runner 建置與 smoke-test 
   owner 必須是 `SanHsien`。不是就立刻 `gh pr close` 留言道歉說明，再對 origin 重開。
 - 2026-08-22 一天內兩個工作階段各誤開一個上游 PR（`lidge-jun/opencodex#2373`、
   `hamanpaul/paulsha-cortex#787`）。批次跑多個 repo 時最容易略過確認，而那正是兩次出事的場合。
+
+## 回覆慣例
+
+使用繁體中文，直接列出修改、驗證與仍存在的限制。沒有實際驗證過的 LINE 平台、Windows GUI 或 Release 行為，不要宣稱已通過。
 
 ## 依賴新鮮度：紅燈的兩條正當出口
 
