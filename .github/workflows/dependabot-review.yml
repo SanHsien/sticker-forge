@@ -1,0 +1,145 @@
+name: Dependabot risk review
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, ready_for_review, closed]
+
+permissions:
+  contents: read
+
+jobs:
+  sync-freshness:
+    if: >-
+      github.event.pull_request.user.login == 'dependabot[bot]' &&
+      github.repository == 'SanHsien/sticker-forge'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions:
+      actions: write
+      contents: read
+
+    steps:
+      - name: Refresh dependency freshness
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run dependency-freshness.yml --ref main
+
+  classify:
+    if: >-
+      github.event.pull_request.user.login == 'dependabot[bot]' &&
+      github.repository == 'SanHsien/sticker-forge' &&
+      github.event.action != 'closed' &&
+      github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      checks: write
+      contents: read
+      pull-requests: write
+
+    steps:
+      # pull_request_target must execute policy from the trusted base commit.
+      - name: Check out trusted policy
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+
+      - name: Read Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+
+      - name: Classify risk
+        id: policy
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          file_args=()
+          while IFS= read -r file; do
+            file_args+=(--changed-file "$file")
+          done < <(gh pr view "$PR_NUMBER" --json files --jq '.files[].path')
+
+          python tools/classify_dependabot_update.py \
+            --ecosystem "${{ steps.metadata.outputs.package-ecosystem }}" \
+            --dependency-type "${{ steps.metadata.outputs.dependency-type }}" \
+            --update-type "${{ steps.metadata.outputs.update-type }}" \
+            --dependency-names "${{ steps.metadata.outputs.dependency-names }}" \
+            --github-output \
+            "${file_args[@]}"
+
+      - name: Create policy check for current head
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          DECISION: ${{ steps.policy.outputs.decision }}
+          REASON: ${{ steps.policy.outputs.reason }}
+        run: |
+          if [[ "$DECISION" == "auto_merge" ]]; then
+            conclusion="success"
+            title="Policy approved; waiting for required CI"
+          else
+            conclusion="neutral"
+            title="Manual dependency review required"
+          fi
+
+          jq -n \
+            --arg name "Dependabot policy" \
+            --arg head_sha "$HEAD_SHA" \
+            --arg conclusion "$conclusion" \
+            --arg title "$title" \
+            --arg summary "$REASON" \
+            '{
+              name: $name,
+              head_sha: $head_sha,
+              status: "completed",
+              conclusion: $conclusion,
+              output: {title: $title, summary: $summary}
+            }' |
+            gh api --method POST \
+              "repos/$GITHUB_REPOSITORY/check-runs" \
+              --input -
+
+      - name: Apply policy label
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          DECISION_LABEL: ${{ steps.policy.outputs.label }}
+        run: |
+          current_labels="$(gh pr view "$PR_NUMBER" --json labels --jq '.labels[].name')"
+          for label in \
+            dependencies-auto-merge \
+            dependencies-manual-review \
+            dependencies-rebase-requested; do
+            if grep -Fxq "$label" <<< "$current_labels"; then
+              gh pr edit "$PR_NUMBER" --remove-label "$label"
+            fi
+          done
+          gh pr edit "$PR_NUMBER" --add-label "$DECISION_LABEL"
+
+      - name: Write policy summary
+        env:
+          DECISION: ${{ steps.policy.outputs.decision }}
+          REASON: ${{ steps.policy.outputs.reason }}
+          DEPENDENCIES: ${{ steps.metadata.outputs.dependency-names }}
+          DEPENDENCY_TYPE: ${{ steps.metadata.outputs.dependency-type }}
+          UPDATE_TYPE: ${{ steps.metadata.outputs.update-type }}
+        run: |
+          {
+            echo "## Dependabot policy"
+            echo
+            echo "- Decision: \`$DECISION\`"
+            echo "- Reason: $REASON"
+            echo "- Dependencies: \`$DEPENDENCIES\`"
+            echo "- Type: \`$DEPENDENCY_TYPE\`"
+            echo "- Update: \`$UPDATE_TYPE\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Start guarded merge gate
+        if: steps.policy.outputs.decision == 'auto_merge'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run dependabot-merge.yml \
+            --ref main \
+            -f pr_number="${{ github.event.pull_request.number }}"
