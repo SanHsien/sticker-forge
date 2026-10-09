@@ -25,7 +25,7 @@ gui = [
     "pywebview>=6.2.1",
 ]
 packaging = [
-    "pyinstaller>=6.22.2",
+    "pyinstaller>=6.22.3",
     "pywebview>=6.2.1",
 ]
 
