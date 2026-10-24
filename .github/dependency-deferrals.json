@@ -1,0 +1,8 @@
+{
+  "deferrals": {
+    "setuptools": {
+      "deferredLatest": "84.2.1",
+      "reason": "Build-only, pure-Python project. 84.1.0-84.2.1 change archive extraction hardening, abi3t extension tags (Python 3.15) and free-threaded extension suffixes; none apply to a package without extensions. Isolated builds already resolve the newest 84.x, so raising the floor would add no protection and only narrow what the declaration promises."
+    }
+  }
+}

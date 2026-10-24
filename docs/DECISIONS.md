@@ -1,5 +1,22 @@
 # Decisions
 
+## 2026-10-24：依賴新鮮度紅燈——Pillow 升到 13、setuptools 延後
+
+**決定**：`Pillow>=12.3.0` 改為 `Pillow>=13.0.0`；`setuptools>=84.0.0` 不動，改在
+`.github/dependency-deferrals.json` 記 `deferredLatest: 84.2.1` 與理由。
+
+**理由**：
+- Pillow 13.0.0 是 major。release notes 的移除項（Python 3.10、I mode 存 PNG、
+  `fromarray` 改 dtype 的 `mode`、`get_child_images`、`Image._show`、
+  `ExifTags.IFD.Makernote`、`_save_netpbm`）全部對照 `src/`、`tests/`，沒有使用；
+  `requires-python>=3.11` 與其 Python 下限一致。本專案會解碼使用者匯入的圖片，13.0.0 同時修了
+  一批 JPEG／TIFF／GIF／APNG 解碼器的安全問題，因此下限值得抬高。已在 Pillow 13.0.0 +
+  setuptools 84.2.1 的乾淨 venv 跑完整 pytest（138 passed）；Windows PyInstaller
+  build／smoke 與 Python 3.11–3.14 矩陣交給此 PR 的 CI 驗證。
+- setuptools 84.1.0–84.2.1 只動歸檔解壓防護、Python 3.15 的 abi3t 標籤與 free-threaded
+  副檔名；本專案是純 Python、沒有 extension，且隔離建置本來就會解析到最新 84.x。
+  抬高下限只會縮小宣告的相容範圍而沒有任何實益，所以走 deferral（PyPI 超過 84.2.1 會重新追問）。
+
 ## 2026-08-23（補）：PR 水位改記 #76——上一輪只查了 open
 
 **決定**：`reviewed_pr_through` 由 0 改為 76。
