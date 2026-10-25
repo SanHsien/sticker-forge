@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import functools
 import json
 import re
 from dataclasses import replace
 from io import BytesIO
 from pathlib import Path
 from typing import Sequence
-from zipfile import ZIP_DEFLATED, ZipFile
+from zipfile import ZIP_DEFLATED, BadZipFile, ZipFile
 
 from PIL import Image
 
@@ -691,6 +692,31 @@ def _is_fully_opaque(image: Image.Image) -> bool:
     return image.getchannel("A").getextrema()[0] == 255
 
 
+def _zip_validator(validate):
+    """Report a file that is not a ZIP as a validation error instead of raising."""
+
+    @functools.wraps(validate)
+    def wrapper(*args, **kwargs) -> list[str]:
+        try:
+            return validate(*args, **kwargs)
+        except BadZipFile as exc:
+            return [f"not a valid ZIP file: {exc}"]
+
+    return wrapper
+
+
+def _read_image(archive: ZipFile, name: str, errors: list[str]) -> Image.Image | None:
+    """Open and decode a ZIP member, recording an error when it is not an image."""
+    try:
+        image = Image.open(BytesIO(archive.read(name)))
+        image.load()
+    except (OSError, ValueError, SyntaxError):
+        errors.append(f"{name} is not a readable image")
+        return None
+    return image
+
+
+@_zip_validator
 def validate_line_zip(
     zip_path: str | Path,
     *,
@@ -728,18 +754,20 @@ def validate_line_zip(
         for name, size in expected_sizes.items():
             if name not in names:
                 continue
-            with archive.open(name) as file:
-                image = Image.open(file)
-                if image.size != size:
-                    errors.append(f"{name} size is {image.size[0]}x{image.size[1]}, expected {size[0]}x{size[1]}")
-                if image.format != "PNG":
-                    errors.append(f"{name} is not PNG")
-                if _is_fully_opaque(image):
-                    errors.append(f"{name} has no transparent background; LINE requires transparent stickers")
+            image = _read_image(archive, name, errors)
+            if image is None:
+                continue
+            if image.size != size:
+                errors.append(f"{name} size is {image.size[0]}x{image.size[1]}, expected {size[0]}x{size[1]}")
+            if image.format != "PNG":
+                errors.append(f"{name} is not PNG")
+            if _is_fully_opaque(image):
+                errors.append(f"{name} has no transparent background; LINE requires transparent stickers")
 
     return errors
 
 
+@_zip_validator
 def validate_emoji_zip(zip_path: str | Path) -> list[str]:
     """Return validation errors for a LINE custom emoji ZIP."""
     errors: list[str] = []
@@ -757,14 +785,15 @@ def validate_emoji_zip(zip_path: str | Path) -> list[str]:
             errors.append(f"missing emoji files: {', '.join(missing)}")
 
         for name in sorted(numbered & names):
-            with archive.open(name) as file:
-                image = Image.open(file)
-                if image.size != LINE_EMOJI_SIZE:
-                    errors.append(f"{name} size is {image.size[0]}x{image.size[1]}, expected 180x180")
-                if image.format != "PNG":
-                    errors.append(f"{name} is not PNG")
-                if _is_fully_opaque(image):
-                    errors.append(f"{name} has no transparent background; LINE requires transparent emoji")
+            image = _read_image(archive, name, errors)
+            if image is None:
+                continue
+            if image.size != LINE_EMOJI_SIZE:
+                errors.append(f"{name} size is {image.size[0]}x{image.size[1]}, expected 180x180")
+            if image.format != "PNG":
+                errors.append(f"{name} is not PNG")
+            if _is_fully_opaque(image):
+                errors.append(f"{name} has no transparent background; LINE requires transparent emoji")
 
     return errors
 
@@ -774,6 +803,7 @@ def validate_big_zip(zip_path: str | Path) -> list[str]:
     return validate_line_zip(zip_path, spec=LINE_BIG_SPEC)
 
 
+@_zip_validator
 def _validate_screen_animation_zip(zip_path: str | Path, *, animation_prefix: str) -> list[str]:
     errors: list[str] = []
 
@@ -808,20 +838,23 @@ def _validate_screen_animation_zip(zip_path: str | Path, *, animation_prefix: st
         for name, size in expected_sizes.items():
             if name not in names:
                 continue
-            with archive.open(name) as file:
-                image = Image.open(file)
-                if image.size != size:
-                    errors.append(f"{name} size is {image.size[0]}x{image.size[1]}, expected {size[0]}x{size[1]}")
-                if image.format != "PNG":
-                    errors.append(f"{name} is not PNG")
-                if _is_fully_opaque(image):
-                    errors.append(f"{name} has no transparent background")
+            image = _read_image(archive, name, errors)
+            if image is None:
+                continue
+            if image.size != size:
+                errors.append(f"{name} size is {image.size[0]}x{image.size[1]}, expected {size[0]}x{size[1]}")
+            if image.format != "PNG":
+                errors.append(f"{name} is not PNG")
+            if _is_fully_opaque(image):
+                errors.append(f"{name} has no transparent background")
 
         for name in sorted({f"{animation_prefix}-main.png", *animation_names} & names):
             data = archive.read(name)
             if len(data) > LINE_SCREEN_ANIM_MAX_BYTES:
                 errors.append(f"{name} is larger than 1 MB")
-            image = Image.open(BytesIO(data))
+            image = _read_image(archive, name, errors)
+            if image is None:
+                continue
             if image.format != "PNG":
                 errors.append(f"{name} is not PNG/APNG")
             width, height = image.size
@@ -860,6 +893,7 @@ def validate_effect_zip(zip_path: str | Path) -> list[str]:
     return _validate_screen_animation_zip(zip_path, animation_prefix="effect")
 
 
+@_zip_validator
 def validate_signal_zip(zip_path: str | Path) -> list[str]:
     """Return validation errors for a local Signal sticker ZIP."""
     errors: list[str] = []
@@ -876,6 +910,10 @@ def validate_signal_zip(zip_path: str | Path) -> list[str]:
             manifest = json.loads(archive.read("signal_manifest.json").decode("utf-8"))
         except (json.JSONDecodeError, UnicodeDecodeError) as exc:
             errors.append(f"signal_manifest.json is invalid: {exc}")
+            return errors
+
+        if not isinstance(manifest, dict):
+            errors.append("signal_manifest.json must be a JSON object")
             return errors
 
         title = str(manifest.get("title", "")).strip()
@@ -912,19 +950,18 @@ def validate_signal_zip(zip_path: str | Path) -> list[str]:
                 continue
             if not emoji:
                 errors.append(f"{filename} emoji is required")
-            with archive.open(filename) as file:
-                image = Image.open(file)
-                if image.size != PLATFORM_SPECS["signal"]["size"]:
-                    errors.append(
-                        f"{filename} size is {image.size[0]}x{image.size[1]}, expected 512x512"
-                    )
-                if image.format not in {"PNG", "WEBP"}:
-                    errors.append(f"{filename} must be PNG or WebP")
-                if _is_fully_opaque(image):
-                    errors.append(f"{filename} has no transparent background")
+            image = _read_image(archive, filename, errors)
+            if image is None:
+                continue
+            if image.size != PLATFORM_SPECS["signal"]["size"]:
+                errors.append(f"{filename} size is {image.size[0]}x{image.size[1]}, expected 512x512")
+            if image.format not in {"PNG", "WEBP"}:
+                errors.append(f"{filename} must be PNG or WebP")
+            if _is_fully_opaque(image):
+                errors.append(f"{filename} has no transparent background")
 
-        with archive.open("cover.png") as file:
-            cover = Image.open(file)
+        cover = _read_image(archive, "cover.png", errors)
+        if cover is not None:
             if cover.size != PLATFORM_SPECS["signal"]["size"]:
                 errors.append(f"cover.png size is {cover.size[0]}x{cover.size[1]}, expected 512x512")
             if cover.format != "PNG":
