@@ -36,7 +36,7 @@ def test_bootstrap_exposes_localised_data() -> None:
     assert zh["suggestions"]["character"] == SUGGESTIONS["zh-Hant"]["character"]
     assert en["suggestions"]["character"] == SUGGESTIONS["en"]["character"]
     assert zh["spec"]["stickerW"] == 370 and zh["spec"]["stickerH"] == 320
-    assert set(zh["chromaKeys"]) == {"green", "magenta"}
+    assert set(zh["chromaKeys"]) == {"green", "magenta", "blue", "cyan", "yellow"}
 
 
 def test_bootstrap_includes_presets() -> None:

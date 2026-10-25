@@ -3,7 +3,9 @@ from __future__ import annotations
 from PIL import Image
 
 from .spec import (
+    ChromaKey,
     ChromaTuneProfile,
+    chroma_channels,
     RGBColor,
     chroma_despill_strength,
     resolve_chroma_key,
@@ -57,17 +59,17 @@ def remove_chroma_background(
 
     despill_strength = chroma_despill_strength(profile)
     continuous = profile.mode == "continuous"
+    extremes = _key_extremes(chroma_key)
 
     for red, green, blue, alpha in source_pixels:
         alpha_out = alpha
         if key_name:
-            score = _key_score(red, green, blue, chroma_key.name)
+            pixel = (red, green, blue)
+            score = _key_score(extremes, pixel)
             # strict: only pixels passing the pure-key test may be keyed, so
             # uncertain foreground edges survive. continuous: key on score
             # alone, which cleans stubborn backgrounds harder.
-            keyable = True if continuous else _is_pure_key(
-                red, green, blue, chroma_key.name, profile
-            )
+            keyable = True if continuous else _is_pure_key(extremes, pixel, profile)
             key_alpha = 255
             if keyable and score > profile.hard:
                 key_alpha = 0
@@ -91,9 +93,9 @@ def remove_chroma_background(
 
         if alpha_out == 0:
             pixels.append((red, green, blue, 0))
-        elif key_name and _key_score(red, green, blue, chroma_key.name) > 0:
+        elif key_name and _key_score(extremes, (red, green, blue)) > 0:
             # Despill only pixels that actually lean toward the key colour
-            # (green/magenta spill on foreground edges). Opaque foreground that
+            # (key-colour spill on foreground edges). Opaque foreground that
             # does not lean key-ward keeps its original colour — otherwise a blue
             # or skin-tone pixel next to a magenta/green backdrop would be forced
             # toward the key channel (e.g. blue -> black under a magenta key).
@@ -103,7 +105,7 @@ def remove_chroma_background(
                         red,
                         green,
                         blue,
-                        active_key=key_name,
+                        key=chroma_key,
                         strength=despill_strength,
                     ),
                     alpha_out,
@@ -150,27 +152,31 @@ def _erode_fringe(image: Image.Image, passes: int) -> Image.Image:
     return working
 
 
-def _key_score(red: int, green: int, blue: int, key_name: str) -> float:
-    if key_name == "magenta":
-        return (min(red, blue) - green) / 255
-    return (green - max(red, blue)) / 255
+def _key_extremes(key: ChromaKey):
+    """Build ``pixel -> (weakest key channel, strongest other channel)``.
+
+    Built once per key (not per pixel): any colour with chroma occupies either
+    one channel (green, red, blue) or two (magenta, cyan, yellow).
+    """
+    key_idx, other_idx = chroma_channels(key.rgb)
+    if len(key_idx) == 1:
+        (a,), (b, c) = key_idx, other_idx
+        return lambda p: (p[a], max(p[b], p[c]))
+    (a, b), (c,) = key_idx, other_idx
+    return lambda p: (min(p[a], p[b]), p[c])
 
 
-def _is_pure_key(red: int, green: int, blue: int, key_name: str, profile) -> bool:
-    if key_name == "magenta":
-        magenta = min(red, blue)
-        return (
-            magenta >= profile.min_key
-            and green <= profile.max_other
-            and red >= green * profile.dominance
-            and blue >= green * profile.dominance
-        )
+def _key_score(extremes, pixel) -> float:
+    high, low = extremes(pixel)
+    return (high - low) / 255
+
+
+def _is_pure_key(extremes, pixel, profile) -> bool:
+    high, low = extremes(pixel)
     return (
-        green >= profile.min_key
-        and red <= profile.max_other
-        and blue <= profile.max_other
-        and green >= red * profile.dominance
-        and green >= blue * profile.dominance
+        high >= profile.min_key
+        and low <= profile.max_other
+        and high >= low * profile.dominance
     )
 
 
@@ -179,25 +185,24 @@ def _despill(
     green: int,
     blue: int,
     *,
-    active_key: str | None,
+    key: ChromaKey | None,
     strength: float = 1.0,
 ) -> RGBColor:
     """Pull the key colour out of a spilled pixel, `strength` of the way.
 
-    At strength 1.0 this is a full despill (magenta -> grey, green channel
-    replaced by the red/blue average). Conservative custom profiles use a lower
+    At strength 1.0 this is a full despill: each key-occupied channel is
+    replaced by the average of the other channels (magenta -> grey, green
+    channel -> red/blue average). Conservative custom profiles use a lower
     strength so a cautious matte does not still rewrite edge colour hard.
     """
-    if active_key is None:
+    if key is None:
         return red, green, blue
-    if active_key == "magenta":
-        return (
-            _clamp_byte(red + (green - red) * strength),
-            green,
-            _clamp_byte(blue + (green - blue) * strength),
-        )
-    target = (red + blue) / 2
-    return red, _clamp_byte(green + (target - green) * strength), blue
+    pixel = [red, green, blue]
+    key_idx, other_idx = chroma_channels(key.rgb)
+    target = sum(pixel[i] for i in other_idx) / len(other_idx)
+    for i in key_idx:
+        pixel[i] = _clamp_byte(pixel[i] + (target - pixel[i]) * strength)
+    return pixel[0], pixel[1], pixel[2]
 
 
 def _clamp_byte(value: float) -> int:

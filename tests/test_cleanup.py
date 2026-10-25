@@ -5,6 +5,7 @@ from PIL import Image
 
 from sticker_forge.cleanup import parse_hex_color, remove_chroma_background
 from sticker_forge.spec import (
+    resolve_chroma_key,
     chroma_despill_strength,
     make_chroma_tune,
     resolve_chroma_tune,
@@ -132,3 +133,86 @@ def test_make_chroma_tune_rejects_invalid_values() -> None:
         make_chroma_tune(erode=-1)
     with pytest.raises(ValueError):
         make_chroma_tune(mode="nonsense")
+
+
+@pytest.mark.parametrize(
+    ("key_name", "key_rgb", "foreground"),
+    [
+        ("blue", (0, 0, 255), (255, 0, 0, 255)),
+        ("cyan", (0, 255, 255), (255, 0, 0, 255)),
+        ("yellow", (255, 255, 0), (0, 0, 255, 255)),
+        ("#FF8000", (255, 128, 0), (0, 0, 255, 255)),
+    ],
+)
+def test_named_and_custom_keys_remove_background_and_keep_foreground(
+    key_name: str, key_rgb: tuple[int, int, int], foreground: tuple[int, int, int, int]
+) -> None:
+    image = Image.new("RGBA", (2, 1), (*key_rgb, 255))
+    image.putpixel((1, 0), foreground)
+
+    result = remove_chroma_background(image, key_name=key_name)
+
+    assert result.getpixel((0, 0))[3] == 0
+    assert result.getpixel((1, 0)) == foreground
+
+
+def test_new_keys_despill_edge_pixels_toward_other_channels() -> None:
+    # A cyan-leaning edge pixel (g, b above r) must lose its key channels.
+    image = Image.new("RGBA", (1, 1), (200, 230, 230, 255))
+
+    red, green, blue, alpha = remove_chroma_background(
+        image, key_name="cyan", tune="safe"
+    ).getpixel((0, 0))
+
+    assert alpha == 255
+    assert (red, green, blue) == (200, 200, 200)
+
+
+def test_green_and_magenta_results_are_unchanged_by_generalised_scoring() -> None:
+    # Pinned outputs recorded from the pre-generalisation green/magenta code:
+    # key pixel keyed, near-key pixel despilled, far foreground untouched.
+    green = Image.new("RGBA", (3, 1), (0, 255, 0, 255))
+    green.putpixel((1, 0), (100, 110, 100, 255))
+    green.putpixel((2, 0), (200, 40, 40, 255))
+    magenta = Image.new("RGBA", (3, 1), (255, 0, 255, 255))
+    magenta.putpixel((1, 0), (200, 190, 200, 255))
+    magenta.putpixel((2, 0), (20, 200, 20, 255))
+
+    cleaned_green = remove_chroma_background(green, key_name="green")
+    cleaned_magenta = remove_chroma_background(magenta, key_name="magenta")
+
+    assert [cleaned_green.getpixel((x, 0)) for x in range(3)] == [
+        (0, 255, 0, 0),
+        (100, 100, 100, 255),
+        (200, 40, 40, 255),
+    ]
+    assert [cleaned_magenta.getpixel((x, 0)) for x in range(3)] == [
+        (255, 0, 255, 0),
+        (190, 190, 190, 255),
+        (20, 200, 20, 255),
+    ]
+
+
+@pytest.mark.parametrize("value", ["#000000", "#FFFFFF", "#808080", "#C8C8C8"])
+def test_custom_key_without_chroma_is_rejected(value: str) -> None:
+    with pytest.raises(ValueError, match="no chroma"):
+        resolve_chroma_key(value)
+
+
+def test_custom_key_too_pale_or_malformed_is_rejected() -> None:
+    with pytest.raises(ValueError, match="not saturated"):
+        resolve_chroma_key("#FF9090")
+    with pytest.raises(ValueError, match="RRGGBB"):
+        resolve_chroma_key("#12345")
+
+
+def test_custom_key_resolves_with_prompt_fields() -> None:
+    key = resolve_chroma_key("#ff8000")
+
+    assert key.hex == "#FF8000"
+    assert key.rgb == (255, 128, 0)
+    assert "#FF8000" in key.label
+
+
+def test_unknown_plain_name_still_falls_back_to_green() -> None:
+    assert resolve_chroma_key("nonsense").name == "green"

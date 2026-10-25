@@ -19,6 +19,7 @@ const UI = {
     style: "風格",
     withText: "有字版",
     background: "背景色",
+    customKey: "自訂色…",
     importGrid: "匯入 3x3",
     addGrid: "加入 grid",
     clearTiles: "清空",
@@ -124,6 +125,7 @@ const UI = {
     style: "Style",
     withText: "Text version",
     background: "Background",
+    customKey: "Custom…",
     importGrid: "Import 3x3",
     addGrid: "Add grid",
     clearTiles: "Clear",
@@ -361,6 +363,18 @@ function slotValues(selector) {
   return Array.from(document.querySelectorAll(selector)).map((input) => input.value.trim());
 }
 
+// The Background select offers named key colours plus "custom", which reads a
+// #RRGGBB from the text field next to it. The backend validates the colour and
+// reports why an unusable one (black/white/grey, not saturated) is rejected.
+function chromaKeyValue() {
+  const value = $("chroma-key").value;
+  return value === "custom" ? $("chroma-key-custom").value.trim() : value;
+}
+
+function syncChromaKeyCustom() {
+  $("chroma-key-custom").hidden = $("chroma-key").value !== "custom";
+}
+
 async function renderPrompt() {
   const bridge = api();
   if (!bridge) return;
@@ -374,7 +388,7 @@ async function renderPrompt() {
     language: $("language").value,
     texts: slotValues(".slot-text"),
     actions: slotValues(".slot-action"),
-    chromaKey: $("chroma-key").value,
+    chromaKey: chromaKeyValue(),
   };
   try {
     $("prompt-output").value = await bridge.render_prompt(payload);
@@ -445,7 +459,7 @@ function resetAdvToPreset() {
 
 function options() {
   return {
-    keyName: $("chroma-key").value,
+    keyName: chromaKeyValue(),
     tune: tuneValue(),
     outline: $("cleanup-outline").value,
     padding: Number($("sticker-padding").value),
@@ -697,7 +711,7 @@ async function loadAnimatedFiles(files) {
   try {
     const dataUrls = await Promise.all(list.map(readFileAsDataURL));
     const previews = await bridge.prepare_animated(dataUrls, {
-      keyName: $("chroma-key").value,
+      keyName: chromaKeyValue(),
       tune: tuneValue(),
       outline: $("cleanup-outline").value,
     });
@@ -722,7 +736,7 @@ async function loadScreenAnimationFiles(files) {
   try {
     const dataUrls = await Promise.all(list.map(readFileAsDataURL));
     state.screenAnimations = await bridge.prepare_screen_animations(dataUrls, {
-      keyName: $("chroma-key").value,
+      keyName: chromaKeyValue(),
       tune: tuneValue(),
       outline: $("cleanup-outline").value,
     });
@@ -979,6 +993,7 @@ function setupDropzone() {
 }
 
 function bindEvents() {
+  $("chroma-key").addEventListener("change", syncChromaKeyCustom);
   document.querySelectorAll("input, select").forEach((node) => node.addEventListener("input", renderPrompt));
   $("sticker-padding").addEventListener("input", updatePreview);
   $("cleanup-tune").addEventListener("change", () => {

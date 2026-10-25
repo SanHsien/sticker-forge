@@ -36,7 +36,7 @@ from .exporter import (
 from .prompts import PROMPT_PRESETS, normalize_locale, render_line_static_prompt
 from .preview import build_pack_preview
 from .spec import CHROMA_TUNE_NAMES
-from .spec import LINE_STATIC_SPEC
+from .spec import CHROMA_KEYS, LINE_STATIC_SPEC
 from .spec import resolve_chroma_key
 from .splitter import load_animated_frames, split_grid_file, split_grid_to_stickers
 
@@ -126,6 +126,21 @@ def _clean_sticker(image, args):
         image, key_name=args.key_name, tune=args.tune
     )
     return apply_outline_and_shadow(cleaned, getattr(args, "outline", "none"))
+
+
+def _chroma_key_arg(value: str) -> str:
+    """argparse type: a named key colour, or a custom #RRGGBB that can work as one."""
+    if value.startswith("#"):
+        try:
+            return resolve_chroma_key(value).hex
+        except ValueError as exc:
+            raise argparse.ArgumentTypeError(str(exc)) from None
+    name = value.lower()
+    if name not in CHROMA_KEYS:
+        raise argparse.ArgumentTypeError(
+            f"invalid key {value!r}: use {', '.join(CHROMA_KEYS)} or a #RRGGBB colour"
+        )
+    return name
 
 
 def _parse_selection(value: str) -> list[int]:
@@ -222,7 +237,7 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     prompt.add_argument("--language")
     prompt.add_argument("--text", action="append", dest="texts", help=text["text_help"])
     prompt.add_argument("--action", action="append", dest="actions", help=text["action_help"])
-    prompt.add_argument("--chroma-key", choices=["green", "magenta"], default="green")
+    prompt.add_argument("--chroma-key", type=_chroma_key_arg, metavar="KEY", default="green")
     prompt.add_argument("-o", "--output", type=Path, help=text["output_prompt_help"])
 
     split = subparsers.add_parser("split", parents=[language_parent], help=text["split_help"])
@@ -235,7 +250,7 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     cleanup.add_argument("input", type=Path)
     cleanup.add_argument("-o", "--output", type=Path, required=True)
     cleanup.add_argument("--key-color", type=parse_hex_color)
-    cleanup.add_argument("--chroma-key", choices=["green", "magenta"])
+    cleanup.add_argument("--chroma-key", type=_chroma_key_arg, metavar="KEY")
     cleanup.add_argument("--tolerance", type=int, default=32)
     cleanup.add_argument("--tune", choices=list(CHROMA_TUNE_NAMES), default="balanced")
     cleanup.add_argument("--outline", choices=list(OUTLINE_STYLES), default="none")
@@ -254,7 +269,7 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     export.add_argument("--title", default="sticker-forge pack")
     export.add_argument("--author", default="sticker-forge")
     export.add_argument("--keep-background", action="store_true", help=text["keep_background_help"])
-    export.add_argument("--key-name", choices=["green", "magenta"], default="green")
+    export.add_argument("--key-name", type=_chroma_key_arg, metavar="KEY", default="green")
     export.add_argument("--tune", choices=list(CHROMA_TUNE_NAMES), default="balanced")
     export.add_argument("--outline", choices=list(OUTLINE_STYLES), default="none")
     export.add_argument("--padding", type=int, default=LINE_STATIC_SPEC.sticker_padding, help=text["padding_help"])
@@ -273,7 +288,7 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     big.add_argument("--title", default="sticker-forge big sticker pack")
     big.add_argument("--author", default="sticker-forge")
     big.add_argument("--keep-background", action="store_true", help=text["keep_background_help"])
-    big.add_argument("--key-name", choices=["green", "magenta"], default="green")
+    big.add_argument("--key-name", type=_chroma_key_arg, metavar="KEY", default="green")
     big.add_argument("--tune", choices=list(CHROMA_TUNE_NAMES), default="balanced")
     big.add_argument("--outline", choices=list(OUTLINE_STYLES), default="none")
 
@@ -281,7 +296,7 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     stickers.add_argument("input", type=Path)
     stickers.add_argument("-o", "--output", type=Path, required=True)
     stickers.add_argument("--keep-background", action="store_true", help=text["keep_background_help"])
-    stickers.add_argument("--key-name", choices=["green", "magenta"], default="green")
+    stickers.add_argument("--key-name", type=_chroma_key_arg, metavar="KEY", default="green")
     stickers.add_argument("--tune", choices=list(CHROMA_TUNE_NAMES), default="balanced")
     stickers.add_argument("--outline", choices=list(OUTLINE_STYLES), default="none")
     stickers.add_argument("--padding", type=int, default=LINE_STATIC_SPEC.sticker_padding, help=text["padding_help"])
@@ -291,7 +306,7 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     platform.add_argument("-o", "--output", type=Path, required=True)
     platform.add_argument("--target", choices=sorted(PLATFORM_SPECS), required=True, help=text["target_help"])
     platform.add_argument("--keep-background", action="store_true", help=text["keep_background_help"])
-    platform.add_argument("--key-name", choices=["green", "magenta"], default="green")
+    platform.add_argument("--key-name", type=_chroma_key_arg, metavar="KEY", default="green")
     platform.add_argument("--tune", choices=list(CHROMA_TUNE_NAMES), default="balanced")
     platform.add_argument("--outline", choices=list(OUTLINE_STYLES), default="none")
     platform.add_argument("--title", default="sticker-forge pack")
@@ -309,7 +324,7 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     )
     emoji.add_argument("--thumb", type=int, default=1, help=text["thumb_help"])
     emoji.add_argument("--keep-background", action="store_true", help=text["keep_background_help"])
-    emoji.add_argument("--key-name", choices=["green", "magenta"], default="green")
+    emoji.add_argument("--key-name", type=_chroma_key_arg, metavar="KEY", default="green")
     emoji.add_argument("--tune", choices=list(CHROMA_TUNE_NAMES), default="balanced")
     emoji.add_argument("--outline", choices=list(OUTLINE_STYLES), default="none")
     emoji.add_argument("--title", default="sticker-forge emoji")
@@ -327,7 +342,7 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     message.add_argument("--main", type=int, default=1, help=text["main_help"])
     message.add_argument("--tab", type=int, default=1, help=text["tab_help"])
     message.add_argument("--keep-background", action="store_true", help=text["keep_background_help"])
-    message.add_argument("--key-name", choices=["green", "magenta"], default="green")
+    message.add_argument("--key-name", type=_chroma_key_arg, metavar="KEY", default="green")
     message.add_argument("--tune", choices=list(CHROMA_TUNE_NAMES), default="balanced")
     message.add_argument("--outline", choices=list(OUTLINE_STYLES), default="none")
     message.add_argument("--title", default="sticker-forge message pack")
@@ -339,7 +354,7 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     animated.add_argument("--main", type=int, default=1, help=text["main_help"])
     animated.add_argument("--tab", type=int, default=1, help=text["tab_help"])
     animated.add_argument("--keep-background", action="store_true", help=text["keep_background_help"])
-    animated.add_argument("--key-name", choices=["green", "magenta"], default="green")
+    animated.add_argument("--key-name", type=_chroma_key_arg, metavar="KEY", default="green")
     animated.add_argument("--tune", choices=list(CHROMA_TUNE_NAMES), default="balanced")
     animated.add_argument("--outline", choices=list(OUTLINE_STYLES), default="none")
     animated.add_argument("--title", default="sticker-forge animated")
@@ -358,7 +373,7 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     popup.add_argument("--main", type=int, default=1, help=text["main_help"])
     popup.add_argument("--tab", type=int, default=1, help=text["tab_help"])
     popup.add_argument("--keep-background", action="store_true", help=text["keep_background_help"])
-    popup.add_argument("--key-name", choices=["green", "magenta"], default="green")
+    popup.add_argument("--key-name", type=_chroma_key_arg, metavar="KEY", default="green")
     popup.add_argument("--tune", choices=list(CHROMA_TUNE_NAMES), default="balanced")
     popup.add_argument("--outline", choices=list(OUTLINE_STYLES), default="none")
     popup.add_argument("--title", default="sticker-forge pop-up")
@@ -377,7 +392,7 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     effect.add_argument("--main", type=int, default=1, help=text["main_help"])
     effect.add_argument("--tab", type=int, default=1, help=text["tab_help"])
     effect.add_argument("--keep-background", action="store_true", help=text["keep_background_help"])
-    effect.add_argument("--key-name", choices=["green", "magenta"], default="green")
+    effect.add_argument("--key-name", type=_chroma_key_arg, metavar="KEY", default="green")
     effect.add_argument("--tune", choices=list(CHROMA_TUNE_NAMES), default="balanced")
     effect.add_argument("--outline", choices=list(OUTLINE_STYLES), default="none")
     effect.add_argument("--title", default="sticker-forge effect")
@@ -392,7 +407,7 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
         help=text["select_help"],
     )
     preview.add_argument("--keep-background", action="store_true", help=text["keep_background_help"])
-    preview.add_argument("--key-name", choices=["green", "magenta"], default="green")
+    preview.add_argument("--key-name", type=_chroma_key_arg, metavar="KEY", default="green")
     preview.add_argument("--tune", choices=list(CHROMA_TUNE_NAMES), default="balanced")
     preview.add_argument("--outline", choices=list(OUTLINE_STYLES), default="none")
     preview.add_argument("--padding", type=int, default=LINE_STATIC_SPEC.sticker_padding, help=text["padding_help"])

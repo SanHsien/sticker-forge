@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 from zipfile import ZipFile
 
+import pytest
 from PIL import Image, ImageDraw
 
 from sticker_forge import cli
@@ -305,3 +306,19 @@ def test_cli_preview_reports_grid_readiness(tmp_path, capsys) -> None:
     assert "01.png" in output
     assert "09.png" in output
     assert "370x320" in output
+
+
+def test_chroma_key_argument_accepts_names_and_valid_custom_colors() -> None:
+    parser = cli.build_parser()
+
+    assert parser.parse_args(["prompt", "--chroma-key", "Cyan"]).chroma_key == "cyan"
+    assert parser.parse_args(["prompt", "--chroma-key", "#ff8000"]).chroma_key == "#FF8000"
+
+
+def test_chroma_key_argument_rejects_grey_and_unknown_names(capsys) -> None:
+    parser = cli.build_parser()
+
+    for bad in ("#808080", "purple"):
+        with pytest.raises(SystemExit):
+            parser.parse_args(["prompt", "--chroma-key", bad])
+    assert "no chroma" in capsys.readouterr().err

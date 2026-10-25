@@ -49,7 +49,7 @@ This separation is intentional: image generation happens in the service you choo
 
 - **Prompt generation** — build editable sticker prompts from a character, theme, tone, language, text, and actions, with text and no-text variants.
 - **3×3 grid slicing** — split common AI sticker grids into individual assets, including non-even dimensions, selection, and ordering.
-- **Background and edge cleanup** — green / magenta chroma key, `safe` / `balanced` / `aggressive` / `continuous` modes, plus advanced GUI tuning.
+- **Background and edge cleanup** — green / magenta / blue / cyan / yellow and custom #RRGGBB chroma key, `safe` / `balanced` / `aggressive` / `continuous` modes, plus advanced GUI tuning.
 - **Outline and shadow** — `simple` white outline or `fancy` outline + feathering + shadow for better contrast on dark chat themes.
 - **LINE export** — static stickers, Big Stickers, emoji, message stickers, animated stickers, pop-up stickers, and effect stickers.
 - **Multi-platform export** — Telegram, WhatsApp, Discord, and Signal sizing and package structures.

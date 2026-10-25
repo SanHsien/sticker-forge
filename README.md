@@ -49,7 +49,7 @@ LINE / Telegram / WhatsApp / Discord / Signal
 
 - **提示詞產生**：依角色、主題、語氣、語言、文字與動作產生可複製的貼圖 prompt，支援有字／無字版本。
 - **3×3 grid 切圖**：把常見 AI 貼圖九宮格拆成獨立素材，處理非整除尺寸並支援選圖與排序。
-- **去背與邊緣修整**：green / magenta chroma key、`safe` / `balanced` / `aggressive` / `continuous` 模式，以及 GUI 進階參數。
+- **去背與邊緣修整**：綠／洋紅／藍／青／黃幕與自訂 #RRGGBB chroma key、`safe` / `balanced` / `aggressive` / `continuous` 模式，以及 GUI 進階參數。
 - **描邊與陰影**：`simple` 白邊或 `fancy` 白邊＋羽化＋陰影，改善深色聊天背景上的辨識度。
 - **LINE 匯出**：靜態貼圖、Big Stickers、emoji、訊息貼圖、動態貼圖、pop-up stickers、effect stickers。
 - **多平台匯出**：Telegram、WhatsApp、Discord、Signal 的尺寸與檔案結構。

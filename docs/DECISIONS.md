@@ -535,7 +535,7 @@ Turnstile、配額都在那條線上。**本 fork 不是**：`app/app.js` 第 2 
 「錯誤訊息只給人話、不要把原始 JSON 丟到畫面上」這個做法值得回來取用。
 
 
-## 2026-10-24：上游 #81（多幕色＋自訂色）暫不移植，列為候選
+## 2026-10-24：上游 #81（多幕色＋自訂色）——當日列為候選，2026-10-25 已移植
 
 commit 水位 0506621 → 1a1e903（upstream/main tip）、PR 水位 80 → 81；issue 水位維持 62
 （upstream-check 在 Actions 上以 `GH_TOKEN` 實查，#62 以上無新項目）。commit 軸的兩筆
@@ -550,16 +550,20 @@ commit 水位 0506621 → 1a1e903（upstream/main tip）、PR 水位 80 → 81�
 - 匯入偵測只認具名幕色，認不出來就警告，不猜顏色硬 key。
 - 補邊填「量到的實際底色」；Worker 生圖 prompt 跟著支援新幕色（Worker 部分本 fork 不適用）。
 
-### 判定：概念適用，但這次不移植
+### 判定：概念適用，已移植（2026-10-25 更新）
 
-本 fork 的 `src/sticker_forge/cleanup.py` 的 `_key_score`／`_is_pure_key`／`_despill` 正是
-上游改版前那種「綠幕、洋紅幕各寫一段」的寫法，`spec.CHROMA_KEYS` 與 CLI `--chroma-key`
-也只有 `green`／`magenta`。所以上游的通道泛化公式可以直接以概念移植到 Python core，
-GUI 與 CLI 共用。
+本 fork 的 `src/sticker_forge/cleanup.py` 原本是上游改版前那種「綠幕、洋紅幕各寫一段」的寫法，
+`spec.CHROMA_KEYS` 與 CLI 也只有 `green`／`magenta`。上游的通道泛化公式可直接以概念移植到
+Python core，GUI 與 CLI 共用。
 
-不在這輪做的理由：這是**新功能**（新增 CLI 選項值、GUI 下拉、prompt 模板、自訂色驗證規則），
-不是修正；動到穩定的去背核心，依本 repo 規則要補逐像素回歸測試並做 Windows GUI 實機驗收。
-例行維護不擅自擴充產品面。
+2026-10-24 當時列為候選、等維護者決定；2026-10-25 維護者指示「上游該引進的要引進」，
+且 chroma tune 本來就是本專案認定值得移植的上游功能（見 2026-08-08），因此移植：
 
-**觸發條件**：維護者決定要支援綠／洋紅以外的幕色時，以 32c546d 的分數公式為藍本移植到
-`cleanup.py`，並以「綠幕、洋紅幕輸出逐像素不變」作為回歸測試的第一條。
+- `spec.py`：加藍、青、黃三支具名色；`resolve_chroma_key()` 接受 `#RRGGBB`，黑白灰與不夠飽和
+  （用 `balanced` 的純度判準檢查幕色自己）的顏色丟 `ValueError` 並說明原因。
+- `cleanup.py`：分數＝key 通道最弱一支 − 其餘通道最強一支；純度與去溢色照同一組通道展開。
+  綠幕、洋紅幕輸出與改版前逐像素相同（隨機影像 × 4 個 tune 對照舊實作，以及釘住輸出的回歸測試）。
+- CLI 的 `--chroma-key`／`--key-name` 與 GUI 背景色下拉都接受新幕色與自訂色。
+- **不移植**：匯入偵測、補邊填量測底色、Worker 生圖 prompt——這些在上游是瀏覽器端與 Worker，
+  本 fork 無對應層（本 fork 的 grid 匯入沒有色偵測，幕色由使用者指定）。
+

@@ -75,7 +75,38 @@ CHROMA_KEYS = {
         avoid="magenta, hot pink, fuchsia, neon pink, purple-pink, magenta-tinted colors",
         substitutions="green, blue, orange, yellow, red, teal, or neutral colors",
     ),
+    "blue": ChromaKey(
+        name="blue",
+        label="PURE NEON BLUE",
+        hex="#0000FF",
+        rgb=(0, 0, 255),
+        forbidden_label="blue-screen color",
+        avoid="blue, royal blue, cobalt, navy, blue-tinted colors",
+        substitutions="red, orange, yellow, green, pink, or neutral colors",
+    ),
+    "cyan": ChromaKey(
+        name="cyan",
+        label="PURE NEON CYAN",
+        hex="#00FFFF",
+        rgb=(0, 255, 255),
+        forbidden_label="cyan-screen color",
+        avoid="cyan, aqua, turquoise, teal, cyan-tinted colors",
+        substitutions="red, orange, yellow, purple, pink, or neutral colors",
+    ),
+    "yellow": ChromaKey(
+        name="yellow",
+        label="PURE NEON YELLOW",
+        hex="#FFFF00",
+        rgb=(255, 255, 0),
+        forbidden_label="yellow-screen color",
+        avoid="yellow, golden yellow, lemon, mustard, yellow-tinted colors",
+        substitutions="red, blue, purple, green, pink, or neutral colors",
+    ),
 }
+
+# Black, white and grey have no chroma, so a chroma key can never separate them
+# from the foreground; anything with a smaller channel spread is rejected.
+MIN_CHROMA_SPREAD = 60
 
 CHROMA_TUNE_PROFILES = {
     "safe": ChromaTuneProfile(hard=0.32, soft=0.12, min_key=60, max_other=100, dominance=1.9),
@@ -109,9 +140,84 @@ _BALANCED_NORM = (
 
 
 def resolve_chroma_key(name: str | None) -> ChromaKey:
+    """Resolve a named key, or a custom ``#RRGGBB`` colour into a key.
+
+    A custom colour that cannot work as a key raises ``ValueError`` with the
+    reason, instead of silently keying nothing out.
+    """
     if not name:
         return CHROMA_KEYS["green"]
-    return CHROMA_KEYS.get(name.lower(), CHROMA_KEYS["green"])
+    named = CHROMA_KEYS.get(name.lower())
+    if named:
+        return named
+    if name.startswith("#"):
+        return make_custom_chroma_key(name)
+    return CHROMA_KEYS["green"]
+
+
+def parse_chroma_hex(value: str) -> RGBColor:
+    color = value.strip().removeprefix("#")
+    try:
+        if len(color) != 6:
+            raise ValueError
+        return int(color[0:2], 16), int(color[2:4], 16), int(color[4:6], 16)
+    except ValueError:
+        raise ValueError("chroma key must be a #RRGGBB colour, e.g. #FF8000") from None
+
+
+def chroma_channels(rgb: RGBColor) -> tuple[tuple[int, ...], tuple[int, ...]]:
+    """Split channels into those the key colour occupies and the rest.
+
+    The midpoint between the strongest and weakest channel is the divider, so
+    green gives ((1,), (0, 2)), magenta ((0, 2), (1,)) and cyan ((1, 2), (0,)).
+    Any colour with chroma has channels on both sides of the midpoint.
+    """
+    mid = (max(rgb) + min(rgb)) / 2
+    key = tuple(i for i in range(3) if rgb[i] > mid)
+    return key, tuple(i for i in range(3) if i not in key)
+
+
+def chroma_key_rejection(rgb: RGBColor) -> str:
+    """Return why ``rgb`` cannot serve as a key colour, or ``""`` if it can."""
+    hex_code = "#%02X%02X%02X" % tuple(rgb)
+    if max(rgb) - min(rgb) < MIN_CHROMA_SPREAD:
+        return (
+            f"{hex_code} has no chroma (black, white and grey never do), so a "
+            "chroma key cannot separate it; use a saturated colour such as "
+            "#00FF00, #FF00FF or #0000FF"
+        )
+    key, other = chroma_channels(rgb)
+    high = min(rgb[i] for i in key)
+    low = max(rgb[i] for i in other)
+    balanced = CHROMA_TUNE_PROFILES["balanced"]
+    if not (
+        high >= balanced.min_key
+        and low <= balanced.max_other
+        and high >= low * balanced.dominance
+    ):
+        return (
+            f"{hex_code} is not saturated enough (the other channels are too "
+            "bright), so the key would miss most of the background; use a "
+            "purer colour such as #FF8000 or #00B7A8"
+        )
+    return ""
+
+
+def make_custom_chroma_key(value: str) -> ChromaKey:
+    rgb = parse_chroma_hex(value)
+    reason = chroma_key_rejection(rgb)
+    if reason:
+        raise ValueError(reason)
+    hex_code = "#%02X%02X%02X" % rgb
+    return ChromaKey(
+        name=hex_code,
+        label=f"PURE {hex_code}",
+        hex=hex_code,
+        rgb=rgb,
+        forbidden_label=f"{hex_code} screen color",
+        avoid=f"{hex_code} and colors close to it, including tinted shadows and highlights",
+        substitutions="colors far from the background hue, or neutral colors",
+    )
 
 
 def resolve_chroma_tune(
