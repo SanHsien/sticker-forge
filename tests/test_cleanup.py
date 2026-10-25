@@ -5,6 +5,7 @@ from PIL import Image
 
 from sticker_forge.cleanup import parse_hex_color, remove_chroma_background
 from sticker_forge.spec import (
+    parse_chroma_hex,
     resolve_chroma_key,
     chroma_despill_strength,
     make_chroma_tune,
@@ -233,3 +234,16 @@ def test_custom_key_resolves_with_prompt_fields() -> None:
 
 def test_unknown_plain_name_still_falls_back_to_green() -> None:
     assert resolve_chroma_key("nonsense").name == "green"
+
+
+@pytest.mark.parametrize("value", ["-1-1-1", "#-1FF00", "#+0FF00", "# 0FF00", "#00FF0 ", "#0_FF00", "#00FF0G"])
+def test_hex_colors_reject_signs_whitespace_and_separators(value: str) -> None:
+    # int(x, 16) alone accepts "-1", " f" and "+f", which let "#-1FF00" through
+    # as a custom key colour whose hex later landed in the prompt verbatim.
+    with pytest.raises(ValueError):
+        parse_hex_color(value)
+    with pytest.raises(ValueError):
+        parse_chroma_hex(value)
+    if value.startswith("#"):
+        with pytest.raises(ValueError):
+            resolve_chroma_key(value)

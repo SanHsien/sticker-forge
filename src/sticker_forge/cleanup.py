@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from PIL import Image
 
 from .spec import (
@@ -16,13 +18,10 @@ from .spec import (
 
 def parse_hex_color(value: str) -> RGBColor:
     color = value.strip().removeprefix("#")
-    if len(color) != 6:
+    # int(x, 16) alone also accepts signs and spaces ("-1", " f"), so match first.
+    if not re.fullmatch(r"[0-9A-Fa-f]{6}", color):
         raise ValueError("hex color must use RRGGBB format")
-
-    try:
-        return int(color[0:2], 16), int(color[2:4], 16), int(color[4:6], 16)
-    except ValueError as exc:
-        raise ValueError("hex color must use RRGGBB format") from exc
+    return int(color[0:2], 16), int(color[2:4], 16), int(color[4:6], 16)
 
 
 def remove_chroma_background(

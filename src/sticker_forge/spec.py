@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 
@@ -157,12 +158,10 @@ def resolve_chroma_key(name: str | None) -> ChromaKey:
 
 def parse_chroma_hex(value: str) -> RGBColor:
     color = value.strip().removeprefix("#")
-    try:
-        if len(color) != 6:
-            raise ValueError
-        return int(color[0:2], 16), int(color[2:4], 16), int(color[4:6], 16)
-    except ValueError:
-        raise ValueError("chroma key must be a #RRGGBB colour, e.g. #FF8000") from None
+    # int(x, 16) alone also accepts signs and spaces ("-1", " f"), so match first.
+    if not re.fullmatch(r"[0-9A-Fa-f]{6}", color):
+        raise ValueError("chroma key must be a #RRGGBB colour, e.g. #FF8000")
+    return int(color[0:2], 16), int(color[2:4], 16), int(color[4:6], 16)
 
 
 def chroma_channels(rgb: RGBColor) -> tuple[tuple[int, ...], tuple[int, ...]]:
