@@ -12,6 +12,13 @@
   - 黑、白、灰與不夠飽和（其他通道太亮）的自訂色會被擋下並說明原因，避免選了卻什麼都沒去背。
   - 不移植上游的瀏覽器端匯入偵測／補邊／Worker prompt 部分（本專案無對應層）。
 
+### 修正
+
+- `#RRGGBB` 解析拒絕正負號與空白：`#-1FF00` 先前會被當成自訂幕色放行，色碼原樣寫進 prompt；`parse_hex_color("-1-1-1")` 也會回傳負值 RGB。
+- `validate`（含 `--emoji`／`--signal`／`--big`／`--popup`／`--effect`）遇到非 ZIP 檔、損毀圖片、或 `signal_manifest.json` 不是 JSON 物件時，改為回報錯誤並 exit 1，不再噴 traceback。
+- 動態貼圖、pop-up、effect 匯出時，若連續相同影格被 Pillow 合併到不足 5 格（例如 5 格輸入中有 4 格相同），改為丟出明確錯誤；先前會成功輸出 LINE 會退件的 APNG。
+- GUI 匯入動態貼圖／畫面動畫時套用「白色描邊」選項（先前被略過，CLI 有套用）。
+
 ### 維護
 
 - 依賴宣告跟上現行版：`setuptools>=84.0.0`、`wheel>=0.48.0`、`packaging>=26.3`、
