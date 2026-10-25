@@ -462,6 +462,30 @@ def _apng_bytes(
     return buffer.getvalue()
 
 
+def _checked_apng_bytes(
+    frames: list[Image.Image],
+    durations: list[int],
+    *,
+    label: str,
+    min_frames: int,
+    **kwargs,
+) -> bytes:
+    """Encode an APNG, refusing a result Pillow shrank below the frame minimum.
+
+    Pillow merges consecutive identical frames while saving, so a held pose can
+    turn a 5-frame input into a 3-frame file that LINE rejects.
+    """
+    data = _apng_bytes(frames, durations, **kwargs)
+    with Image.open(BytesIO(data)) as image:
+        written = getattr(image, "n_frames", 1)
+    if written < min_frames:
+        raise ValueError(
+            f"{label} has only {written} frame(s) after merging identical consecutive "
+            f"frames, but LINE needs at least {min_frames}; make the held frames differ"
+        )
+    return data
+
+
 def export_animated_zip(
     sticker_frames: Sequence[Sequence[Image.Image]],
     output_path: str | Path,
@@ -510,9 +534,25 @@ def export_animated_zip(
     with ZipFile(output, "w", compression=ZIP_DEFLATED) as archive:
         for index, frames in enumerate(sticker_frames):
             fitted = _fit_frames_within(list(frames), LINE_ANIM_MAX_SIZE)
-            archive.writestr(f"{index + 1:02d}.png", _apng_bytes(fitted, _durations_for(index, frames)))
+            archive.writestr(
+                f"{index + 1:02d}.png",
+                _checked_apng_bytes(
+                    fitted,
+                    _durations_for(index, frames),
+                    label=f"sticker {index + 1}",
+                    min_frames=LINE_ANIM_MIN_FRAMES,
+                ),
+            )
         main_frames = [fit_to_canvas(frame, LINE_ANIM_MAIN_SIZE) for frame in sticker_frames[main_index]]
-        archive.writestr("main.png", _apng_bytes(main_frames, _durations_for(main_index, sticker_frames[main_index])))
+        archive.writestr(
+            "main.png",
+            _checked_apng_bytes(
+                main_frames,
+                _durations_for(main_index, sticker_frames[main_index]),
+                label="main image",
+                min_frames=LINE_ANIM_MIN_FRAMES,
+            ),
+        )
         tab_image = fit_to_canvas(sticker_frames[tab_index][0], LINE_ANIM_TAB_SIZE)
         archive.writestr("tab.png", _png_bytes(tab_image))
         archive.writestr("README.txt", readme)
@@ -609,9 +649,11 @@ def _export_screen_animation_zip(
             fitted = _fit_screen_frames(frames)
             archive.writestr(
                 f"{animation_prefix}-{index + 1:02d}.png",
-                _apng_bytes(
+                _checked_apng_bytes(
                     fitted,
                     _durations_for(index, frames),
+                    label=f"{kind} animation {index + 1}",
+                    min_frames=LINE_SCREEN_ANIM_MIN_FRAMES,
                     max_loops=3,
                     max_total_ms=3000,
                 ),
@@ -619,9 +661,11 @@ def _export_screen_animation_zip(
         main_frames = _fit_screen_frames(screen_frames[main_index])
         archive.writestr(
             f"{animation_prefix}-main.png",
-            _apng_bytes(
+            _checked_apng_bytes(
                 main_frames,
                 _durations_for(main_index, screen_frames[main_index]),
+                label=f"{kind} main animation",
+                min_frames=LINE_SCREEN_ANIM_MIN_FRAMES,
                 max_loops=3,
                 max_total_ms=3000,
             ),
