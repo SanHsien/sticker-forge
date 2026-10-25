@@ -266,14 +266,7 @@ class Api:
         for url in data_urls:
             frames, durations = _decode_animated(url)
             if not options.get("keepBackground", False):
-                frames = [
-                    remove_chroma_background(
-                        frame,
-                        key_name=options.get("keyName", "green"),
-                        tune=_tune_option(options),
-                    )
-                    for frame in frames
-                ]
+                frames = self._cleanup_tiles(frames, options)
             fitted = _fit_frames_within(frames, LINE_ANIM_MAX_SIZE)
             previews.append(_encode_apng(fitted, [max(20, int(d)) for d in durations]))
         return previews
@@ -317,14 +310,7 @@ class Api:
         for url in data_urls:
             frames, durations = _decode_animated(url)
             if not options.get("keepBackground", False):
-                frames = [
-                    remove_chroma_background(
-                        frame,
-                        key_name=options.get("keyName", "green"),
-                        tune=_tune_option(options),
-                    )
-                    for frame in frames
-                ]
+                frames = self._cleanup_tiles(frames, options)
             previews.append(_encode_screen_apng(_fit_screen_frames(frames), [max(20, int(d)) for d in durations]))
         return previews
 

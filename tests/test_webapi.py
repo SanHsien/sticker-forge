@@ -8,7 +8,7 @@ from PIL import Image, ImageDraw
 
 from sticker_forge.exporter import validate_effect_zip, validate_line_zip, validate_popup_zip
 from sticker_forge.prompts import SUGGESTIONS
-from sticker_forge.webapi import Api, _decode, _encode
+from sticker_forge.webapi import Api, _decode, _decode_animated, _encode
 
 
 def _grid_data_url(color=(0, 255, 0, 255), size=(300, 300)) -> str:
@@ -250,3 +250,38 @@ def test_custom_tune_from_the_gui_changes_cleanup_output() -> None:
     # A conservative custom profile must keep visibly more than the preset,
     # otherwise the sliders are not reaching the core.
     assert conservative > preset
+
+
+def _white_pixels(data_url: str) -> int:
+    frames, _ = _decode_animated(data_url)
+    pixels = frames[0].get_flattened_data() if hasattr(frames[0], "get_flattened_data") else frames[0].getdata()
+    return sum(1 for pixel in pixels if pixel == (255, 255, 255, 255))
+
+
+def test_prepare_animated_applies_the_outline_option() -> None:
+    # The GUI sends the "White outline" dropdown with the animated import, and the
+    # CLI's `animated` command honours --outline; the bridge dropped it silently.
+    api = Api()
+    [plain] = api.prepare_animated([_animated_data_url()], {"keyName": "green", "outline": "none"})
+    [outlined] = api.prepare_animated([_animated_data_url()], {"keyName": "green", "outline": "simple"})
+
+    assert _white_pixels(plain) == 0
+    assert _white_pixels(outlined) > 0
+
+
+def test_prepare_screen_animations_applies_the_outline_option() -> None:
+    api = Api()
+    [plain] = api.prepare_screen_animations([_animated_data_url()], {"keyName": "green", "outline": "none"})
+    [outlined] = api.prepare_screen_animations([_animated_data_url()], {"keyName": "green", "outline": "simple"})
+
+    assert _white_pixels(plain) == 0
+    assert _white_pixels(outlined) > 0
+
+
+def test_prepare_animated_keep_background_skips_cleanup_and_outline() -> None:
+    api = Api()
+    [kept] = api.prepare_animated(
+        [_animated_data_url()], {"keyName": "green", "outline": "simple", "keepBackground": True}
+    )
+
+    assert _white_pixels(kept) == 0
