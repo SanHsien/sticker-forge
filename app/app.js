@@ -378,6 +378,8 @@ function syncChromaKeyCustom() {
 async function renderPrompt() {
   const bridge = api();
   if (!bridge) return;
+  // Wait until a custom colour is a full #RRGGBB instead of erroring per keystroke.
+  if ($("chroma-key").value === "custom" && !/^#[0-9a-f]{6}$/i.test(chromaKeyValue())) return;
   const payload = {
     locale: state.locale,
     withText: $("with-text").checked,

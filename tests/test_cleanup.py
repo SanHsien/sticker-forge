@@ -193,6 +193,23 @@ def test_green_and_magenta_results_are_unchanged_by_generalised_scoring() -> Non
     ]
 
 
+@pytest.mark.parametrize("value", ["#3C0000", "#643700", "#64B464", "#FF7F00"])
+def test_custom_key_that_would_not_self_key_under_every_preset_is_rejected(value: str) -> None:
+    with pytest.raises(ValueError, match="not saturated"):
+        resolve_chroma_key(value)
+
+
+@pytest.mark.parametrize("value", ["#FF8000", "#00B7A8", "#FF0000"])
+@pytest.mark.parametrize("tune", ["safe", "balanced", "aggressive", "continuous"])
+def test_accepted_custom_key_removes_its_own_background_under_every_preset(
+    value: str, tune: str
+) -> None:
+    rgb = resolve_chroma_key(value).rgb
+    result = remove_chroma_background(Image.new("RGBA", (1, 1), (*rgb, 255)), key_name=value, tune=tune)
+
+    assert result.getpixel((0, 0))[3] == 0
+
+
 @pytest.mark.parametrize("value", ["#000000", "#FFFFFF", "#808080", "#C8C8C8"])
 def test_custom_key_without_chroma_is_rejected(value: str) -> None:
     with pytest.raises(ValueError, match="no chroma"):

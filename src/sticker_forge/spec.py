@@ -189,17 +189,22 @@ def chroma_key_rejection(rgb: RGBColor) -> str:
     key, other = chroma_channels(rgb)
     high = min(rgb[i] for i in key)
     low = max(rgb[i] for i in other)
-    balanced = CHROMA_TUNE_PROFILES["balanced"]
-    if not (
-        high >= balanced.min_key
-        and low <= balanced.max_other
-        and high >= low * balanced.dominance
-    ):
-        return (
-            f"{hex_code} is not saturated enough (the other channels are too "
-            "bright), so the key would miss most of the background; use a "
-            "purer colour such as #FF8000 or #00B7A8"
-        )
+    # The colour must key out cleanly under every built-in preset, the
+    # strictest (safe) included; otherwise its own backdrop would survive or
+    # be despilled to grey.
+    for profile in CHROMA_TUNE_PROFILES.values():
+        if not (
+            high >= profile.min_key
+            and low <= profile.max_other
+            and high >= low * profile.dominance
+            and (high - low) / 255 > profile.hard
+        ):
+            return (
+                f"{hex_code} is not saturated enough, or sits on the boundary "
+                "between two hues (the other channels are too bright), so the "
+                "key would miss part of the background; use a purer colour "
+                "such as #FF8000 or #00B7A8"
+            )
     return ""
 
 
@@ -215,7 +220,10 @@ def make_custom_chroma_key(value: str) -> ChromaKey:
         hex=hex_code,
         rgb=rgb,
         forbidden_label=f"{hex_code} screen color",
-        avoid=f"{hex_code} and colors close to it, including tinted shadows and highlights",
+        avoid=(
+            f"{hex_code}, colors close to it, and the whole hue family it shares "
+            "channels with, including tinted shadows and highlights"
+        ),
         substitutions="colors far from the background hue, or neutral colors",
     )
 

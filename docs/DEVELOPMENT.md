@@ -25,7 +25,7 @@ split → cleanup → resize → preview → export ZIP
 | `spec` | LINE 尺寸、張數、chroma-key 與去背 tune profile 的單一來源（`safe`／`balanced`／`aggressive`／`continuous` 四個 preset，含 `mode`（strict／continuous）與 `erode`；`make_chroma_tune()` 建自訂 profile、`chroma_despill_strength()` 決定去溢色力度） |
 | `prompts` | 提示詞欄位渲染（中英文模板、有字／無字）、`SUGGESTIONS` 下拉建議、`PROMPT_PRESETS` 主題預設包 |
 | `splitter` | 3x3 grid 切圖，3% inset；尺寸不整除時向下取整丟餘數；`load_animated_frames` 讀單一動態檔（GIF/APNG）→ 影格＋時間 |
-| `cleanup` | green / magenta chroma-key 去背 + despill（strict／continuous matte、邊緣侵蝕、來源 alpha 合成、依 profile 調整去溢色力度） |
+| `cleanup` | 綠／洋紅／藍／青／黃與自訂 #RRGGBB chroma-key 去背 + despill（strict／continuous matte、邊緣侵蝕、來源 alpha 合成、依 profile 調整去溢色力度） |
 | `decorate` | 白色描邊與陰影（`apply_outline_and_shadow`：`none`／`simple`／`fancy`），去背後套用 |
 | `exporter` | LINE 貼圖 ZIP（`LINE_PACK_SIZES` 8/16/24/32/40、可選 main/tab index）、LINE Big Stickers ZIP（396×660）、LINE 訊息貼圖 ZIP（`LINE_MESSAGE_PACK_SIZES` 8/16/24、padding 0）、LINE emoji ZIP（8–40×180×180＋96×74 縮圖）、LINE 動態貼圖 ZIP（`export_animated_zip`：8/16/24 APNG≤320×270＋動畫 main＋靜態 tab）、LINE pop-up / effect stickers ZIP（靜態貼圖＋480×480 APNG screen animation）、PNG-only ZIP、多平台 ZIP（`PLATFORM_SPECS`：Telegram/WhatsApp/Discord/Signal）匯出與 ZIP 驗證（貼圖／Big／emoji／Signal／pop-up／effect、含透明背景檢查）、尺寸整理與 padding |
 | `preview` | 貼圖預覽 metadata 與選圖檢查 |
@@ -79,7 +79,7 @@ sticker-forge-gui --lang en          # or: python -m sticker_forge.gui  (opens t
 
 > **去背預設開啟**：`export` / `stickers` / `preview` 因為切圖會用 key 色填背景、且 LINE 要求透明背景，預設就會去背。加 `--keep-background` 可保留實心底色（少數非 LINE 用途）。
 >
-> `--key-color` 只在 `cleanup` 有效（distance-based 去背）。`export` / `stickers` / `preview` 固定走 `--key-name` 的 green/magenta score-based 去背，不接受 `--key-color`。
+> `--key-color` 只在 `cleanup` 有效（distance-based 去背）。`export` / `stickers` / `preview` 固定走 `--key-name`（具名色或 `#RRGGBB`）的 score-based 去背，不接受 `--key-color`。
 
 修改 JavaScript 時可加跑語法檢查：
 
@@ -89,7 +89,7 @@ node --check app/app.js
 
 ## 測試涵蓋
 
-`python -m pytest`（目前 121 passed）。最小涵蓋：prompt CLI 輸出與渲染、中英文語系、Windows 非 UTF-8 console、GUI 初始語系 bridge contract、3x3 inset 切圖（含 1024×1024 非整除尺寸）、選圖／排序、green/magenta 去背、匯出預設去背與 `--keep-background`、main/tab image、LINE 靜態／Big／emoji／訊息／動態／pop-up／effect ZIP 結構與 validator（含透明背景檢查）、PNG-only ZIP、多平台 ZIP、Signal manifest、padding、`webapi.Api` bridge（bootstrap/prompt/split/cleanup/export/prepare_screen_animations/export_popup/export_effect），白色描邊／陰影（`decorate`）、以及依賴 freshness、風險分類、guarded merge 與上游檢查 workflow 契約。GUI 視窗本身需依 [`WINDOWS_VALIDATION.md`](WINDOWS_VALIDATION.md) 在 Windows 桌面驗證。
+`python -m pytest`（目前 153 passed）。最小涵蓋：prompt CLI 輸出與渲染、中英文語系、Windows 非 UTF-8 console、GUI 初始語系 bridge contract、3x3 inset 切圖（含 1024×1024 非整除尺寸）、選圖／排序、多幕色與自訂幕色去背、匯出預設去背與 `--keep-background`、main/tab image、LINE 靜態／Big／emoji／訊息／動態／pop-up／effect ZIP 結構與 validator（含透明背景檢查）、PNG-only ZIP、多平台 ZIP、Signal manifest、padding、`webapi.Api` bridge（bootstrap/prompt/split/cleanup/export/prepare_screen_animations/export_popup/export_effect），白色描邊／陰影（`decorate`）、以及依賴 freshness、風險分類、guarded merge 與上游檢查 workflow 契約。GUI 視窗本身需依 [`WINDOWS_VALIDATION.md`](WINDOWS_VALIDATION.md) 在 Windows 桌面驗證。
 
 ## 依賴維護
 
