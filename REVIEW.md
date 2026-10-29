@@ -57,11 +57,14 @@ local-first 邊界仍然成立：不架 hosted backend、不代管 AI API、不�
 ### P1：GitHub 上只剩 `v0.22.0` 一個 tag 與 Release
 
 `git ls-remote --tags origin` 與 GitHub Releases API 都只回報 `v0.22.0`；
-`v0.18.0`–`v0.21.0`（以及更早的 `v0.1.0`–`v0.17.0`）都不在遠端。本機 23 個 tag
-完好，且指向的 commit 全都仍在 `origin/main` 歷史中，因此可以還原。
+`v0.18.0`–`v0.21.0`（以及更早的 `v0.1.0`–`v0.17.0`）都不在遠端。本機 23 個 tag（含 `v0.22.0`，其中 22 個舊 tag 不在遠端）
+雖存在，但 2026-10-26 實測顯示本機 `v0.1.0`–`v0.21.0`（甚至 `v0.22.0`）指向的
+commit 都不是 `origin/main` 的祖先，與 `origin/main` 無共同祖先（可透過
+`git merge-base v0.21.0 origin/main` 無輸出重現）。若照字面補推 tag 會將一串無關的
+孤兒歷史推上 GitHub。
 
-還原前需要先確認原因，避免把使用者刻意移除的東西又推回去。在確認之前，
-不應對外宣稱這些版本「有正式 Release」。
+此項已列為刻意不做（見 `ROADMAP.md`「刻意不做」補推舊 tag 項目），版本紀錄以
+`CHANGELOG.md` 為準，不再嘗試補推。不應對外宣稱這些版本「在 GitHub 有正式 Release」。
 
 ### P1：LINE Creators Market 平台抽驗仍未完成
 

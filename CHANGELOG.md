@@ -18,6 +18,7 @@
 - `validate`（含 `--emoji`／`--signal`／`--big`／`--popup`／`--effect`）遇到非 ZIP 檔、損毀圖片、或 `signal_manifest.json` 不是 JSON 物件時，改為回報錯誤並 exit 1，不再噴 traceback。
 - 動態貼圖、pop-up、effect 匯出時，若連續相同影格被 Pillow 合併到不足 5 格（例如 5 格輸入中有 4 格相同），改為丟出明確錯誤；先前會成功輸出 LINE 會退件的 APNG。
 - GUI 匯入動態貼圖／畫面動畫時套用「白色描邊」選項（先前被略過，CLI 有套用）。
+- GUI 自訂幕色未填滿 6 碼時清空 prompt 面板，空白 prompt 不複製，避免拿舊色碼的 prompt 去生圖。
 
 ### 維護
 

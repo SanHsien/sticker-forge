@@ -36,3 +36,15 @@ def test_advanced_tune_panel_is_wired_and_off_by_default() -> None:
     assert "state.tuneProfiles = initial.tuneProfiles || {};" in app_js
     # soft above hard would invert the alpha ramp.
     assert "if (profile.soft > profile.hard)" in app_js
+
+
+def test_incomplete_custom_chroma_clears_stale_prompt() -> None:
+    app_js = (Path(__file__).parents[1] / "app" / "app.js").read_text(encoding="utf-8")
+
+    assert (
+        'if ($("chroma-key").value === "custom" && !/^#[0-9a-f]{6}$/i.test(chromaKeyValue())) {\n'
+        '    $("prompt-output").value = "";\n'
+        '    return;\n'
+        '  }'
+    ) in app_js
+    assert "if (!text) return;" in app_js
