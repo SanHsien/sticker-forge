@@ -14,7 +14,6 @@ Windows GUI 實機驗收尚未完成，是否發 v0.23.0 也未定。本檔不�
 | 項目 | 為什麼 | 驗收方式 | 建議執行者 | 證據 |
 | --- | --- | --- | --- | --- |
 | 更正 `REVIEW.md`「P1：GitHub 上只剩 `v0.22.0`」段落的事實 | 該段寫「本機 tag 指向的 commit 全都仍在 `origin/main` 歷史中，因此可以還原」，2026-10-26 實測不成立：本機 v0.1.0–v0.21.0 的 commit 都不是 `origin/main` 的祖先，與 origin 沒有共同祖先（連 `v0.22.0` 也不是 `origin/main` 祖先）。留著會讓下一個人照字面去補推 tag，把一串無關的孤兒歷史推上 GitHub | `REVIEW.md` 該段改為實測結果並指向本檔「刻意不做」那一列；`git merge-base v0.21.0 origin/main` 無輸出可重現；`git diff --check` 綠 | Claude Sonnet | `REVIEW.md` P1 tag 段落；深掃報告（2026-10-26）「補推 tag 的查核」 |
-| 加固 validator 的壞 ZIP 邊角：ZIP 成員 deflate 損毀的 `zlib.error`、CRC 錯誤使驗證提早結束、`DecompressionBombError` 未攔 | 本專案會處理使用者匯入的檔案；上一輪已修 `BadZipFile` 與 `UnidentifiedImageError`（`c10ec69`），審查員指出這三個相鄰輸入仍會丟例外而不是回報錯誤 | 為每個輸入先寫紅燈測試再轉綠；`python -m pytest` 綠；對故意損毀的 ZIP 跑 `python -m sticker_forge validate`，列出錯誤並 exit 1、沒有 traceback | Claude Sonnet | `c10ec69`；深掃報告「刻意不修」第一條 |
 | GUI 自訂幕色欄位未填滿 6 碼時，prompt 面板保留舊色碼，加上「已過期」標示或清空 | 目前點不下去送出，但面板仍顯示上一個色碼，使用者可能把舊色碼的 prompt 拿去生圖 | `app/app.js` 改動後 `node --check app/app.js` 通過；GUI 實機輸入 `#FF80` 時面板不再顯示可直接複製的舊色碼。動手前先 `git pull` | Claude Sonnet | `b913dd6`；接續開發報告（2026-10-2x）「刻意不做／延後」第二條 |
 
 ## 中期：等條件成立再做

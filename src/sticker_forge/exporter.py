@@ -3,6 +3,7 @@ from __future__ import annotations
 import functools
 import json
 import re
+import zlib
 from dataclasses import replace
 from io import BytesIO
 from pathlib import Path
@@ -10,6 +11,7 @@ from typing import Sequence
 from zipfile import ZIP_DEFLATED, BadZipFile, ZipFile
 
 from PIL import Image
+from PIL.Image import DecompressionBombError
 
 from .spec import LINE_BIG_SPEC, LINE_STATIC_SPEC, LINEStickerSpec
 
@@ -743,18 +745,30 @@ def _zip_validator(validate):
     def wrapper(*args, **kwargs) -> list[str]:
         try:
             return validate(*args, **kwargs)
-        except BadZipFile as exc:
+        except (BadZipFile, zlib.error) as exc:
             return [f"not a valid ZIP file: {exc}"]
 
     return wrapper
 
 
-def _read_image(archive: ZipFile, name: str, errors: list[str]) -> Image.Image | None:
-    """Open and decode a ZIP member, recording an error when it is not an image."""
+def _read_image(
+    archive: ZipFile,
+    name: str,
+    errors: list[str],
+    *,
+    data: bytes | None = None,
+) -> Image.Image | None:
+    """Open and decode a ZIP member, recording an error when it cannot be read or is not an image."""
+    if data is None:
+        try:
+            data = archive.read(name)
+        except (BadZipFile, zlib.error):
+            errors.append(f"{name} is not a readable image")
+            return None
     try:
-        image = Image.open(BytesIO(archive.read(name)))
+        image = Image.open(BytesIO(data))
         image.load()
-    except (OSError, ValueError, SyntaxError):
+    except (OSError, ValueError, SyntaxError, DecompressionBombError):
         errors.append(f"{name} is not a readable image")
         return None
     return image
@@ -893,10 +907,14 @@ def _validate_screen_animation_zip(zip_path: str | Path, *, animation_prefix: st
                 errors.append(f"{name} has no transparent background")
 
         for name in sorted({f"{animation_prefix}-main.png", *animation_names} & names):
-            data = archive.read(name)
+            try:
+                data = archive.read(name)
+            except (BadZipFile, zlib.error):
+                errors.append(f"{name} is not a readable image")
+                continue
             if len(data) > LINE_SCREEN_ANIM_MAX_BYTES:
                 errors.append(f"{name} is larger than 1 MB")
-            image = _read_image(archive, name, errors)
+            image = _read_image(archive, name, errors, data=data)
             if image is None:
                 continue
             if image.format != "PNG":
@@ -951,8 +969,9 @@ def validate_signal_zip(zip_path: str | Path) -> list[str]:
             return errors
 
         try:
-            manifest = json.loads(archive.read("signal_manifest.json").decode("utf-8"))
-        except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+            manifest_bytes = archive.read("signal_manifest.json")
+            manifest = json.loads(manifest_bytes.decode("utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError, BadZipFile, zlib.error) as exc:
             errors.append(f"signal_manifest.json is invalid: {exc}")
             return errors
 
