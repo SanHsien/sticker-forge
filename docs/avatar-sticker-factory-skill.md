@@ -15,7 +15,7 @@ author: "SanHsien / Ann Cheng Prompt Engineering Framework"
 # AI 似顏繪貼圖工廠技能範本 (Avatar Sticker Factory Skill)
 
 > 本技能範本收錄於 `templates/avatar-sticker-factory-skill.md`。可直接複製至 Agent 技能目錄（如 `%USERPROFILE%\.gemini\config\skills\avatar-sticker-factory\SKILL.md` 或各專案技能目錄）中引入使用。  
-> 【自包含與依賴說明】：本技能依賴切圖驗證腳本 `tools/slice_line_stickers.py`。若獨立複製至其他環境或專案，請將該腳本一併複製至技能目錄下的 `scripts/` 或確保其已加入系統 PATH。  
+> 【自包含與依賴說明】：本技能依賴切圖驗證腳本 `tools/slice_line_stickers.py`（僅用 Python 標準函式庫加第三方套件 Pillow，需 `pip install Pillow`；缺套件時腳本 exit 2 並提示）。若獨立複製至其他環境或專案，請將該腳本一併複製至技能目錄下的 `scripts/` 或確保其已加入系統 PATH。其判定門檻與已知抓不到的情況見 `docs/line-sticker-16-grid-prompt-spec.md` 第 6.3 節。  
 > 核心規範對照：[`docs/line-sticker-16-grid-prompt-spec.md`](../docs/line-sticker-16-grid-prompt-spec.md)  
 > 查證日期：2026-11-02
 
@@ -23,7 +23,7 @@ author: "SanHsien / Ann Cheng Prompt Engineering Framework"
 
 ## 1. 技能定位與管線全貌（Pipeline Architecture）
 
-本技能為 AI Coding Agent（Antigravity、Claude Code、Codex 等）提供一套確定性、零風格漂移的個人品牌與企業似顏繪貼圖生成管線：
+本技能為 AI Coding Agent（Antigravity、Claude Code、Codex 等）提供一套「生成走單張 16 宮格、切圖與規格檢查走確定性腳本」的個人品牌與企業似顏繪貼圖管線（單張生成能否讓風格較一致是經驗推測，沒有實測數據）：
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -37,7 +37,7 @@ author: "SanHsien / Ann Cheng Prompt Engineering Framework"
 │            │                         與 16 組高頻日常繁體中文字庫（早安~恭喜）                 │
 │            ▼                                                                                   │
 │  [ Step 3：單張生圖一次性交付 ] ──► 產出單張 1480 × 1280 像素 RGBA 透明背景排列圖              │
-│            │                         (同一 Attention 上下文，風格與人物長相零漂移)             │
+│            │                         (16 格共用同一次生成，風格較易一致，未驗證)               │
 │            ▼                                                                                   │
 │  [ Step 4：調用機械切圖與檢驗工具 ] ──► 執行 slice_line_stickers.py (repo 或 scripts/)         │
 │            ├─ 沿 370×320 網格切分出 01.png ~ 16.png (單張最大 370×320 px)                     │
@@ -74,9 +74,9 @@ Agent 套用 Ann Cheng 16 宮格工法，組合出結構化 Prompt：
   - Row 4: `13 週休快樂`（墨鏡冰飲）、`14 假期愉快`（小旗幟慶祝）、`15 生日快樂`（生日帽蛋糕）、`16 恭喜`（抱拳彩炮）
 
 ### 階段三：圖像生成與取得
-- 將組裝之 Prompt 傳入生成模型（如 Midjourney 指定 `--ar 37:32`、Stable Diffusion 或 DALL-E 3）。
-- 【去背處理必要性說明】：目前主流生圖模型（Midjourney、DALL-E 等）通常直接產出純色或不透明底（JPG/PNG）；即便提示詞要求透明背景，多數模型仍會產生假透明或白色實心背景。因此生成後必須先使用去背工具（如開源 `rembg`、Photoshop 去背或專屬去背外掛）轉為具備 Alpha 通道的真正透明背景 RGBA PNG。
-- 檢查產出檔案確認已成功具備 Alpha 透明通道（RGBA 格式）且四周邊距留白充足。
+- 將組裝之 Prompt 傳入生成模型。各模型的長寬比參數（例如 Midjourney 的 `--ar 37:32`）與是否支援輸出透明 PNG，本 repo 沒有逐一實測，【未驗證】，請以所用平台當下的文件為準。
+- 【去背處理】：【未驗證】本 repo 沒有對任何特定模型實測它的「透明背景」輸出是不是真的有 Alpha 通道；原作者貼文本身也同時要求「純白背景」與「透明排列圖」（見規範文件第 2.2 節）。因此不要假設模型輸出是真透明：一律先跑階段四的切圖工具，它回報缺 Alpha、無透明像素、或安全區被填滿／疑似白底棋盤格時，再用去背工具（例如 `rembg`、Photoshop，工具效果未在本 repo 驗證）處理成真正透明的 RGBA PNG，處理後重跑工具。
+- 工具是否通過只是機械檢查，不代表背景乾淨、不代表上架審核會過。
 
 ### 階段四：自動化切圖與機械合規驗證
 調用切圖工具（本專案位於 `tools/slice_line_stickers.py`；若獨立使用技能請調用同技能目錄下的 `scripts/slice_line_stickers.py`）：
@@ -90,12 +90,13 @@ python tools/slice_line_stickers.py \
   --zip "output/line_stickers.zip"
 ```
 
-檢核清單：
-- [x] 是否產出 `01.png` ~ `16.png` 且皆為 370×320 px。
-- [x] 是否產出 `main.png`（240×240 px）。
-- [x] 是否產出 `tab.png`（96×74 px）。
-- [x] 每張圖四周 10px 安全邊距內是否皆為透明像素（0 violations）。
-- [x] 檔案模式是否全為 RGBA，背景無雜色。
+檢核清單（空白框，需在實際執行後逐項勾選；工具能查的以 exit 0 與 `--json` 報告為證據，查不到的要人工看圖）：
+- [ ] （工具）`01.png` ~ `16.png` 皆為 370×320 px 的 RGBA。
+- [ ] （工具）`main.png`（240×240 px）與 `tab.png`（96×74 px）已產出。
+- [ ] （工具）每張圖四周 10px 安全邊距內沒有不透明像素（0 violations）。
+- [ ] （工具）沒有空白貼圖、實心底、疑似白底或棋盤格（工具有已知抓不到的情況，見規範文件 6.3）。
+- [ ] （工具）exit 0 且 ZIP 確實產生（`--zip` 沒產出時工具會 exit 1）。
+- [ ] （人工）肉眼看過每張圖：背景沒有殘留雜色或光暈、繁體字正確、人物特徵一致。工具查不到這三項。
 
 ### 階段五：交付與上架審查
 Agent 回報上架壓縮檔路徑及規格驗證摘要：
@@ -158,6 +159,9 @@ watermark, realistic photo, 3D render, cell border overlap, touching 370x320 edg
 
 | 異常現象 | 機械原因 | 補救處方 |
 | :--- | :--- | :--- |
+| `安全區可見覆蓋率 …%（實心底／假透明）`、`疑似白底或棋盤格` | 去背沒做、做了假透明（把棋盤格圖樣畫進圖裡）、或整格鋪了白底 | 用去背工具重做真正的透明，再重跑；不要調低工具門檻 |
+| `可見像素僅 N 個…視為空白貼圖` | 該格沒畫出東西、只剩雜點，或內容幾乎透明 | 重新生成該格，或在繪圖軟體補畫 |
+| `已要求 --zip 但未產出 ZIP：…` | 有格子不合格、缺 main／tab、張數不是 8/16/24/32/40、單格尺寸不是偶數或超過 370×320、`--margin` 小於 10 | 照訊息逐項修正；舊 ZIP 已被工具刪除，不會殘留 |
 | `10px 邊距溢出警告` | 模型將手勢或文字畫得太靠邊緣 | 1. 調整提示詞強調「手勢與文字內縮置中，預留四周 10px 留白」<br>2. 在繪圖或去背軟體中微調圖層縮小置中（切勿放寬工具檢查） |
 | `缺少 Alpha 通道 (RGB)` | 生圖平台輸出為純白底 JPG 或 RGB PNG | 使用去背工具（如 `rembg`、Photoshop）完成去背並轉存為 RGBA PNG |
 | `大圖尺寸非 1480x1280` | 模型生成長寬比不符（例如 1536x1024 或 1024x1024） | 1536×1024 (3:2) 與 1480×1280 (37:32) 長寬比不符，無法直接等比縮放！切圖工具僅做網格切分，不負責全局縮放；需在生圖時指定 `--ar 37:32`，或在切圖前先手動裁切/補畫布至 37:32 比例後，再調整尺寸為 1480×1280 |

@@ -8,13 +8,22 @@ Ann Cheng 16 宮格 AI 似顏繪 LINE 貼圖自動切圖與規格驗證工具。
 功能：
 1. 讀取 1480x1280 的透明排列圖，自動切出 16 張 370x320 PNG (01.png ~ 16.png)。
 2. 檢查 Alpha Channel 透明通道、實質去背透明度、尺寸與四周 10px 安全邊距合規性。
-3. 檢查單張檔案大小不超過 1MB 上限，防範全透明空白或全不透明實心貼圖。
+3. 檢查單張檔案大小不超過 1MB 上限，並以「可見像素」啟發式防範空白貼圖（只剩雜點）、
+   實心白框／假透明底（安全區被不透明內容填滿）與近乎全白的淺灰內容（疑似棋盤格）。
 4. 自動等比例縮放合成 main.png (240x240) 與 tab.png (96x74)。
 5. 檢驗全數合規時可選打包輸出為 LINE 上架 ZIP 壓縮包（未通過合規不予打包）。
 
+啟發式門檻（本工具自訂的取捨，不是 LINE 官方數字，見下方常數與規範文件 6.3）：
+- VISIBLE_ALPHA_MIN：alpha 達此值才算「肉眼看得見」的像素。
+- MIN_VISIBLE_RATIO：單格可見像素佔整格比例低於此值視為空白貼圖。
+- MAX_SAFE_COVERAGE：安全區內可見像素覆蓋率達此值視為未去背（實心底）。
+- MAX_LIGHT_NEUTRAL_RATIO：可見像素中淺色無彩色佔比達此值視為疑似白底／棋盤格。
+已知抓不到：深色或彩色的棋盤格、只佔安全區一部分的彩色假底。
+
 結束碼：
-0: 成功且檢驗通過（或非 strict 模式下僅邊距警告放行）
-1: 規格檢驗失敗（缺少 Alpha 通道、全無透明去背、尺寸不符、空圖、全實心圖、超限 1MB、或 --strict 模式下邊距違規）
+0: 成功且檢驗通過（或非 strict 模式下僅邊距警告放行；未要求 --zip 時）
+1: 規格檢驗失敗（缺少 Alpha 通道、全無透明去背、尺寸不符、空圖、實心／假透明圖、超限 1MB、
+   --strict 模式下邊距違規或 --margin 小於 10，或已要求 --zip 但因任何原因未能產出）
 2: 參數錯誤、檔案不存在、或缺少必要套件 Pillow
 """
 
@@ -25,16 +34,30 @@ import json
 import os
 import sys
 import zipfile
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 try:
-    from PIL import Image
+    from PIL import Image, ImageChops
     PIL_AVAILABLE = True
 except ImportError:
     Image = None  # type: ignore
+    ImageChops = None  # type: ignore
     PIL_AVAILABLE = False
+
+# LINE 官方數字（https://creator.line.me/zh-hant/guideline/sticker/，2026-11-02 查證）
+LINE_MIN_MARGIN = 10
+LINE_MAX_STICKER_SIZE = (370, 320)
+LINE_STICKER_COUNTS = (8, 16, 24, 32, 40)
+LINE_MAX_FILE_BYTES = 1024 * 1024
+LINE_MAX_ZIP_BYTES = 60 * 1024 * 1024
+
+# 本工具自訂的啟發式門檻（非 LINE 官方數字，是取捨：寧可誤擋也不放行明顯瑕疵）
+VISIBLE_ALPHA_MIN = 16
+MIN_VISIBLE_RATIO = 0.01
+MAX_SAFE_COVERAGE = 0.95
+MAX_LIGHT_NEUTRAL_RATIO = 0.90
 
 
 def _utf8_stdio() -> None:
@@ -79,6 +102,10 @@ class CellReport:
     violations: MarginViolation
     file_size_bytes: int
     exceeds_1mb: bool
+    visible_pixels: int = 0
+    safe_area_coverage: float = 0.0
+    light_neutral_ratio: float = 0.0
+    looks_like_backdrop: bool = False
 
     def as_dict(self) -> Dict[str, Any]:
         return {
@@ -93,6 +120,10 @@ class CellReport:
             "violations": self.violations.as_dict(),
             "file_size_bytes": self.file_size_bytes,
             "exceeds_1mb": self.exceeds_1mb,
+            "visible_pixels": self.visible_pixels,
+            "safe_area_coverage": round(self.safe_area_coverage, 4),
+            "light_neutral_ratio": round(self.light_neutral_ratio, 4),
+            "looks_like_backdrop": self.looks_like_backdrop,
         }
 
 
@@ -114,6 +145,7 @@ class SlicingReport:
     cells: List[CellReport]
     errors: List[str]
     warnings: List[str]
+    package_blockers: List[str] = field(default_factory=list)
 
     def as_dict(self) -> Dict[str, Any]:
         return {
@@ -133,6 +165,7 @@ class SlicingReport:
             "cells": [c.as_dict() for c in self.cells],
             "errors": self.errors,
             "warnings": self.warnings,
+            "package_blockers": self.package_blockers,
         }
 
 
@@ -143,44 +176,18 @@ def check_cell_margins(cell_img: Any, margin: int = 10, alpha_threshold: int = 0
 
     w, h = cell_img.size
     alpha = cell_img.getchannel("A")
-    get_data_fn = getattr(alpha, "get_flattened_data", None)
-    if get_data_fn is not None:
-        alpha_data = list(get_data_fn())
-    else:
-        alpha_data = list(alpha.getdata())
 
-    top_count = 0
-    bottom_count = 0
-    left_count = 0
-    right_count = 0
+    def count(box: Tuple[int, int, int, int]) -> int:
+        x0, y0, x1, y1 = box
+        if x1 <= x0 or y1 <= y0:
+            return 0
+        return sum(alpha.crop(box).histogram()[alpha_threshold + 1:])
 
-    # 檢查上方 (y < margin)
-    for y in range(min(margin, h)):
-        row_offset = y * w
-        for x in range(w):
-            if alpha_data[row_offset + x] > alpha_threshold:
-                top_count += 1
-
-    # 檢查下方 (y >= h - margin)
-    for y in range(max(0, h - margin), h):
-        row_offset = y * w
-        for x in range(w):
-            if alpha_data[row_offset + x] > alpha_threshold:
-                bottom_count += 1
-
-    # 檢查左方 (x < margin，排除上下邊界避免重複計數)
-    for y in range(margin, max(margin, h - margin)):
-        row_offset = y * w
-        for x in range(min(margin, w)):
-            if alpha_data[row_offset + x] > alpha_threshold:
-                left_count += 1
-
-    # 檢查右方 (x >= w - margin，排除上下邊界避免重複計數)
-    for y in range(margin, max(margin, h - margin)):
-        row_offset = y * w
-        for x in range(max(0, w - margin), w):
-            if alpha_data[row_offset + x] > alpha_threshold:
-                right_count += 1
+    # 上、下各取 margin 列的整條；左、右只取中間列，避免與上下角落重複計數
+    top_count = count((0, 0, w, min(margin, h)))
+    bottom_count = count((0, max(0, h - margin), w, h))
+    left_count = count((0, margin, min(margin, w), max(margin, h - margin)))
+    right_count = count((max(0, w - margin), margin, w, max(margin, h - margin)))
 
     return MarginViolation(
         top=top_count,
@@ -188,6 +195,44 @@ def check_cell_margins(cell_img: Any, margin: int = 10, alpha_threshold: int = 0
         left=left_count,
         right=right_count,
     )
+
+
+def measure_cell_content(cell_img: Any, margin: int = LINE_MIN_MARGIN) -> Dict[str, float]:
+    """量測單格內容：可見像素數、安全區覆蓋率、可見像素中淺色無彩色佔比。
+
+    可見 = alpha >= VISIBLE_ALPHA_MIN；安全區 = 扣掉四周 margin 後的內部矩形。
+    """
+    if cell_img.mode != "RGBA":
+        cell_img = cell_img.convert("RGBA")
+    w, h = cell_img.size
+
+    alpha = cell_img.getchannel("A")
+    visible = sum(alpha.histogram()[VISIBLE_ALPHA_MIN:])
+
+    # 淺色無彩色：min(r,g,b) >= 192 且 max-min <= 12，且該像素可見（用整張影像運算，避免逐像素 Python 迴圈）
+    r, g, b = cell_img.getchannel("R"), cell_img.getchannel("G"), cell_img.getchannel("B")
+    lo = ImageChops.darker(ImageChops.darker(r, g), b)
+    hi = ImageChops.lighter(ImageChops.lighter(r, g), b)
+    is_light = lo.point(lambda v: 255 if v >= 192 else 0)
+    is_gray = ImageChops.subtract(hi, lo).point(lambda v: 255 if v <= 12 else 0)
+    is_visible = alpha.point(lambda v: 255 if v >= VISIBLE_ALPHA_MIN else 0)
+    both = ImageChops.multiply(ImageChops.multiply(is_light, is_gray), is_visible)
+    light = both.histogram()[255]
+
+    safe_box = (margin, margin, w - margin, h - margin)
+    if safe_box[2] > safe_box[0] and safe_box[3] > safe_box[1]:
+        safe_alpha = cell_img.getchannel("A").crop(safe_box)
+        hist = safe_alpha.histogram()
+        safe_total = (safe_box[2] - safe_box[0]) * (safe_box[3] - safe_box[1])
+        coverage = sum(hist[VISIBLE_ALPHA_MIN:]) / safe_total
+    else:
+        coverage = 0.0
+
+    return {
+        "visible_pixels": visible,
+        "safe_area_coverage": coverage,
+        "light_neutral_ratio": (light / visible) if visible else 0.0,
+    }
 
 
 def create_fitted_canvas(
@@ -229,7 +274,11 @@ def slice_line_stickers(
     zip_path: Optional[Path | str] = None,
     strict: bool = False,
 ) -> SlicingReport:
-    """執行 16 宮格切圖、驗證與縮圖合成。"""
+    """執行 16 宮格切圖、驗證與縮圖合成。
+
+    strict=True 時，邊距違規與 margin 小於 LINE 官方 10px 都視為錯誤。
+    要求 zip_path 但因任何原因未能產出時，一律在 errors 補一條原因（呼叫端據此回 exit 1）。
+    """
     if not PIL_AVAILABLE or Image is None:
         raise RuntimeError("缺少必要第三方套件 Pillow (PIL)。請執行 pip install Pillow 安裝依賴。")
 
@@ -245,6 +294,15 @@ def slice_line_stickers(
     src_file = Path(input_path)
     if not src_file.is_file():
         raise FileNotFoundError(f"輸入檔案不存在：{src_file}")
+
+    # 先清掉舊 ZIP：本次若不合格，磁碟上就不會殘留上一輪合格時留下的舊檔
+    zip_p: Optional[Path] = Path(zip_path) if zip_path else None
+    if zip_p is not None:
+        if zip_p.resolve() == src_file.resolve():
+            raise ValueError(f"--zip 路徑不可與輸入檔案相同：{zip_p}")
+        if zip_p.is_dir():
+            raise ValueError(f"--zip 路徑是目錄，需為檔案路徑：{zip_p}")
+        zip_p.unlink(missing_ok=True)
 
     target_dir = Path(out_dir)
     target_dir.mkdir(parents=True, exist_ok=True)
@@ -270,14 +328,20 @@ def slice_line_stickers(
     else:
         has_alpha_channel = False
         working_base = img.convert("RGBA")
-        errors.append(f"影像缺少 Alpha 通道（目前模式為 {orig_mode}，LINE 貼圖強制要求 RGBA 透明背景）")
+        errors.append(f"影像缺少 Alpha 通道（目前模式為 {orig_mode}，LINE 要求去背透明，本工具以 Alpha 通道判定）")
 
     # 檢查實質去背透明度：若全圖所有像素 Alpha 均為 255，屬於未去背的假透明圖
     alpha_channel = working_base.getchannel("A")
     alpha_min, alpha_max = alpha_channel.getextrema()
-    has_transparent_pixels = (alpha_min < 255)
+    has_transparent_pixels = (alpha_min < VISIBLE_ALPHA_MIN)
     if not has_transparent_pixels:
-        errors.append("影像完全無任何透明像素（所有像素皆為不透明實心），未去背處理")
+        errors.append("影像幾乎無透明像素（所有像素 alpha 皆 >= 16，肉眼看來是不透明實心），未去背處理")
+
+    if margin < LINE_MIN_MARGIN:
+        if strict:
+            errors.append(f"--strict 要求安全邊距 >= LINE 官方 {LINE_MIN_MARGIN}px，收到 --margin {margin}")
+        else:
+            warnings.append(f"--margin {margin} 小於 LINE 官方 {LINE_MIN_MARGIN}px，結果不保證可上架，也不會打包 ZIP")
 
     expected_w = cols * cell_width
     expected_h = rows * cell_height
@@ -316,24 +380,41 @@ def slice_line_stickers(
             fixed_cell.paste(cell_img, (0, 0), mask=cell_img)
             cell_img = fixed_cell
 
-        # 檢查單格內容實質性
-        cell_bbox = cell_img.getbbox()
-        is_empty = (cell_bbox is None)
+        # 檢查單格內容實質性：以「可見像素」量測，而非只看有沒有任何非零像素
+        m = measure_cell_content(cell_img, margin=margin)
+        visible_pixels = int(m["visible_pixels"])
+        safe_coverage = float(m["safe_area_coverage"])
+        light_ratio = float(m["light_neutral_ratio"])
+        cell_area = cell_width * cell_height
+        min_visible = max(1, int(cell_area * MIN_VISIBLE_RATIO))
+
+        is_empty = visible_pixels < min_visible
         if is_empty:
             all_cells_valid = False
-            errors.append(f"單格 {idx:02d}.png 為完全透明空白圖，無貼圖內容")
+            errors.append(
+                f"單格 {idx:02d}.png 可見像素僅 {visible_pixels} 個（低於整格 {MIN_VISIBLE_RATIO:.0%} = {min_visible} 個），視為空白貼圖"
+            )
 
-        cell_alpha = cell_img.getchannel("A")
-        c_min, c_max = cell_alpha.getextrema()
-        is_fully_opaque = (c_min == 255)
+        is_fully_opaque = safe_coverage >= MAX_SAFE_COVERAGE
         if is_fully_opaque:
             all_cells_valid = False
-            errors.append(f"單格 {idx:02d}.png 完全無透明背景（全像素不透明），未去背")
+            errors.append(
+                f"單格 {idx:02d}.png 安全區可見覆蓋率 {safe_coverage:.1%}（>= {MAX_SAFE_COVERAGE:.0%}），實心底或假透明，未去背"
+            )
+
+        looks_like_backdrop = (not is_empty) and light_ratio >= MAX_LIGHT_NEUTRAL_RATIO
+        if looks_like_backdrop:
+            all_cells_valid = False
+            errors.append(
+                f"單格 {idx:02d}.png 可見像素有 {light_ratio:.1%} 是淺色無彩色，疑似白底或棋盤格假透明"
+            )
 
         violations = check_cell_margins(cell_img, margin=margin)
-        margin_ok = (violations.total == 0) and not is_empty and not is_fully_opaque
+        margin_ok = (violations.total == 0) and not is_empty and not is_fully_opaque and not looks_like_backdrop
         if violations.total > 0:
             all_margin_ok = False
+            if strict:
+                errors.append(f"單格 {idx:02d}.png 邊距溢出 {violations.total} px（--strict）")
 
         fname = f"{idx:02d}.png"
         out_path = target_dir / fname
@@ -341,7 +422,7 @@ def slice_line_stickers(
         sliced_images[idx] = cell_img
 
         file_size = os.path.getsize(out_path)
-        exceeds_1mb = file_size > 1024 * 1024
+        exceeds_1mb = file_size > LINE_MAX_FILE_BYTES
         if exceeds_1mb:
             all_cells_valid = False
             errors.append(f"單格 {idx:02d}.png 容量 ({file_size} bytes) 超過 1MB 官方上限")
@@ -359,6 +440,10 @@ def slice_line_stickers(
                 violations=violations,
                 file_size_bytes=file_size,
                 exceeds_1mb=exceeds_1mb,
+                visible_pixels=visible_pixels,
+                safe_area_coverage=safe_coverage,
+                light_neutral_ratio=light_ratio,
+                looks_like_backdrop=looks_like_backdrop,
             )
         )
 
@@ -371,7 +456,7 @@ def slice_line_stickers(
             main_path = target_dir / "main.png"
             main_canvas.save(main_path, format="PNG")
             main_size = os.path.getsize(main_path)
-            if main_size > 1024 * 1024:
+            if main_size > LINE_MAX_FILE_BYTES:
                 all_cells_valid = False
                 errors.append(f"主圖 main.png 容量 ({main_size} bytes) 超過 1MB 上限")
             main_created = True
@@ -385,31 +470,50 @@ def slice_line_stickers(
             tab_path = target_dir / "tab.png"
             tab_canvas.save(tab_path, format="PNG")
             tab_size = os.path.getsize(tab_path)
-            if tab_size > 1024 * 1024:
+            if tab_size > LINE_MAX_FILE_BYTES:
                 all_cells_valid = False
                 errors.append(f"標籤 tab.png 容量 ({tab_size} bytes) 超過 1MB 上限")
             tab_created = True
 
-    # 打包 ZIP：僅在無重大錯誤且全數邊距與規格皆合規時才打包（瑕疵圖絕不打包）
+    # 打包 ZIP：只有「內容完整、規格合規」才打包；要求打包卻不能打包，一律記為錯誤（exit 1）
     created_zip_file: Optional[str] = None
-    can_package = (len(errors) == 0) and all_cells_valid and all_margin_ok
+    package_blockers: List[str] = []
+    if errors or not all_cells_valid:
+        package_blockers.append(f"檢驗有 {len(errors)} 項錯誤")
+    if not all_margin_ok:
+        package_blockers.append("有格子邊距溢出")
+    if margin < LINE_MIN_MARGIN:
+        package_blockers.append(f"--margin {margin} 小於 LINE 官方 {LINE_MIN_MARGIN}px")
+    if not main_created:
+        package_blockers.append("缺少 main.png（--skip-main 或來源格不存在）")
+    if not tab_created:
+        package_blockers.append("缺少 tab.png（--skip-tab 或來源格不存在）")
+    if expected_total not in LINE_STICKER_COUNTS:
+        package_blockers.append(f"貼圖張數 {expected_total} 不是 LINE 可選的 {'/'.join(map(str, LINE_STICKER_COUNTS))}")
+    if cell_width % 2 or cell_height % 2:
+        package_blockers.append(f"單格尺寸 {cell_width}x{cell_height} 不是偶數")
+    if cell_width > LINE_MAX_STICKER_SIZE[0] or cell_height > LINE_MAX_STICKER_SIZE[1]:
+        package_blockers.append(
+            f"單格尺寸 {cell_width}x{cell_height} 超過 LINE 上限 {LINE_MAX_STICKER_SIZE[0]}x{LINE_MAX_STICKER_SIZE[1]}"
+        )
 
-    if zip_path:
-        if can_package:
-            zip_p = Path(zip_path)
+    if zip_p is not None:
+        if not package_blockers:
             zip_p.parent.mkdir(parents=True, exist_ok=True)
             with zipfile.ZipFile(zip_p, "w", compression=zipfile.ZIP_DEFLATED) as zf:
                 for c in cells_reports:
-                    fpath = target_dir / c.filename
-                    if fpath.exists():
-                        zf.write(fpath, arcname=c.filename)
-                if main_created and (target_dir / "main.png").exists():
-                    zf.write(target_dir / "main.png", arcname="main.png")
-                if tab_created and (target_dir / "tab.png").exists():
-                    zf.write(target_dir / "tab.png", arcname="tab.png")
-            created_zip_file = str(zip_p)
-        else:
+                    zf.write(target_dir / c.filename, arcname=c.filename)
+                zf.write(target_dir / "main.png", arcname="main.png")
+                zf.write(target_dir / "tab.png", arcname="tab.png")
+            zip_size = zip_p.stat().st_size
+            if zip_size >= LINE_MAX_ZIP_BYTES:
+                zip_p.unlink(missing_ok=True)
+                package_blockers.append(f"ZIP 容量 {zip_size} bytes 不小於 LINE 上限 60MB")
+            else:
+                created_zip_file = str(zip_p)
+        if created_zip_file is None:
             warnings.append("檢驗未達合規標準，取消打包上架 ZIP 壓縮包以防上架被退件")
+            errors.append("已要求 --zip 但未產出 ZIP：" + "；".join(package_blockers))
 
     return SlicingReport(
         input_path=str(src_file),
@@ -428,6 +532,7 @@ def slice_line_stickers(
         cells=cells_reports,
         errors=errors,
         warnings=warnings,
+        package_blockers=package_blockers,
     )
 
 
@@ -531,6 +636,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     has_margin_violations = not report.all_margin_ok
 
     passed = (not has_fatal_errors) and ((not has_margin_violations) or (not args.strict))
+    zip_failed = bool(args.zip_path) and not report.zip_created
 
     if args.json:
         data = report.as_dict()
@@ -540,7 +646,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     else:
         print(f"[*] 讀取影像: {report.input_path} ({report.image_width}x{report.image_height}, 模式: {report.mode})")
         if not report.has_alpha:
-            print(f"[FAIL] ❌ 缺少 Alpha 通道！目前模式為 {report.mode}，LINE 貼圖必須為 RGBA 透明背景。")
+            print(f"[FAIL] ❌ 缺少 Alpha 通道！目前模式為 {report.mode}，LINE 要求去背透明，本工具以 Alpha 通道判定。")
         if not report.has_transparent_pixels:
             print(f"[FAIL] ❌ 缺少透明去背！整張圖無任何透明像素（假透明白底）。")
         if not is_size_exact:
@@ -549,14 +655,16 @@ def main(argv: Optional[List[str]] = None) -> int:
         print(f"[*] 切割 {args.rows}x{args.cols} 宮格 (單格 {args.cell_width}x{args.cell_height})...")
         for c in report.cells:
             if c.is_empty:
-                print(f"  [FAIL] ❌ {c.filename} ({c.width}x{c.height}) - 完全透明空白圖（無貼圖內容）")
+                print(f"  [FAIL] ❌ {c.filename} ({c.width}x{c.height}) - 空白貼圖（可見像素僅 {c.visible_pixels} 個）")
             elif c.is_fully_opaque:
-                print(f"  [FAIL] ❌ {c.filename} ({c.width}x{c.height}) - 完全無透明背景（全像素不透明）")
+                print(f"  [FAIL] ❌ {c.filename} ({c.width}x{c.height}) - 安全區可見覆蓋率 {c.safe_area_coverage:.1%}（實心底／假透明）")
+            elif c.looks_like_backdrop:
+                print(f"  [FAIL] ❌ {c.filename} ({c.width}x{c.height}) - 淺色無彩色佔 {c.light_neutral_ratio:.1%}（疑似白底／棋盤格）")
             elif c.exceeds_1mb:
                 print(f"  [FAIL] ❌ {c.filename} ({c.width}x{c.height}) - 容量 {c.file_size_bytes} bytes 超過 1MB 上限")
             else:
                 status = "[PASS] ✅" if c.margin_ok else "[WARN] ⚠️"
-                margin_info = "10px 安全邊距合規" if c.margin_ok else f"邊距溢出 {c.violations.total} px (T:{c.violations.top} B:{c.violations.bottom} L:{c.violations.left} R:{c.violations.right})"
+                margin_info = f"{args.margin}px 安全邊距合規" if c.margin_ok else f"邊距溢出 {c.violations.total} px (T:{c.violations.top} B:{c.violations.bottom} L:{c.violations.left} R:{c.violations.right})"
                 print(f"  {status} {c.filename} ({c.width}x{c.height}) - {margin_info}")
 
         if report.main_created:
@@ -565,8 +673,12 @@ def main(argv: Optional[List[str]] = None) -> int:
             print(f"[*] 合成標籤: {Path(args.out_dir) / 'tab.png'} (96x74, 來源: {args.tab_index:02d}.png) [OK]")
         if report.zip_created:
             print(f"[*] 打包壓縮檔: {report.zip_created} [OK]")
-        elif args.zip_path and not report.zip_created:
-            print(f"[WARN] ⚠️ 未通過合規驗證，未產生 ZIP 打包檔：{args.zip_path}")
+        elif zip_failed:
+            print(f"[FAIL] ❌ 已要求 --zip 但未產生 ZIP 打包檔：{args.zip_path}（{'；'.join(report.package_blockers)}）")
+        for w in report.warnings:
+            print(f"[WARN] ⚠️ {w}")
+        for e in report.errors:
+            print(f"[ERROR] {e}")
 
         if passed and not has_margin_violations:
             print("[SUCCESS] 🎉 全數貼圖與上架檔案切圖合規完成！")
@@ -575,7 +687,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         else:
             print("[FAIL] ❌ 未通過合規檢查，請檢視上述錯誤與警示。")
 
-    # 判定 exit code
+    # 判定 exit code（已要求 --zip 卻沒產出時，report.errors 已含原因，所以也是 has_fatal_errors）
     if has_fatal_errors:
         return 1
     if has_margin_violations and args.strict:
