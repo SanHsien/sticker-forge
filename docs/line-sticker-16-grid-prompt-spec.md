@@ -1,7 +1,7 @@
 # AI 似顏繪 LINE 16 宮格貼圖 Prompt 工程與視覺規範
 
 > 對應任務：`T-20261031-01`
-> 來源筆記：[`notes/2026-10-31-line-sticker-16-grid-ai-avatar-prompt-spec.md`](../notes/2026-10-31-line-sticker-16-grid-ai-avatar-prompt-spec.md)
+> 來源筆記：[`docs/research/2026-10-31-line-sticker-16-grid-ai-avatar-prompt-spec.md`](research/2026-10-31-line-sticker-16-grid-ai-avatar-prompt-spec.md)
 > 核心原創：Ann Cheng（安總監 / 安老師，@anncheng_ann101）
 > 查證日期：2026-11-02（LINE 官方準則與 Threads 貼文都在這天實際開頁核對，範圍見第 7 節）
 
@@ -180,16 +180,16 @@ No watermark, no photography realism, no 3D uncanny valley rendering, no merged 
 
 ## 6. 自動切圖工具對接操作手冊
 
-本 repo 提供專用切圖與規格驗證工具 [`tools/slice_line_stickers.py`](../tools/slice_line_stickers.py)，可一鍵將生圖模型輸出的 $1480 \times 1280$ 排列圖切分並驗證合規：
+本 repo 提供專用切圖與規格驗證工具 [`examples/slice_line_stickers.py`](../examples/slice_line_stickers.py)，可一鍵將生圖模型輸出的 $1480 \times 1280$ 排列圖切分並驗證合規：
 
 ### 6.1 基本執行指令
 ```bash
 # 自動切分 16 宮格、檢查 10px 餘白與 Alpha 通道，並輸出 main.png 與 tab.png（不打包）
-python tools/slice_line_stickers.py avatar_grid_1480x1280.png --out-dir output/stickers
+python examples/slice_line_stickers.py avatar_grid_1480x1280.png --out-dir output/stickers
 
 # 嚴格模式並打包為上架 ZIP。任何一格不合格（含邊距溢出）時：仍會寫出 01~16.png 供檢視，
 # 但 exit 1、不產生 ZIP，並會先刪掉同路徑上一輪留下的舊 ZIP
-python tools/slice_line_stickers.py avatar_grid_1480x1280.png -o output/stickers --strict --zip output/line_stickers.zip
+python examples/slice_line_stickers.py avatar_grid_1480x1280.png -o output/stickers --strict --zip output/line_stickers.zip
 ```
 
 非 `--strict` 時，邊距溢出只是警告（exit 0）；但只要加了 `--zip` 而 ZIP 沒有產出，一律 exit 1，不會出現「通過卻沒有檔案」。

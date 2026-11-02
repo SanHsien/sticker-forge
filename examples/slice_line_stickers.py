@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-tools/slice_line_stickers.py
+examples/slice_line_stickers.py
 Ann Cheng 16 宮格 AI 似顏繪 LINE 貼圖自動切圖與規格驗證工具。
 對應規範：docs/line-sticker-16-grid-prompt-spec.md
 對應任務：T-20261031-02

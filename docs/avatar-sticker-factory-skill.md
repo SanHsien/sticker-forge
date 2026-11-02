@@ -15,8 +15,8 @@ author: "SanHsien / Ann Cheng Prompt Engineering Framework"
 # AI 似顏繪貼圖工廠技能範本 (Avatar Sticker Factory Skill)
 
 > 本技能範本收錄於 `templates/avatar-sticker-factory-skill.md`。可直接複製至 Agent 技能目錄（如 `%USERPROFILE%\.gemini\config\skills\avatar-sticker-factory\SKILL.md` 或各專案技能目錄）中引入使用。  
-> 【自包含與依賴說明】：本技能依賴切圖驗證腳本 `tools/slice_line_stickers.py`（僅用 Python 標準函式庫加第三方套件 Pillow，需 `pip install Pillow`；缺套件時腳本 exit 2 並提示）。若獨立複製至其他環境或專案，請將該腳本一併複製至技能目錄下的 `scripts/` 或確保其已加入系統 PATH。其判定門檻與已知抓不到的情況見 `docs/line-sticker-16-grid-prompt-spec.md` 第 6.3 節。  
-> 核心規範對照：[`docs/line-sticker-16-grid-prompt-spec.md`](../docs/line-sticker-16-grid-prompt-spec.md)  
+> 【自包含與依賴說明】：本技能依賴切圖驗證腳本 `examples/slice_line_stickers.py`（僅用 Python 標準函式庫加第三方套件 Pillow，需 `pip install Pillow`；缺套件時腳本 exit 2 並提示）。若獨立複製至其他環境或專案，請將該腳本一併複製至技能目錄下的 `scripts/` 或確保其已加入系統 PATH。其判定門檻與已知抓不到的情況見 `docs/line-sticker-16-grid-prompt-spec.md` 第 6.3 節。  
+> 核心規範對照：[`docs/line-sticker-16-grid-prompt-spec.md`](line-sticker-16-grid-prompt-spec.md)  
 > 查證日期：2026-11-02
 
 ---
@@ -79,11 +79,11 @@ Agent 套用 Ann Cheng 16 宮格工法，組合出結構化 Prompt：
 - 工具是否通過只是機械檢查，不代表背景乾淨、不代表上架審核會過。
 
 ### 階段四：自動化切圖與機械合規驗證
-調用切圖工具（本專案位於 `tools/slice_line_stickers.py`；若獨立使用技能請調用同技能目錄下的 `scripts/slice_line_stickers.py`）：
+調用切圖工具（本專案位於 `examples/slice_line_stickers.py`；若獨立使用技能請調用同技能目錄下的 `scripts/slice_line_stickers.py`）：
 
 ```bash
 # 執行嚴格切圖驗證並直接打包為上架 ZIP
-python tools/slice_line_stickers.py \
+python examples/slice_line_stickers.py \
   "input_avatar_1480x1280.png" \
   --out-dir "output/line_stickers" \
   --strict \
