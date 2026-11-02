@@ -27,6 +27,8 @@
 - 依賴宣告跟上現行版：`setuptools>=84.0.0`、`wheel>=0.48.0`、`packaging>=26.3`、
   `pyinstaller>=6.22.2`。每月依賴檢查自 8/15 起因這四筆落後而紅燈，本次補上後轉綠；
   121 個測試在本機通過，EXE 打包由 CI 的 Windows EXE job 驗證。
+- 開發依賴 `pytest>=9.2.0`：每月依賴檢查 11/1 因 pytest 9.2.0 未審而紅燈；在乾淨 venv 以
+  9.2.0 跑全部測試（把 `PytestDeprecationWarning` 當錯誤）253 個通過。只影響測試環境，不進打包。
 
 ## v0.22.0
 
