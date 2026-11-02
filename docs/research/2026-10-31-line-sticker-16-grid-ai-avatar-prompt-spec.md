@@ -6,7 +6,7 @@ source_platform: "Threads (@anncheng_ann101) / YouTube"
 author: "Ann Cheng (安總監 / 安老師, @anncheng_ann101)"
 analyzed_at: 2026-10-31
 analyzed_by: "Antigravity"
-status: pending
+status: done
 cluster: 2
 cluster_role: "貼圖工程"
 short_title: "Ann Cheng 16宮格似顏繪貼圖規格"
@@ -25,7 +25,7 @@ tags:
 - **來源連結**：[Threads 原文分享 (@anncheng_ann101)](https://www.threads.com/share/BAgCwYB05Y/) ｜ [貼文永久網址](https://www.threads.com/@anncheng_ann101/post/DfEB-BIEUGF) ｜ [作者 YouTube 實戰教學 (Line透明貼圖16宮格+Line拍貼上架)](https://www.youtube.com/@ANNChengANN101)
 - **核心作者**：Ann Cheng（安總監 / 安老師，企業數位長、雙軌轉型顧問與生成式 AI 實戰講師）
 - **分析主題**：利用單一 Prompt 達成高一致性似顏繪（Q版 chibi 2.8 頭身）角色定裝、鎖定真實人物五官髮型、1480×1280 總尺寸精確劃分 16 宮格透明排列圖（單格 370×320）、四周 10px 安全邊距防裁切、粗白貼圖外框可讀性規範、16 組高頻日常繁體中文字情境搭配、以及將多宮格排列圖自動化切割為 LINE 官方規範檔案（01~16.png、main.png 240×240、tab.png 96×74）的端到端工程管線
-- **當前狀態**：`🔴 待辦處理中 (Pending)`
+- **當前狀態**：`🟢 已完成 (Done)`
 - **相關交叉參照**：
   - [`notes/2026-10-28-motion-design-agent-harness-opus-55.md`](./2026-10-28-motion-design-agent-harness-opus-55.md)（0xalpha 代碼驅動動效與視覺 Anti-Slop 規範）
   - [`notes/2026-10-28-multi-agent-team-dispatch-five-roads-going-li.md`](./2026-10-28-multi-agent-team-dispatch-five-roads-going-li.md)（Going Li 五路工具流：ROAD 02 做圖像、公仔與 LINE 貼圖流程）
@@ -134,7 +134,7 @@ Ann Cheng 提煉之 16 組高頻日常繁體中文字庫，完全覆蓋職場溝
 
 > ⚠️ 本節是任務的唯一資料來源：改完執行 `python tools/build_index.py` 重產 [`README.md`](../README.md) 總表。
 
-- [ ] **`T-20261031-01`**｜**[優先級：高]** 撰寫「AI 似顏繪 LINE 16 宮格貼圖 Prompt 工程與視覺規範」收錄於 `docs/line-sticker-16-grid-prompt-spec.md`
+- [x] **`T-20261031-01`**｜**[優先級：高]** 撰寫「AI 似顏繪 LINE 16 宮格貼圖 Prompt 工程與視覺規範」收錄於 `docs/line-sticker-16-grid-prompt-spec.md`
   - **目標範圍**：`docs/line-sticker-16-grid-prompt-spec.md`（規範文檔；不修改其他專案程式）
   - **具體做法**：
     1. 詳細定義角色鎖臉（Face Retention）提示詞結構與 2.8 頭身 Q 版風格約束。
@@ -142,9 +142,10 @@ Ann Cheng 提煉之 16 組高頻日常繁體中文字庫，完全覆蓋職場溝
     3. 整理 16 組繁體中文高頻社交詞與對應情境動作設計表。
     4. 納入 LINE Creators Market 上架技術規範清單（主圖 240×240、標籤圖 96×74、貼圖 370×320）。
   - **驗收標準（DoD）**：產出 `docs/line-sticker-16-grid-prompt-spec.md`，內含完整提示詞範本、尺寸規格表與上架規範；以 `Test-Path docs/line-sticker-16-grid-prompt-spec.md` 驗證存在。
-  - **實作紀錄 / 證據**：*（待完成後由執行 Agent 填寫）*
+  - **完成日期**：2026-11-02
+  - **實作紀錄 / 證據**：docs/line-sticker-16-grid-prompt-spec.md：尺寸、1MB、60MB ZIP、留白原句對照 LINE 官方準則；原貼文「純白背景」與「透明」的內部矛盾照實揭露，查證範圍限登出可見內容，16 組文案標為本 repo 擴充。原交付被審查退回兩輪後改由 Claude 接手。
 
-- [ ] **`T-20261031-02`**｜**[優先級：中]** 實作「LINE 16 宮格貼圖自動切圖與規格驗證工具」於 `tools/slice_line_stickers.py`
+- [x] **`T-20261031-02`**｜**[優先級：中]** 實作「LINE 16 宮格貼圖自動切圖與規格驗證工具」於 `tools/slice_line_stickers.py`
   - **目標範圍**：`tools/slice_line_stickers.py` 與 `tests/test_slice_line_stickers.py`
   - **具體做法**：
     1. 實作命令列工具，讀取 1480×1280 的透明排列圖，自動切出 16 張 370×320 PNG（命名為 `01.png`~`16.png`）。
@@ -152,15 +153,17 @@ Ann Cheng 提煉之 16 組高頻日常繁體中文字庫，完全覆蓋職場溝
     3. 檢查 Alpha Channel 透明通道、尺寸與邊緣安全距離合規性。
     4. 撰寫單元測試覆蓋有效切割、非法尺寸防禦與透明通道檢查。
   - **驗收標準（DoD）**：產出 `tools/slice_line_stickers.py` 與單元測試，執行 `python -m unittest discover -s tests` 全綠通過。
-  - **實作紀錄 / 證據**：*（待完成後由執行 Agent 填寫）*
+  - **完成日期**：2026-11-02
+  - **實作紀錄 / 證據**：tools/slice_line_stickers.py＋tests/test_slice_line_stickers.py（33 測試）：依可見像素比例與安全區覆蓋率擋空白、實心、假透明，不合格不打包，舊 ZIP 先刪；重現步驟實跑（實心白框、每格 1 像素 exit 1 且無 ZIP，正常圖通過），47 種突變全紅。CI 已裝 Pillow，測試實際執行。門檻為本 repo 取捨，深色棋盤格抓不到（文件已寫）。
 
-- [ ] **`T-20261031-03`**｜**[優先級：低]** 產出標準化「AI 似顏繪貼圖工廠 Skill 範本（Avatar-Sticker-Factory）」收錄於 `templates/avatar-sticker-factory-skill.md`
+- [x] **`T-20261031-03`**｜**[優先級：低]** 產出標準化「AI 似顏繪貼圖工廠 Skill 範本（Avatar-Sticker-Factory）」收錄於 `templates/avatar-sticker-factory-skill.md`
   - **目標範圍**：`templates/avatar-sticker-factory-skill.md`
   - **具體做法**：
     1. 產出可直接供 Claude Code、Antigravity 或其他 Agent 引入的 Skill 範本。
     2. 整合「真人照片輸入 $\rightarrow$ 16宮格 Prompt 生成 $\rightarrow$ 切圖腳本調用 $\rightarrow$ LINE 上架 ZIP 包輸出」端到端指令流。
   - **驗收標準（DoD）**：產出 `templates/avatar-sticker-factory-skill.md`，具備標準 YAML frontmatter 與完整執行步驟；以 `Test-Path templates/avatar-sticker-factory-skill.md` 驗證存在。
-  - **實作紀錄 / 證據**：*（待完成後由執行 Agent 填寫）*
+  - **完成日期**：2026-11-02
+  - **實作紀錄 / 證據**：templates/avatar-sticker-factory-skill.md：端到端流程與檢查清單，每項標明工具可查或要人工看；無來源的模型能力說法改標未驗證，刪除放寬邊距的建議。
 
 ---
 
