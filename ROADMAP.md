@@ -5,7 +5,7 @@
 
 ## 現況
 
-`sticker-forge` 是 Windows-first、local-first 的聊天貼圖工具（Python core＋pywebview GUI＋CLI），是 `yazelin/line-sticker-studio` 的 MIT fork（`AGENTS.md:7,11`）。最近 release 是 v0.23.0（多幕色、自訂幕色與多項 GUI／validator 修正，見 `CHANGELOG.md`），`pyproject.toml:7` 也是 0.23.0。
+`sticker-forge` 是 Windows-first、local-first 的聊天貼圖工具（Python core＋pywebview GUI＋CLI），是 `yazelin/line-sticker-studio` 的 MIT fork（`AGENTS.md:7,11`）。最近 release 是 v0.22.0；`main` 已是 v0.23.0 的發版 commit（`pyproject.toml:7` 為 0.23.0，`CHANGELOG.md` 有 v0.23.0 段），但 tag 與 GitHub Release 尚未建立，見近期第一列。
 健康：open PR 0、Dependabot 與 code scanning 告警 0，CI、CodeQL、Dependabot guarded merge、Dependency freshness、Upstream commit check 在 `main` 最近一次皆 success；issues 在 GitHub 上已停用，所以 open issue 數是「未查到」，不是 0（2026-10-29 `gh` 查詢）。
 v0.23.0 的 Windows GUI 實機驗收（以 agent-desktop 操作原始碼版 GUI 的按鈕與原生對話框）與 Release 資產驗證紀錄在 `docs/WINDOWS_VALIDATION.md`；LINE Creators Market 手動上傳仍未做，只擋 v1.0.0。上游水位在 commit `1a1e903`、PR 81、issue 62（`tools/upstream_baseline.json`），2026-10-26 的 Upstream commit check 為 success，代表沒有未審項目。
 
@@ -14,6 +14,7 @@ v0.23.0 的 Windows GUI 實機驗收（以 agent-desktop 操作原始碼版 GUI 
 | 項目 | 驗收方式 | 建議執行者 | 證據 |
 | --- | --- | --- | --- |
 | 把 4×4／370×320 規格與空白圖、假透明檢查整合進 `spec.py` 與驗證流程，完成後移除（或改為薄包裝）`examples/slice_line_stickers.py` | 新增 4×4 規格（`LINEStickerSpec` 16 張、`grid_rows=4`、`grid_columns=4`）並能由 CLI／GUI 選用；`validate_line_zip` 對空白格、實心白底（假透明）、近乎全白淺灰內容回報錯誤，門檻沿用獨立工具常數並在 `docs/line-sticker-16-grid-prompt-spec.md` 6.3 節對照；`tests/test_slice_line_stickers.py` 的案例移植到對應測試後 `python -m pytest` 綠；不得讓現有 3×3／8 張預設行為改變 | Claude Sonnet | 下方差異表 |
+| 建立 tag `v0.23.0` 與 GitHub Release | tag 指向 `839aed0`；Release 附 `sticker-forge-v0.23.0-windows-x64.zip` 與 `.sha256`，SHA-256 等於 `docs/WINDOWS_VALIDATION.md` v0.23.0 紀錄 Windows build 列的值（本機 build 在 `%TEMP%\sticker-forge-pyinstaller-dist\`，若已被清掉就照 `packaginguild-windows.ps1` 重建並更新紀錄）；Release 說明草稿照 CHANGELOG v0.23.0 段 | 維護者（2026-11-03 由 AI 建立時被自動權限擋下：公開發布要維護者本人執行或放行） | 本列；`docs/DEVELOPMENT.md` Release checklist |
 | 補完 v0.23.0 驗收紀錄的待補項目 | `docs/WINDOWS_VALIDATION.md` v0.23.0 紀錄的 Release SHA-256／Expand-Archive 一列由「待補」改為實測結果（下載資產的 SHA-256 須等於 Windows build 列記下的值），並以解壓後的 exe 跑 `--smoke` | Claude Sonnet | 該紀錄；`docs/WINDOWS_VALIDATION.md` 第三節 |
 | 動態／pop-up／effect 匯出錯誤訊息在地化 | 繁中 GUI 匯出影格數不足的動態貼圖時，狀態列顯示繁中訊息（目前為英文 `sticker 1 has 2 frames, expected 5-20`）；英文 GUI 維持英文；對應測試綠 | Claude Sonnet | 2026-11-03 GUI 驗收步驟 6；訊息來源 `src/sticker_forge/exporter.py:509,594,936` |
 
