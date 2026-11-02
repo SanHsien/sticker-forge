@@ -14,9 +14,9 @@ author: "SanHsien / Ann Cheng Prompt Engineering Framework"
 
 # AI 似顏繪貼圖工廠技能範本 (Avatar Sticker Factory Skill)
 
-> 本技能範本收錄於 `templates/avatar-sticker-factory-skill.md`，可直接複製至 Agent 技能目錄（如 `~/.gemini/config/skills/avatar-sticker-factory/SKILL.md` 或 Claude Code 專案技能）中引入使用。  
+> 本技能範本收錄於 `templates/avatar-sticker-factory-skill.md`。可直接複製至 Agent 技能目錄（如 `%USERPROFILE%\.gemini\config\skills\avatar-sticker-factory\SKILL.md` 或各專案技能目錄）中引入使用。  
+> 【自包含與依賴說明】：本技能依賴切圖驗證腳本 `tools/slice_line_stickers.py`。若獨立複製至其他環境或專案，請將該腳本一併複製至技能目錄下的 `scripts/` 或確保其已加入系統 PATH。  
 > 核心規範對照：[`docs/line-sticker-16-grid-prompt-spec.md`](../docs/line-sticker-16-grid-prompt-spec.md)  
-> 切圖工具實作：[`tools/slice_line_stickers.py`](../tools/slice_line_stickers.py)  
 > 查證日期：2026-11-02
 
 ---
@@ -39,7 +39,7 @@ author: "SanHsien / Ann Cheng Prompt Engineering Framework"
 │  [ Step 3：單張生圖一次性交付 ] ──► 產出單張 1480 × 1280 像素 RGBA 透明背景排列圖              │
 │            │                         (同一 Attention 上下文，風格與人物長相零漂移)             │
 │            ▼                                                                                   │
-│  [ Step 4：調用機械切圖與檢驗工具 ] ──► 執行 tools/slice_line_stickers.py                       │
+│  [ Step 4：調用機械切圖與檢驗工具 ] ──► 執行 slice_line_stickers.py (repo 或 scripts/)         │
 │            ├─ 沿 370×320 網格切分出 01.png ~ 16.png (單張最大 370×320 px)                     │
 │            ├─ 嚴格機械檢驗每張貼圖四周 10px 安全邊界（防聊天氣泡切除）與 Alpha 通道             │
 │            ├─ 自動等比例縮放合成主圖 main.png (240×240 px)                                      │
@@ -74,11 +74,12 @@ Agent 套用 Ann Cheng 16 宮格工法，組合出結構化 Prompt：
   - Row 4: `13 週休快樂`（墨鏡冰飲）、`14 假期愉快`（小旗幟慶祝）、`15 生日快樂`（生日帽蛋糕）、`16 恭喜`（抱拳彩炮）
 
 ### 階段三：圖像生成與取得
-- 將組裝之 Prompt 傳入生成模型（Midjourney `--ar 37:32`、DALL-E 或 SD 模型），產生 1480×1280 透明背景圖。
-- 檢查產出檔案確認為 RGBA 格式。
+- 將組裝之 Prompt 傳入生成模型（如 Midjourney 指定 `--ar 37:32`、Stable Diffusion 或 DALL-E 3）。
+- 【去背處理必要性說明】：目前主流生圖模型（Midjourney、DALL-E 等）通常直接產出純色或不透明底（JPG/PNG）；即便提示詞要求透明背景，多數模型仍會產生假透明或白色實心背景。因此生成後必須先使用去背工具（如開源 `rembg`、Photoshop 去背或專屬去背外掛）轉為具備 Alpha 通道的真正透明背景 RGBA PNG。
+- 檢查產出檔案確認已成功具備 Alpha 透明通道（RGBA 格式）且四周邊距留白充足。
 
 ### 階段四：自動化切圖與機械合規驗證
-調用本專案 `tools/slice_line_stickers.py` 工具進行裁切與驗收：
+調用切圖工具（本專案位於 `tools/slice_line_stickers.py`；若獨立使用技能請調用同技能目錄下的 `scripts/slice_line_stickers.py`）：
 
 ```bash
 # 執行嚴格切圖驗證並直接打包為上架 ZIP
@@ -98,8 +99,8 @@ python tools/slice_line_stickers.py \
 
 ### 階段五：交付與上架審查
 Agent 回報上架壓縮檔路徑及規格驗證摘要：
-- 上架 ZIP 包包含 18 個檔案（16 張貼圖 + main.png + tab.png）。
-- 提醒使用者登入 [LINE Creators Market](https://creator.line.me/zh-hant/)，點選「新增貼圖」 $\rightarrow$ 選擇「靜態貼圖」 $\rightarrow$ 設定 16 張貼圖 $\rightarrow$ 於貼圖圖片區塊「上傳壓縮檔 (ZIP)」，即可一次性完成所有圖片配置。
+- 上架 ZIP 包包含 18 個檔案（16 張貼圖 + main.png + tab.png），且總容量小於 60MB（單張 < 1MB）。
+- 【上架流程標註未驗證】：提醒使用者登入 [LINE Creators Market](https://creator.line.me/zh-hant/)，點選「新增貼圖」 $\rightarrow$ 選擇「靜態貼圖」 $\rightarrow$ 設定 16 張貼圖 $\rightarrow$ 於貼圖圖片區塊「上傳壓縮檔 (ZIP)」；或使用「LINE 拍貼」App 匯入。（此流程與介面標註為未驗證，請依 LINE 官方後台最新版本操作指引為準）。
 
 ---
 
@@ -157,7 +158,7 @@ watermark, realistic photo, 3D render, cell border overlap, touching 370x320 edg
 
 | 異常現象 | 機械原因 | 補救處方 |
 | :--- | :--- | :--- |
-| `10px 邊距溢出警告` | 模型將手勢或文字畫得太靠邊緣 | 1. 調整提示詞強調「手勢內縮置中」<br>2. 執行切圖工具 `--margin 8` 或微調裁切位移<br>3. 在繪圖軟體微調透明圖層邊緣 |
-| `缺少 Alpha 通道 (RGB)` | 生圖平台輸出為純白底 JPG 或 RGB PNG | 執行去背工具或於提示詞加強 `transparent alpha channel PNG` |
-| `大圖尺寸非 1480x1280` | 模型自適應長寬比（例如 1024x1024） | 工具自動補齊透明畫布以防崩潰；但最佳作法是指定模型生成固定尺寸或等比縮放為 1480x1280 |
+| `10px 邊距溢出警告` | 模型將手勢或文字畫得太靠邊緣 | 1. 調整提示詞強調「手勢與文字內縮置中，預留四周 10px 留白」<br>2. 在繪圖或去背軟體中微調圖層縮小置中（切勿放寬工具檢查） |
+| `缺少 Alpha 通道 (RGB)` | 生圖平台輸出為純白底 JPG 或 RGB PNG | 使用去背工具（如 `rembg`、Photoshop）完成去背並轉存為 RGBA PNG |
+| `大圖尺寸非 1480x1280` | 模型生成長寬比不符（例如 1536x1024 或 1024x1024） | 1536×1024 (3:2) 與 1480×1280 (37:32) 長寬比不符，無法直接等比縮放！切圖工具僅做網格切分，不負責全局縮放；需在生圖時指定 `--ar 37:32`，或在切圖前先手動裁切/補畫布至 37:32 比例後，再調整尺寸為 1480×1280 |
 | `繁體字體出現簡體` | 基礎生圖模型中文偏誤 | 使用繁體字專用 LoRA，或在生圖後由圖像工具換上繁體中文向量字型 |
