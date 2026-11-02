@@ -86,6 +86,19 @@ def test_validators_report_a_file_that_is_not_a_zip(tmp_path, validator) -> None
     assert any("ZIP" in error for error in errors)
 
 
+@pytest.mark.parametrize("validator", VALIDATORS)
+def test_validators_report_a_missing_file_instead_of_raising(tmp_path, validator) -> None:
+    errors = validator(tmp_path / "missing.zip")
+
+    assert errors
+    assert any("ZIP" in error for error in errors)
+
+
+def test_cli_validate_exits_1_for_a_missing_file_without_traceback(tmp_path, capsys) -> None:
+    assert main(["validate", str(tmp_path / "missing.zip")]) == 1
+    assert "cannot open ZIP file" in capsys.readouterr().out
+
+
 def test_validate_line_zip_reports_unreadable_images(tmp_path) -> None:
     broken = tmp_path / "garbage.zip"
     with ZipFile(broken, "w") as archive:

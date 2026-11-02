@@ -739,7 +739,7 @@ def _is_fully_opaque(image: Image.Image) -> bool:
 
 
 def _zip_validator(validate):
-    """Report a file that is not a ZIP as a validation error instead of raising."""
+    """Report a missing, unreadable or non-ZIP file as a validation error instead of raising."""
 
     @functools.wraps(validate)
     def wrapper(*args, **kwargs) -> list[str]:
@@ -747,6 +747,8 @@ def _zip_validator(validate):
             return validate(*args, **kwargs)
         except (BadZipFile, zlib.error) as exc:
             return [f"not a valid ZIP file: {exc}"]
+        except OSError as exc:
+            return [f"cannot open ZIP file: {exc}"]
 
     return wrapper
 

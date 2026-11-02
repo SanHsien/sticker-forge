@@ -41,10 +41,61 @@ def test_advanced_tune_panel_is_wired_and_off_by_default() -> None:
 def test_incomplete_custom_chroma_clears_stale_prompt() -> None:
     app_js = (Path(__file__).parents[1] / "app" / "app.js").read_text(encoding="utf-8")
 
-    assert (
-        'if ($("chroma-key").value === "custom" && !/^#[0-9a-f]{6}$/i.test(chromaKeyValue())) {\n'
-        '    $("prompt-output").value = "";\n'
-        '    return;\n'
-        '  }'
-    ) in app_js
+    render = app_js[app_js.index("async function renderPrompt("):]
+    render = render[: render.index("\n}\n")]
+    guard = render[render.index('if ($("chroma-key").value === "custom" && !/^#[0-9a-f]{6}$/i.test(chromaKeyValue())) {'):]
+    guard = guard[: guard.index("    return;\n  }")]
+
+    # Still typing: the panel is emptied without nagging about the half-typed value.
+    assert '} else {\n      $("prompt-output").value = "";' in guard
     assert "if (!text) return;" in app_js
+
+
+def test_rejected_custom_chroma_never_leaves_a_copyable_prompt() -> None:
+    app_js = (Path(__file__).parents[1] / "app" / "app.js").read_text(encoding="utf-8")
+    show = app_js[app_js.index("function showPromptError("):]
+    show = show[: show.index("\n}\n")]
+    render = app_js[app_js.index("async function renderPrompt("):]
+    render = render[: render.index("\n}\n")]
+
+    # Every rejection path (backend error, full-length bad value) goes through the
+    # helper, and the helper empties the prompt before showing the reason.
+    assert '$("prompt-output").value = "";' in show
+    assert "showPromptError(String(err));" in render
+    assert "showPromptError(ui().customKeyInvalid);" in render
+    assert "setStatus(String(err), true);" not in render
+    # Both locales explain the format instead of leaving the panel silently empty.
+    assert app_js.count("customKeyInvalid:") == 2
+
+
+def test_prompt_error_is_cleared_by_the_next_good_render_only() -> None:
+    app_js = (Path(__file__).parents[1] / "app" / "app.js").read_text(encoding="utf-8")
+    render = app_js[app_js.index("async function renderPrompt("):]
+    render = render[: render.index("\n}\n")]
+    clear = app_js[app_js.index("function clearPromptError("):]
+    clear = clear[: clear.index("\n}\n")]
+
+    assert "clearPromptError();" in render
+    # Restores only when the status still shows our error, so a status written by
+    # another action in between is not overwritten.
+    assert "if (status.textContent === promptError.text)" in clear
+    # A status written between two errors is what gets restored, not an older one.
+    show = app_js[app_js.index("function showPromptError("):]
+    show = show[: show.index("\n}\n")]
+    assert "if (!promptError || status.textContent !== promptError.text) {" in show
+    # An older async render cannot overwrite the panel after a newer input.
+    assert render.count("if (seq !== renderSeq) return;") == 2
+
+
+def test_custom_chroma_hint_appears_once_the_value_cannot_become_a_colour() -> None:
+    import re
+
+    app_js = (Path(__file__).parents[1] / "app" / "app.js").read_text(encoding="utf-8")
+    still_typing = re.compile(r"^(#[0-9a-f]{0,5})?$", re.IGNORECASE)
+
+    # The JS uses this exact pattern; check what it means on concrete inputs.
+    assert "if (!/^(#[0-9a-f]{0,5})?$/i.test(chromaKeyValue())) {" in app_js
+    for value in ["", "#", "#FF8", "#ff80"]:
+        assert still_typing.match(value), value
+    for value in ["FF8000", "#-1FF00", "#GG", "#FF80000", " #FF"]:
+        assert not still_typing.match(value), value

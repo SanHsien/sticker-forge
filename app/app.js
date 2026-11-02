@@ -20,6 +20,7 @@ const UI = {
     withText: "有字版",
     background: "背景色",
     customKey: "自訂色…",
+    customKeyInvalid: "自訂色要是 # 加 6 位十六進位數字，例如 #FF8000",
     importGrid: "匯入 3x3",
     addGrid: "加入 grid",
     clearTiles: "清空",
@@ -126,6 +127,7 @@ const UI = {
     withText: "Text version",
     background: "Background",
     customKey: "Custom…",
+    customKeyInvalid: "A custom colour must be # followed by 6 hex digits, e.g. #FF8000",
     importGrid: "Import 3x3",
     addGrid: "Add grid",
     clearTiles: "Clear",
@@ -375,13 +377,49 @@ function syncChromaKeyCustom() {
   $("chroma-key-custom").hidden = $("chroma-key").value !== "custom";
 }
 
+// A prompt error empties the prompt panel so the previous colour's prompt cannot be
+// copied, and is remembered so the next good render clears that message (and only
+// that one: a status set by another action in between is left alone).
+let promptError = null;
+let renderSeq = 0;
+
+function showPromptError(text) {
+  $("prompt-output").value = "";
+  const status = $("status");
+  // Re-capture when another action rewrote the status since the last error, so the
+  // restore puts back what the user last saw rather than an older message.
+  if (!promptError || status.textContent !== promptError.text) {
+    promptError = { prevText: status.textContent, prevColor: status.style.color };
+  }
+  promptError.text = text;
+  setStatus(text, true);
+}
+
+function clearPromptError() {
+  if (!promptError) return;
+  const status = $("status");
+  if (status.textContent === promptError.text) {
+    status.textContent = promptError.prevText;
+    status.style.color = promptError.prevColor;
+  }
+  promptError = null;
+}
+
 async function renderPrompt() {
   const bridge = api();
   if (!bridge) return;
+  const seq = ++renderSeq;
   // Wait until a custom colour is a full #RRGGBB instead of erroring per keystroke.
-  // Clear the prompt output if incomplete so stale prompts cannot be copied.
+  // Clear the prompt output if incomplete so stale prompts cannot be copied; once
+  // the value can no longer become a colour (no leading #, a non-hex character, or
+  // seven characters typed), say why.
   if ($("chroma-key").value === "custom" && !/^#[0-9a-f]{6}$/i.test(chromaKeyValue())) {
-    $("prompt-output").value = "";
+    if (!/^(#[0-9a-f]{0,5})?$/i.test(chromaKeyValue())) {
+      showPromptError(ui().customKeyInvalid);
+    } else {
+      $("prompt-output").value = "";
+      clearPromptError();
+    }
     return;
   }
   const payload = {
@@ -397,9 +435,14 @@ async function renderPrompt() {
     chromaKey: chromaKeyValue(),
   };
   try {
-    $("prompt-output").value = await bridge.render_prompt(payload);
+    const text = await bridge.render_prompt(payload);
+    // A slower, older render must not overwrite the result of a newer input.
+    if (seq !== renderSeq) return;
+    $("prompt-output").value = text;
+    clearPromptError();
   } catch (err) {
-    setStatus(String(err), true);
+    if (seq !== renderSeq) return;
+    showPromptError(String(err));
   }
 }
 
