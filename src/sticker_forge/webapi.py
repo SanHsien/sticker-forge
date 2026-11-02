@@ -176,9 +176,12 @@ class Api:
     def split(self, image_data_url: str, options: dict) -> list[str]:
         options = options or {}
         image = _decode(image_data_url)
-        key = resolve_chroma_key(options.get("keyName", "green"))
+        resolve_chroma_key(options.get("keyName", "green"))  # reject an unusable key up front
         spec = _spec_for(options)
-        tiles = split_grid_to_stickers(image, spec=spec, background=(*key.rgb, 255))
+        # A transparent border, not the import-time key: the GUI splits on import and the
+        # user often picks the real background afterwards, so a key-coloured border would
+        # survive a later cleanup as opaque bars down both sides of every sticker.
+        tiles = split_grid_to_stickers(image, spec=spec, background=(0, 0, 0, 0))
         if options.get("cleanup", False):
             tiles = self._cleanup_tiles(tiles, options)
         return [_encode(tile) for tile in tiles]

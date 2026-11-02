@@ -65,11 +65,37 @@ def test_split_returns_nine_tiles_and_cleanup_makes_transparent() -> None:
     api = Api()
     tiles = api.split(_grid_data_url(), {"keyName": "green", "padding": 10, "cleanup": False})
     assert len(tiles) == 9
-    # Without cleanup the green fill stays opaque.
-    assert _decode(tiles[0]).getpixel((0, 0))[3] == 255
+    # Without cleanup the green fill of the cell itself stays opaque.
+    tile = _decode(tiles[0])
+    assert tile.getpixel((tile.width // 2, tile.height // 2))[3] == 255
 
     cleaned = api.split(_grid_data_url(), {"keyName": "green", "cleanup": True})
     assert _decode(cleaned[0]).getpixel((0, 0))[3] == 0
+
+
+def test_changing_the_key_after_import_leaves_no_opaque_canvas_border() -> None:
+    # The GUI splits on import with whatever key is selected, and the user often picks
+    # the real background colour only afterwards. The canvas border added to fit LINE's
+    # size must not carry the import-time key, or a later cleanup with the right key
+    # leaves opaque bars down both sides of every sticker.
+    grid = Image.new("RGBA", (300, 300), (255, 0, 255, 255))
+    draw = ImageDraw.Draw(grid)
+    for row in range(3):
+        for col in range(3):
+            x, y = col * 100 + 35, row * 100 + 35
+            draw.rectangle([x, y, x + 30, y + 30], fill=(200, 30, 30, 255))
+    buffer = BytesIO()
+    grid.save(buffer, format="PNG")
+    source = "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode("ascii")
+
+    api = Api()
+    tiles = api.split(source, {"keyName": "green", "cleanup": False})
+    cleaned = api.cleanup(tiles, {"keyName": "magenta", "tune": "balanced"})
+
+    for data_url in cleaned:
+        image = _decode(data_url)
+        leftovers = [p for p in image.getdata() if p[3] > 0 and not (p[0] > 150 and p[1] < 80 and p[2] < 80)]
+        assert leftovers == []
 
 
 def test_cleanup_endpoint_removes_key_colour() -> None:
