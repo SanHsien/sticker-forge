@@ -11,7 +11,19 @@ Windows GUI 實機驗收尚未完成，是否發 v0.23.0 也未定。本檔不�
 
 ## 近期：可以直接動手
 
-目前無待動工項目。
+| 項目 | 驗收方式 | 建議執行者 | 證據 |
+| --- | --- | --- | --- |
+| 把 4×4／370×320 規格與空白圖、假透明檢查整合進 `spec.py` 與驗證流程，完成後移除（或改為薄包裝）`examples/slice_line_stickers.py` | 新增 4×4 規格（`LINEStickerSpec` 16 張、`grid_rows=4`、`grid_columns=4`）並能由 CLI／GUI 選用；`validate_line_zip` 對空白格、實心白底（假透明）、近乎全白淺灰內容回報錯誤，門檻沿用獨立工具常數並在 `docs/line-sticker-16-grid-prompt-spec.md` 6.3 節對照；`tests/test_slice_line_stickers.py` 的案例移植到對應測試後 `python -m pytest` 綠；不得讓現有 3×3／8 張預設行為改變 | Claude Sonnet | 下方差異表 |
+
+差異（2026-11-02 讀程式碼比對）：
+
+| 面向 | 主程式 `src/sticker_forge` | 獨立工具 `examples/slice_line_stickers.py` |
+| --- | --- | --- |
+| 預設格數 | `LINEStickerSpec` 預設 3×3、`sticker_count=8`（`spec.py`）；`split_grid` 接受任意 rows/columns，但沒有 4×4 預設或規格 | 4×4，輸入 1480×1280，輸出 16 張 370×320 |
+| 切法 | `split_grid` 以 floor 取整，餘數丟在右／下緣，另有 `inset_ratio`（預設 0.03） | 固定格寬 370×高 320，不留 inset |
+| 驗證 | `validate_line_zip` 檢查張數、檔名、尺寸、PNG 格式與「完全不透明」（`exporter.py`） | 另外檢查四周 10px 留白、單檔 1MB、空白圖（可見像素比例過低）、假透明／實心白底（安全區覆蓋率過高）、近乎全白的淺灰內容 |
+| 其他 | 去背、描邊、多格式匯出、GUI | 只切圖、驗證、產 main/tab、可選打包 ZIP |
+
 
 ## 中期：等條件成立再做
 

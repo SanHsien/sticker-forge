@@ -96,6 +96,16 @@ Windows 發行版由 PyInstaller 建置；CI 同時測試 Python 3.11–3.14，�
 
 開發、打包與架構細節見 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)。
 
+## 獨立工具：16 宮格切圖與規格檢查
+
+`examples/slice_line_stickers.py` 是一支獨立的小工具（只需要 Pillow，不屬於 `sticker_forge` 套件）：針對 1480×1280 的 4×4 透明排列圖，切成 16 張 370×320 的 `01.png`–`16.png`，並產生 `main.png`（240×240）與 `tab.png`（96×74），檢查 Alpha 通道、四周 10px 留白、單檔 1MB 上限，另以啟發式擋空白圖、假透明底與近乎全白內容；通過後可選擇打包成 ZIP。
+
+```powershell
+python examples\slice_line_stickers.py avatar_grid_1480x1280.png --out-dir outputs\stickers
+```
+
+規格與 prompt 範本見 [`docs/line-sticker-16-grid-prompt-spec.md`](docs/line-sticker-16-grid-prompt-spec.md)，搭配的 AI 技能模板見 [`docs/avatar-sticker-factory-skill.md`](docs/avatar-sticker-factory-skill.md)。主程式對應的功能是 `split` / `export` / `validate`（`src/sticker_forge/splitter.py`、`exporter.py`）；它們尚未內建 4×4／370×320 預設與上述啟發式檢查，整合計畫見 [`ROADMAP.md`](ROADMAP.md)。
+
 ## 文件
 
 - [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md)：一般操作、各類匯出與常見問題。
