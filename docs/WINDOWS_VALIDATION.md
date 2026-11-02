@@ -207,3 +207,23 @@ emoji、訊息、動態、pop-up、effect。每一類記錄：
 | 白色描邊 none / simple / fancy | PASS/FAIL/BLOCKED | <觀察> |
 | LINE 手動上傳 | PASS/FAIL/BLOCKED | <平台訊息> |
 ```
+
+## 驗收紀錄
+
+### v0.23.0 / tag `v0.23.0` / 2026-11-03
+
+GUI 由 AI 以 agent-desktop（無障礙 API；`<input type=file>` 用實體點擊，點擊前確認前景視窗正是 `sticker-forge`）操作 **source 版 GUI**（`main` `663b0f4`）。產物放 `%TEMP%` 子目錄。
+
+| 項目 | 結果 | 證據或阻塞原因 |
+| --- | --- | --- |
+| pytest / diff | PASS | 254 passed；`git diff --check` clean |
+| Windows build | PASS | `packaging\build-windows.ps1`：254 passed；GUI `--smoke` 0；CLI `--help` 0；另對 build 產物手動跑 GUI `--smoke` 0、CLI `--lang en --help` 0；`_internal\app`、`_internal\prompts` 存在；ZIP SHA-256 `2a1feef2ce9feed1617c6140abf8be49dc938e00b8259b4fae4320f15012db94` |
+| Release SHA-256 / Expand-Archive | 待補 | 發佈後依第三節下載驗證 |
+| 繁中 GUI | PASS | 標題、Prompt、Grid、匯出按鈕與狀態文字可見；背景色五色與自訂色切換時 prompt 同步 |
+| 英文 GUI | BLOCKED | 本輪未驗 |
+| 靜態匯入→去背→ZIP | PASS | 綠／洋紅／橘 grid 匯入、去背、匯出並 `validate` 通過；先匯入後換色去背不再留色條（`663b0f4`） |
+| 動態 / pop-up / effect | PASS | 白邊＋8 個 GIF 匯出動態貼圖：8 張 320×270 APNG（6 格）＋動畫 main＋tab；含連續相同影格的 GIF 匯出時 GUI 顯示錯誤、不寫檔（訊息目前為英文）；pop-up `validate --popup`、effect `validate --effect` 通過。目視播放未做 |
+| emoji / Big Stickers | PASS | `validate --emoji`、`validate --big` 通過 |
+| 去背強度（含 continuous）／進階面板 | BLOCKED | 本輪未驗 |
+| 白色描邊 none / simple / fancy | PASS（none／simple） | simple 的近白不透明像素明顯多於 none；fancy 未驗 |
+| LINE 手動上傳 | BLOCKED | 需維護者登入 LINE Creators Market；只擋 v1.0.0 |

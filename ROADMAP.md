@@ -1,19 +1,21 @@
 # 路線圖
 
 > 本 repo 後續工作的單一真相源。做完一項，就在同一個 commit 刪掉那一列；新工作只加在這裡。
-> 現況段的數字是 2026-10-29 依 `main` `5052f7f46b88` 查的快照，開工前先重查 GitHub。
+> 現況段的數字是 2026-11-03 查的快照，開工前先重查 GitHub。
 
 ## 現況
 
-`sticker-forge` 是 Windows-first、local-first 的聊天貼圖工具（Python core＋pywebview GUI＋CLI），是 `yazelin/line-sticker-studio` 的 MIT fork（`AGENTS.md:7,11`）。最近 release 是 v0.22.0，`pyproject.toml:7` 也是 0.22.0；`main` 帶有未發行的多幕色與四項缺陷修正（`CHANGELOG.md` Unreleased 段）。
+`sticker-forge` 是 Windows-first、local-first 的聊天貼圖工具（Python core＋pywebview GUI＋CLI），是 `yazelin/line-sticker-studio` 的 MIT fork（`AGENTS.md:7,11`）。最近 release 是 v0.23.0（多幕色、自訂幕色與多項 GUI／validator 修正，見 `CHANGELOG.md`），`pyproject.toml:7` 也是 0.23.0。
 健康：open PR 0、Dependabot 與 code scanning 告警 0，CI、CodeQL、Dependabot guarded merge、Dependency freshness、Upstream commit check 在 `main` 最近一次皆 success；issues 在 GitHub 上已停用，所以 open issue 數是「未查到」，不是 0（2026-10-29 `gh` 查詢）。
-Windows GUI 實機驗收尚未完成，是否發 v0.23.0 也未定。本檔不替它決定發版與否；下面與發版有關的列都標為等待。上游水位在 commit `1a1e903`、PR 81、issue 62（`tools/upstream_baseline.json`），2026-10-26 的 Upstream commit check 為 success，代表沒有未審項目。
+v0.23.0 的 Windows GUI 實機驗收（以 agent-desktop 操作原始碼版 GUI 的按鈕與原生對話框）與 Release 資產驗證紀錄在 `docs/WINDOWS_VALIDATION.md`；LINE Creators Market 手動上傳仍未做，只擋 v1.0.0。上游水位在 commit `1a1e903`、PR 81、issue 62（`tools/upstream_baseline.json`），2026-10-26 的 Upstream commit check 為 success，代表沒有未審項目。
 
 ## 近期：可以直接動手
 
 | 項目 | 驗收方式 | 建議執行者 | 證據 |
 | --- | --- | --- | --- |
 | 把 4×4／370×320 規格與空白圖、假透明檢查整合進 `spec.py` 與驗證流程，完成後移除（或改為薄包裝）`examples/slice_line_stickers.py` | 新增 4×4 規格（`LINEStickerSpec` 16 張、`grid_rows=4`、`grid_columns=4`）並能由 CLI／GUI 選用；`validate_line_zip` 對空白格、實心白底（假透明）、近乎全白淺灰內容回報錯誤，門檻沿用獨立工具常數並在 `docs/line-sticker-16-grid-prompt-spec.md` 6.3 節對照；`tests/test_slice_line_stickers.py` 的案例移植到對應測試後 `python -m pytest` 綠；不得讓現有 3×3／8 張預設行為改變 | Claude Sonnet | 下方差異表 |
+| 補完 v0.23.0 驗收紀錄的待補項目 | `docs/WINDOWS_VALIDATION.md` v0.23.0 紀錄的 Release SHA-256／Expand-Archive 一列由「待補」改為實測結果（下載資產的 SHA-256 須等於 Windows build 列記下的值），並以解壓後的 exe 跑 `--smoke` | Claude Sonnet | 該紀錄；`docs/WINDOWS_VALIDATION.md` 第三節 |
+| 動態／pop-up／effect 匯出錯誤訊息在地化 | 繁中 GUI 匯出影格數不足的動態貼圖時，狀態列顯示繁中訊息（目前為英文 `sticker 1 has 2 frames, expected 5-20`）；英文 GUI 維持英文；對應測試綠 | Claude Sonnet | 2026-11-03 GUI 驗收步驟 6；訊息來源 `src/sticker_forge/exporter.py:509,594,936` |
 
 差異（2026-11-02 讀程式碼比對）：
 
@@ -29,7 +31,6 @@ Windows GUI 實機驗收尚未完成，是否發 v0.23.0 也未定。本檔不�
 
 | 項目 | 觸發條件 | 驗收方式 | 建議執行者 | 證據 |
 | --- | --- | --- | --- | --- |
-| 發 v0.23.0（同步 `pyproject.toml` 版本、`CHANGELOG.md` 把 Unreleased 改成版本段、tag、Release 與資產） | Windows GUI 實機驗收通過，且維護者決定發版 | `pyproject.toml` 版本＝tag＝Release；`docs/WINDOWS_VALIDATION.md` 的驗收紀錄模板補上本版一筆；Release 資產 SHA-256 與本機 build 相符 | 維護者 | `AGENTS.md:41`、`docs/WINDOWS_VALIDATION.md:76-106,192`、接續開發報告（2026-10-2x）「需要維護者決定的事」 |
 | 切 v1.0.0 | 維護者有時間在登入狀態下做 LINE Creators Market 七類型手動上傳抽驗，並完成 GUI 匯出矩陣（原生儲存對話框）與 WebView2／SmartScreen 記錄 | `docs/WINDOWS_VALIDATION.md` 該版驗收紀錄每項為 PASS，沒有 BLOCKED；七種 trial pack（`python examples\create_line_trial_packs.py`）皆已手動上傳且無退件；Release 資產齊備 | 維護者 | `REVIEW.md` 尚未通過 P1「LINE Creators Market」、P2「GUI 匯出矩陣」「WebView2」；`REVIEW.md` 發行判定 |
 | 取得 Dependabot guarded merge 的端到端證據 | Dependabot 提出第一個符合政策的 minor／patch PR（查：`gh pr list --repo SanHsien/sticker-forge --author app/dependabot`） | 該 PR 實際出現 label、綁定 head SHA 的 `Dependabot policy` check、自動核准與 squash merge；把結果寫回 `REVIEW.md` 並刪除該 P2 段落 | Claude Sonnet | `REVIEW.md` P2「guarded merge 尚待第一個真實低風險 Dependabot PR」；`docs/DEVELOPMENT.md:96-100` |
 | 審查上游新項目並判斷採用與否 | `Upstream commit check` 週排程（週一）紅燈，代表上游有水位之後的新 commit、PR 或 issue | 依 `docs/DECISIONS.md` 格式新增一筆決定（採用／不採用及理由）；`tools/upstream_baseline.json` 水位推進；採用者先有紅燈測試，`python -m pytest` 綠 | Claude Opus | `tools/upstream_baseline.json`；`.github/workflows/upstream-check.yml:12`；`docs/DECISIONS.md:41,123` 的既有判斷方式 |
