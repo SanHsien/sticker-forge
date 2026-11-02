@@ -29,7 +29,7 @@ tags:
 - **分析主題**：利用單一 Prompt 達成高一致性似顏繪（Q版 chibi 2.8 頭身）角色定裝、鎖定真實人物五官髮型、1480×1280 總尺寸精確劃分 16 宮格透明排列圖（單格 370×320）、四周 10px 安全邊距防裁切、粗白貼圖外框可讀性規範、16 組高頻日常繁體中文字情境搭配、以及將多宮格排列圖自動化切割為 LINE 官方規範檔案（01~16.png、main.png 240×240、tab.png 96×74）的端到端工程管線
 - **當前狀態**：`🟢 已完成 (Done)`
 - **相關交叉參照**：
-  - [`notes/2026-10-28-motion-design-agent-harness-opus-55.md`](https://github.com/SanHsien/ai-inbox/blob/main/notes/2026-10-28-motion-design-agent-harness-opus-55.md)（0xalpha 代碼驅動動效與視覺 Anti-Slop 規範）
+  - [`notes/2026-10-28-motion-design-agent-harness-opus-55.md`](https://github.com/SanHsien/code-as-video-studio/blob/main/notes/2026-10-28-motion-design-agent-harness-opus-55.md)（0xalpha 代碼驅動動效與視覺 Anti-Slop 規範）
   - [`notes/2026-10-28-multi-agent-team-dispatch-five-roads-going-li.md`](https://github.com/SanHsien/ai-inbox/blob/main/notes/2026-10-28-multi-agent-team-dispatch-five-roads-going-li.md)（Going Li 五路工具流：ROAD 02 做圖像、公仔與 LINE 貼圖流程）
   - [`notes/2026-10-28-thorsten-ball-how-i-work-with-agents-2026.md`](https://github.com/SanHsien/ai-inbox/blob/main/notes/2026-10-28-thorsten-ball-how-i-work-with-agents-2026.md)（Thorsten Ball 15 條 Agent 實戰哲學：為 Agent 打造試錯工具與確定性交付）
 
@@ -174,6 +174,6 @@ Ann Cheng 提煉之 16 組高頻日常繁體中文字庫，完全覆蓋職場溝
 - **多 Agent 協同與產出路徑**：
   - [Going Li 四 Agent 派工協定與五路工具流](https://github.com/SanHsien/ai-inbox/blob/main/notes/2026-10-28-multi-agent-team-dispatch-five-roads-going-li.md) ｜ 關聯任務：`T-20261028-10`、`T-20261028-11`
 - **動效與視覺 Anti-Slop 規範**：
-  - [0xalpha 代碼驅動 Motion Design Agent Harness 解構](https://github.com/SanHsien/ai-inbox/blob/main/notes/2026-10-28-motion-design-agent-harness-opus-55.md) ｜ 關聯任務：`T-20261028-16`、`T-20261028-17`
+  - [0xalpha 代碼驅動 Motion Design Agent Harness 解構](https://github.com/SanHsien/code-as-video-studio/blob/main/notes/2026-10-28-motion-design-agent-harness-opus-55.md) ｜ 關聯任務：`T-20261028-16`、`T-20261028-17`
 - **確定性交付與工具打造**：
   - [Thorsten Ball 15 條 Agent 實戰哲學](https://github.com/SanHsien/ai-inbox/blob/main/notes/2026-10-28-thorsten-ball-how-i-work-with-agents-2026.md) ｜ 關聯任務：`T-20261028-04`、`T-20261028-05`

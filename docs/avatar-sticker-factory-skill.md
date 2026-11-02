@@ -14,9 +14,9 @@ author: "SanHsien / Ann Cheng Prompt Engineering Framework"
 
 # AI 似顏繪貼圖工廠技能範本 (Avatar Sticker Factory Skill)
 
-> 本技能範本收錄於 `templates/avatar-sticker-factory-skill.md`。可直接複製至 Agent 技能目錄（如 `%USERPROFILE%\.gemini\config\skills\avatar-sticker-factory\SKILL.md` 或各專案技能目錄）中引入使用。  
-> 【自包含與依賴說明】：本技能依賴切圖驗證腳本 `examples/slice_line_stickers.py`（僅用 Python 標準函式庫加第三方套件 Pillow，需 `pip install Pillow`；缺套件時腳本 exit 2 並提示）。若獨立複製至其他環境或專案，請將該腳本一併複製至技能目錄下的 `scripts/` 或確保其已加入系統 PATH。其判定門檻與已知抓不到的情況見 `docs/line-sticker-16-grid-prompt-spec.md` 第 6.3 節。  
-> 核心規範對照：[`docs/line-sticker-16-grid-prompt-spec.md`](line-sticker-16-grid-prompt-spec.md)  
+> 本技能範本收錄於 `docs/avatar-sticker-factory-skill.md`。可直接複製至 Agent 技能目錄（如 `%USERPROFILE%\.gemini\config\skills\avatar-sticker-factory\SKILL.md` 或各專案技能目錄）中引入使用。<br>
+> 【自包含與依賴說明】：本技能依賴切圖驗證腳本 `examples/slice_line_stickers.py`（僅用 Python 標準函式庫加第三方套件 Pillow，需 `pip install Pillow`；缺套件時腳本 exit 2 並提示）。若獨立複製至其他環境或專案，請將該腳本一併複製至技能目錄下的 `scripts/` 或確保其已加入系統 PATH。其判定門檻與已知抓不到的情況見 `docs/line-sticker-16-grid-prompt-spec.md` 第 6.3 節。<br>
+> 核心規範對照：[`docs/line-sticker-16-grid-prompt-spec.md`](line-sticker-16-grid-prompt-spec.md)<br>
 > 查證日期：2026-11-02
 
 ---

@@ -20,7 +20,7 @@ Windows GUI 實機驗收尚未完成，是否發 v0.23.0 也未定。本檔不�
 | 面向 | 主程式 `src/sticker_forge` | 獨立工具 `examples/slice_line_stickers.py` |
 | --- | --- | --- |
 | 預設格數 | `LINEStickerSpec` 預設 3×3、`sticker_count=8`（`spec.py`）；`split_grid` 接受任意 rows/columns，但沒有 4×4 預設或規格 | 4×4，輸入 1480×1280，輸出 16 張 370×320 |
-| 切法 | `split_grid` 以 floor 取整，餘數丟在右／下緣，另有 `inset_ratio`（預設 0.03） | 固定格寬 370×高 320，不留 inset |
+| 切法 | `split_grid` 以 floor 取整，餘數丟在右／下緣，`split_grid` 的 `inset_ratio` 預設 0；LINE 規格流程（`split_grid_to_stickers`）用 `split_inset_ratio=0.03` | 固定格寬 370×高 320，不留 inset |
 | 驗證 | `validate_line_zip` 檢查張數、檔名、尺寸、PNG 格式與「完全不透明」（`exporter.py`） | 另外檢查四周 10px 留白、單檔 1MB、空白圖（可見像素比例過低）、假透明／實心白底（安全區覆蓋率過高）、近乎全白的淺灰內容 |
 | 其他 | 去背、描邊、多格式匯出、GUI | 只切圖、驗證、產 main/tab、可選打包 ZIP |
 

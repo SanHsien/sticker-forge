@@ -104,7 +104,7 @@ Windows 發行版由 PyInstaller 建置；CI 同時測試 Python 3.11–3.14，�
 python examples\slice_line_stickers.py avatar_grid_1480x1280.png --out-dir outputs\stickers
 ```
 
-規格與 prompt 範本見 [`docs/line-sticker-16-grid-prompt-spec.md`](docs/line-sticker-16-grid-prompt-spec.md)，搭配的 AI 技能模板見 [`docs/avatar-sticker-factory-skill.md`](docs/avatar-sticker-factory-skill.md)。主程式對應的功能是 `split` / `export` / `validate`（`src/sticker_forge/splitter.py`、`exporter.py`）；它們尚未內建 4×4／370×320 預設與上述啟發式檢查，整合計畫見 [`ROADMAP.md`](ROADMAP.md)。
+規格與 prompt 範本見 [`docs/line-sticker-16-grid-prompt-spec.md`](docs/line-sticker-16-grid-prompt-spec.md)，搭配的 AI 技能模板見 [`docs/avatar-sticker-factory-skill.md`](docs/avatar-sticker-factory-skill.md)。主程式對應的功能是 `split` / `export` / `validate`（`src/sticker_forge/splitter.py`、`exporter.py`）；它們尚未內建 4×4 格線（1480×1280 輸入）預設與上述啟發式檢查，整合計畫見 [`ROADMAP.md`](ROADMAP.md)。
 
 ## 文件
 
