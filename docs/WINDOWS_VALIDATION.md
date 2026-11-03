@@ -186,7 +186,7 @@ emoji、訊息、動態、pop-up、effect。每一類記錄：
 - 動畫播放、循環與畫面範圍是否符合預期。
 - 草稿是否保留；若要刪除，先由維護者確認。
 
-只要 APNG 類型還沒有平台接受證據，`v1.0.0` gate 就維持 `BLOCKED`。抽驗成功
+APNG 類型的平台接受證據不再擋 `v1.0.0`（2026-11-03 維護者決定：LINE 實機上傳不影響程式結果，改為不擋 `v1.0.0` 的獨立項目，見 `ROADMAP.md`）。抽驗成功
 也不代表 LINE 保證送審通過；內容、著作權與銷售資訊仍由維護者負責。
 
 ## 驗收紀錄模板
@@ -226,4 +226,4 @@ GUI 由 AI 以 agent-desktop（無障礙 API；`<input type=file>` 用實體點�
 | emoji / Big Stickers | PASS | `validate --emoji`、`validate --big` 通過 |
 | 去背強度（含 continuous）／進階面板 | BLOCKED | 本輪未驗 |
 | 白色描邊 none / simple / fancy | PASS（none／simple） | simple 的近白不透明像素明顯多於 none；fancy 未驗 |
-| LINE 手動上傳 | BLOCKED | 需維護者登入 LINE Creators Market；只擋 v1.0.0 |
+| LINE 手動上傳 | BLOCKED | 需維護者登入 LINE Creators Market，並等正式貼圖；不擋版本 |

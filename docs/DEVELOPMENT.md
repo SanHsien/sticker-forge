@@ -140,6 +140,8 @@ python tools\classify_dependabot_update.py --ecosystem pip --dependency-type dir
 
 ### v1.0.0 checklist
 
+下面兩項 LINE Creators Market 相關項目（2026-11-03 維護者決定：LINE 實機上傳不影響程式結果，改為不擋 `v1.0.0` 的獨立項目，見 `ROADMAP.md`）。
+
 - 先跑 `python examples\create_line_trial_packs.py`，確認本機產生靜態、Big、emoji、訊息、動態、pop-up、effect 抽驗 ZIP 且 validator 通過。
 - 用非侵權素材完成 LINE Creators Market 手動上傳抽驗，至少涵蓋靜態、Big、emoji、訊息、動態、pop-up、effect 的 ZIP 結構。
 - GUI 覆蓋主要 LINE 類型，或在 README 明確標示 CLI-only 的例外。
