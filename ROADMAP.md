@@ -5,7 +5,7 @@
 
 ## 現況
 
-`sticker-forge` 是 Windows-first、local-first 的聊天貼圖工具（Python core＋pywebview GUI＋CLI），是 `yazelin/line-sticker-studio` 的 MIT fork（`AGENTS.md:7,11`）。最近 release 是 v0.22.0；`main` 已是 v0.23.0 的發版 commit（`pyproject.toml:7` 為 0.23.0，`CHANGELOG.md` 有 v0.23.0 段），但 tag 與 GitHub Release 尚未建立，見近期第一列。
+`sticker-forge` 是 Windows-first、local-first 的聊天貼圖工具（Python core＋pywebview GUI＋CLI），是 `yazelin/line-sticker-studio` 的 MIT fork（`AGENTS.md:7,11`）。最近 release 是 v0.23.0（tag 指向 `839aed0`，2026-11-03 發佈，資產經下載驗證），`pyproject.toml:7` 也是 0.23.0。
 健康：open PR 0、Dependabot 與 code scanning 告警 0，CI、CodeQL、Dependabot guarded merge、Dependency freshness、Upstream commit check 在 `main` 最近一次皆 success；issues 在 GitHub 上已停用，所以 open issue 數是「未查到」，不是 0（2026-10-29 `gh` 查詢）。
 v0.23.0 的 Windows GUI 實機驗收（以 agent-desktop 操作原始碼版 GUI 的按鈕與原生對話框）與 Release 資產驗證紀錄在 `docs/WINDOWS_VALIDATION.md`；LINE Creators Market 手動上傳仍未做，只擋 v1.0.0。上游水位在 commit `1a1e903`、PR 81、issue 62（`tools/upstream_baseline.json`），2026-10-26 的 Upstream commit check 為 success，代表沒有未審項目。
 
@@ -15,8 +15,6 @@ v0.23.0 的 Windows GUI 實機驗收（以 agent-desktop 操作原始碼版 GUI 
 
 | 項目 | 驗收方式 | 建議執行者 | 證據 |
 | --- | --- | --- | --- |
-| 建立 tag `v0.23.0` 與 GitHub Release | tag 指向 `839aed0`；Release 附 `sticker-forge-v0.23.0-windows-x64.zip` 與 `.sha256`，SHA-256 等於 `docs/WINDOWS_VALIDATION.md` v0.23.0 紀錄 Windows build 列的值（本機 build 在 `%TEMP%\sticker-forge-pyinstaller-dist\`，若已被清掉就照 `packaging\build-windows.ps1` 重建並更新紀錄）；Release 說明草稿照 CHANGELOG v0.23.0 段 | 維護者（2026-11-03 由 AI 建立時被自動權限擋下：公開發布要維護者本人執行或放行） | 本列；`docs/DEVELOPMENT.md` Release checklist |
-| 補完 v0.23.0 驗收紀錄的待補項目 | `docs/WINDOWS_VALIDATION.md` v0.23.0 紀錄的 Release SHA-256／Expand-Archive 一列由「待補」改為實測結果（下載資產的 SHA-256 須等於 Windows build 列記下的值），並以解壓後的 exe 跑 `--smoke` | Claude Sonnet | 該紀錄；`docs/WINDOWS_VALIDATION.md` 第三節 |
 
 
 ## 中期：等條件成立再做

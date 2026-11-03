@@ -54,9 +54,9 @@ local-first 邊界仍然成立：不架 hosted backend、不代管 AI API、不�
 
 ## 尚未通過
 
-### P1：GitHub 上只剩 `v0.22.0` 一個 tag 與 Release
+### P1：GitHub 上只有 `v0.22.0` 起的 tag 與 Release
 
-`git ls-remote --tags origin` 與 GitHub Releases API 都只回報 `v0.22.0`；
+`git ls-remote --tags origin` 與 GitHub Releases API 只回報 `v0.22.0` 與 `v0.23.0`（2026-11-03 發佈）；
 `v0.18.0`–`v0.21.0`（以及更早的 `v0.1.0`–`v0.17.0`）都不在遠端。本機 23 個 tag（含 `v0.22.0`，其中 22 個舊 tag 不在遠端）
 雖存在，但 2026-10-26 實測顯示本機 `v0.1.0`–`v0.21.0`（甚至 `v0.22.0`）指向的
 commit 都不是 `origin/main` 的祖先，與 `origin/main` 無共同祖先（可透過

@@ -218,7 +218,7 @@ GUI 由 AI 以 agent-desktop（無障礙 API；`<input type=file>` 用實體點�
 | --- | --- | --- |
 | pytest / diff | PASS | 254 passed；`git diff --check` clean |
 | Windows build | PASS | `packaging\build-windows.ps1`：254 passed；GUI `--smoke` 0；CLI `--help` 0；另對 build 產物手動跑 GUI `--smoke` 0、CLI `--lang en --help` 0；`_internal\app`、`_internal\prompts` 存在；ZIP SHA-256 `2a1feef2ce9feed1617c6140abf8be49dc938e00b8259b4fae4320f15012db94` |
-| Release SHA-256 / Expand-Archive | 待補 | 發佈後依第三節下載驗證 |
+| Release SHA-256 / Expand-Archive | PASS | 依第三節 `gh release download` 下載：SHA-256 `2a1feef2…12db94` 與 `.sha256`、本機 build 相同；Expand-Archive 後 `_internal\app`、`_internal\prompts`、兩個 exe 都在；解壓後 CLI `--lang en --help` 0、GUI `--smoke` 0；以解壓後 CLI 匯出範例 grid 並 `validate` OK |
 | 繁中 GUI | PASS | 標題、Prompt、Grid、匯出按鈕與狀態文字可見；背景色五色與自訂色切換時 prompt 同步 |
 | 英文 GUI | BLOCKED | 本輪未驗 |
 | 靜態匯入→去背→ZIP | PASS | 綠／洋紅／橘 grid 匯入、去背、匯出並 `validate` 通過；先匯入後換色去背不再留色條（`663b0f4`） |
