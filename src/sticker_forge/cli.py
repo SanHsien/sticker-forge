@@ -36,7 +36,7 @@ from .exporter import (
 from .prompts import PROMPT_PRESETS, normalize_locale, render_line_static_prompt
 from .preview import build_pack_preview
 from .spec import CHROMA_TUNE_NAMES
-from .spec import CHROMA_KEYS, LINE_STATIC_SPEC
+from .spec import CHROMA_KEYS, LINE_STATIC_SPEC, LINE_GRID_SPECS
 from .spec import resolve_chroma_key
 from .splitter import load_animated_frames, split_grid_file, split_grid_to_stickers
 
@@ -243,6 +243,7 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     split = subparsers.add_parser("split", parents=[language_parent], help=text["split_help"])
     split.add_argument("input", type=Path)
     split.add_argument("-o", "--output-dir", type=Path, required=True)
+    split.add_argument("--grid", choices=tuple(LINE_GRID_SPECS), default="3x3")
     split.add_argument("--prefix", default="sticker")
     split.add_argument("--inset-ratio", type=float, default=0)
 
@@ -261,9 +262,10 @@ def build_parser(locale: str = "zh-Hant") -> argparse.ArgumentParser:
     export.add_argument(
         "--select",
         type=_parse_selection,
-        default=_parse_selection("1,2,3,4,5,6,7,8"),
+        default=None,
         help=text["select_help"],
     )
+    export.add_argument("--grid", choices=tuple(LINE_GRID_SPECS), default="3x3")
     export.add_argument("--main", type=int, default=1, help=text["main_help"])
     export.add_argument("--tab", type=int, default=1, help=text["tab_help"])
     export.add_argument("--title", default="sticker-forge pack")
@@ -457,6 +459,8 @@ def main(argv: list[str] | None = None) -> int:
         paths = split_grid_file(
             args.input,
             args.output_dir,
+            rows=LINE_GRID_SPECS[args.grid].grid_rows,
+            columns=LINE_GRID_SPECS[args.grid].grid_columns,
             prefix=args.prefix,
             inset_ratio=args.inset_ratio,
         )
@@ -480,12 +484,17 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "export":
-        spec = replace(LINE_STATIC_SPEC, sticker_padding=args.padding)
+        spec = replace(LINE_GRID_SPECS[args.grid], sticker_padding=args.padding)
+        if args.select is None:
+            args.select = list(range(1, spec.sticker_count + 1))
         key = resolve_chroma_key(args.key_name)
         pool: list[Image.Image] = []
         for grid_path in args.input:
             with Image.open(grid_path) as image:
-                pool.extend(split_grid_to_stickers(image, spec=spec, background=(*key.rgb, 255)))
+                pool.extend(split_grid_to_stickers(
+                    image, spec=spec,
+                    background=(0, 0, 0, 0) if args.grid == "4x4" else (*key.rgb, 255),
+                ))
         if any(index > len(pool) for index in args.select):
             parser.error(
                 f"--select values must be between 1 and {len(pool)} "

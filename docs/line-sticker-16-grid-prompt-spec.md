@@ -180,7 +180,9 @@ No watermark, no photography realism, no 3D uncanny valley rendering, no merged 
 
 ## 6. 自動切圖工具對接操作手冊
 
-本 repo 提供專用切圖與規格驗證工具 [`examples/slice_line_stickers.py`](../examples/slice_line_stickers.py)，可一鍵將生圖模型輸出的 $1480 \times 1280$ 排列圖切分並驗證合規：
+主程式 CLI 的 `split`／`export` 可用 `--grid 4x4`，GUI 可在切圖按鈕旁選 `4x4`；預設仍為 3×3／8 張。4×4 使用 `spec.py` 的 `LINE_STATIC_16_SPEC`（16 張、370×320、無 inset）。
+
+原入口 [`examples/slice_line_stickers.py`](../examples/slice_line_stickers.py) 是套件 `sticker_forge.grid_tool` 的薄包裝，保留嚴格邊距檢查、JSON 報告與舊參數。從原始碼執行前先安裝本 repo 依賴。可將生圖模型輸出的 $1480 \times 1280$ 排列圖切分並驗證：
 
 ### 6.1 基本執行指令
 ```bash
@@ -220,6 +222,10 @@ python examples/slice_line_stickers.py avatar_grid_1480x1280.png -o output/stick
 
 ### 6.3 判定規則與已知極限
 下列門檻是本 repo 自訂的啟發式取捨，不是 LINE 官方數字；寧可誤擋也不放行明顯瑕疵。
+
+常數統一定義於 `src/sticker_forge/spec.py`：`VISIBLE_ALPHA_MIN=16`、`MIN_VISIBLE_RATIO=0.01`、`MAX_SAFE_COVERAGE=0.95`、`MAX_LIGHT_NEUTRAL_RATIO=0.90`。`content.measure_cell_content` 由舊入口與主程式共用；`validate_line_zip` 對 370×320 編號貼圖套用下表前三項並回報錯誤（不對 main/tab 縮圖或 Big 規格套用）。安全區固定扣四邊 10px。
+
+主程式 `export --grid 4x4` 會預選 16 張；`--select` 仍可覆寫。主程式匯出沿用尺寸整理與透明 padding，驗證的是 ZIP 內最終圖片；舊入口則驗證原始切格，並額外執行下表邊距、色彩模式與打包閘門。因此兩個入口的輸出報告不完全相同。
 
 | 檢查 | 判定 | 抓得到 | 抓不到或會誤擋 |
 | :--- | :--- | :--- | :--- |

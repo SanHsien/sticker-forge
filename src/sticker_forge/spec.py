@@ -57,6 +57,26 @@ class LINEStickerSpec:
 LINE_STATIC_SPEC = LINEStickerSpec()
 LINE_BIG_SPEC = LINEStickerSpec(sticker_size=(396, 660), sticker_padding=0)
 
+
+LINE_MIN_MARGIN = 10
+LINE_MAX_STICKER_SIZE = (370, 320)
+LINE_STICKER_COUNTS = (8, 16, 24, 32, 40)
+LINE_MAX_FILE_BYTES = 1024 * 1024
+LINE_MAX_ZIP_BYTES = 60 * 1024 * 1024
+
+# Conservative content heuristics, not official LINE thresholds.
+VISIBLE_ALPHA_MIN = 16
+MIN_VISIBLE_RATIO = 0.01
+MAX_SAFE_COVERAGE = 0.95
+MAX_LIGHT_NEUTRAL_RATIO = 0.90
+
+
+LINE_STATIC_16_SPEC = LINEStickerSpec(
+    sticker_count=16, grid_rows=4, grid_columns=4, split_inset_ratio=0,
+)
+LINE_GRID_SPECS = {"3x3": LINE_STATIC_SPEC, "4x4": LINE_STATIC_16_SPEC}
+
+
 CHROMA_KEYS = {
     "green": ChromaKey(
         name="green",

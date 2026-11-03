@@ -9,23 +9,14 @@
 健康：open PR 0、Dependabot 與 code scanning 告警 0，CI、CodeQL、Dependabot guarded merge、Dependency freshness、Upstream commit check 在 `main` 最近一次皆 success；issues 在 GitHub 上已停用，所以 open issue 數是「未查到」，不是 0（2026-10-29 `gh` 查詢）。
 v0.23.0 的 Windows GUI 實機驗收（以 agent-desktop 操作原始碼版 GUI 的按鈕與原生對話框）與 Release 資產驗證紀錄在 `docs/WINDOWS_VALIDATION.md`；LINE Creators Market 手動上傳仍未做，只擋 v1.0.0。上游水位在 commit `1a1e903`、PR 81、issue 62（`tools/upstream_baseline.json`），2026-10-26 的 Upstream commit check 為 success，代表沒有未審項目。
 
+4×4／16 張規格已整合至 CLI／GUI，預設仍為 3×3／8 張；靜態 ZIP 驗證已共用空白與假透明內容啟發式。動態／pop-up／effect 影格數錯誤依 GUI 目前語系顯示。
+
 ## 近期：可以直接動手
 
 | 項目 | 驗收方式 | 建議執行者 | 證據 |
 | --- | --- | --- | --- |
-| 把 4×4／370×320 規格與空白圖、假透明檢查整合進 `spec.py` 與驗證流程，完成後移除（或改為薄包裝）`examples/slice_line_stickers.py` | 新增 4×4 規格（`LINEStickerSpec` 16 張、`grid_rows=4`、`grid_columns=4`）並能由 CLI／GUI 選用；`validate_line_zip` 對空白格、實心白底（假透明）、近乎全白淺灰內容回報錯誤，門檻沿用獨立工具常數並在 `docs/line-sticker-16-grid-prompt-spec.md` 6.3 節對照；`tests/test_slice_line_stickers.py` 的案例移植到對應測試後 `python -m pytest` 綠；不得讓現有 3×3／8 張預設行為改變 | Claude Sonnet | 下方差異表 |
 | 建立 tag `v0.23.0` 與 GitHub Release | tag 指向 `839aed0`；Release 附 `sticker-forge-v0.23.0-windows-x64.zip` 與 `.sha256`，SHA-256 等於 `docs/WINDOWS_VALIDATION.md` v0.23.0 紀錄 Windows build 列的值（本機 build 在 `%TEMP%\sticker-forge-pyinstaller-dist\`，若已被清掉就照 `packaging\build-windows.ps1` 重建並更新紀錄）；Release 說明草稿照 CHANGELOG v0.23.0 段 | 維護者（2026-11-03 由 AI 建立時被自動權限擋下：公開發布要維護者本人執行或放行） | 本列；`docs/DEVELOPMENT.md` Release checklist |
 | 補完 v0.23.0 驗收紀錄的待補項目 | `docs/WINDOWS_VALIDATION.md` v0.23.0 紀錄的 Release SHA-256／Expand-Archive 一列由「待補」改為實測結果（下載資產的 SHA-256 須等於 Windows build 列記下的值），並以解壓後的 exe 跑 `--smoke` | Claude Sonnet | 該紀錄；`docs/WINDOWS_VALIDATION.md` 第三節 |
-| 動態／pop-up／effect 匯出錯誤訊息在地化 | 繁中 GUI 匯出影格數不足的動態貼圖時，狀態列顯示繁中訊息（目前為英文 `sticker 1 has 2 frames, expected 5-20`）；英文 GUI 維持英文；對應測試綠 | Claude Sonnet | 2026-11-03 GUI 驗收步驟 6；訊息來源 `src/sticker_forge/exporter.py:509,594,936` |
-
-差異（2026-11-02 讀程式碼比對）：
-
-| 面向 | 主程式 `src/sticker_forge` | 獨立工具 `examples/slice_line_stickers.py` |
-| --- | --- | --- |
-| 預設格數 | `LINEStickerSpec` 預設 3×3、`sticker_count=8`（`spec.py`）；`split_grid` 接受任意 rows/columns，但沒有 4×4 預設或規格 | 4×4，輸入 1480×1280，輸出 16 張 370×320 |
-| 切法 | `split_grid` 以 floor 取整，餘數丟在右／下緣，`split_grid` 的 `inset_ratio` 預設 0；LINE 規格流程（`split_grid_to_stickers`）用 `split_inset_ratio=0.03` | 固定格寬 370×高 320，不留 inset |
-| 驗證 | `validate_line_zip` 檢查張數、檔名、尺寸、PNG 格式與「完全不透明」（`exporter.py`） | 另外檢查四周 10px 留白、單檔 1MB、空白圖（可見像素比例過低）、假透明／實心白底（安全區覆蓋率過高）、近乎全白的淺灰內容 |
-| 其他 | 去背、描邊、多格式匯出、GUI | 只切圖、驗證、產 main/tab、可選打包 ZIP |
 
 
 ## 中期：等條件成立再做

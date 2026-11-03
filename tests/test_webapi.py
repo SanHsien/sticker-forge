@@ -175,7 +175,12 @@ def test_export_platform_bridge_behaviour() -> None:
 
 def test_write_line_zip_is_valid(tmp_path) -> None:
     api = Api()
-    tiles = api.split(_grid_data_url(), {"keyName": "green", "cleanup": True})
+    grid = Image.new("RGBA", (300, 300), (0, 255, 0, 255))
+    draw = ImageDraw.Draw(grid)
+    for row in range(3):
+        for col in range(3):
+            draw.ellipse((col * 100 + 25, row * 100 + 25, col * 100 + 75, row * 100 + 75), fill=(200, 30, 30, 255))
+    tiles = api.split(_encode(grid), {"keyName": "green", "cleanup": True})
     selected = [_decode(url) for url in tiles[:8]]
     output = api._write_line_zip(selected, tmp_path / "pack.zip", {"padding": 10, "mainIndex": 2, "tabIndex": 3})
     assert ZipFile(output).namelist()

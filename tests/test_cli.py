@@ -83,6 +83,10 @@ def test_cli_english_help(capsys) -> None:
 
 def test_cli_export_creates_zip(tmp_path) -> None:
     grid = Image.new("RGBA", (300, 300), (255, 255, 255, 0))
+    draw = ImageDraw.Draw(grid)
+    for row in range(3):
+        for col in range(3):
+            draw.ellipse((col * 100 + 25, row * 100 + 25, col * 100 + 75, row * 100 + 75), fill=(200, 30, 30, 255))
     grid_path = tmp_path / "grid.png"
     grid.save(grid_path)
     output_path = tmp_path / "pack.zip"
@@ -143,6 +147,10 @@ def test_cli_stickers_creates_png_only_zip(tmp_path) -> None:
 
 def test_cli_export_multi_grid_16(tmp_path) -> None:
     grid = Image.new("RGBA", (300, 300), (0, 255, 0, 255))
+    draw = ImageDraw.Draw(grid)
+    for row in range(3):
+        for col in range(3):
+            draw.ellipse((col * 100 + 25, row * 100 + 25, col * 100 + 75, row * 100 + 75), fill=(200, 30, 30, 255))
     g1, g2 = tmp_path / "a.png", tmp_path / "b.png"
     grid.save(g1)
     grid.save(g2)
@@ -172,6 +180,10 @@ def test_cli_emoji_creates_and_validates_zip(tmp_path) -> None:
 
 def test_cli_message_creates_and_validates_zip(tmp_path) -> None:
     grid = Image.new("RGBA", (300, 300), (0, 255, 0, 255))
+    draw = ImageDraw.Draw(grid)
+    for row in range(3):
+        for col in range(3):
+            draw.ellipse((col * 100 + 25, row * 100 + 25, col * 100 + 75, row * 100 + 75), fill=(200, 30, 30, 255))
     grid_path = tmp_path / "grid.png"
     grid.save(grid_path)
     output_path = tmp_path / "message.zip"

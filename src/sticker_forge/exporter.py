@@ -13,7 +13,11 @@ from zipfile import ZIP_DEFLATED, BadZipFile, ZipFile
 from PIL import Image
 from PIL.Image import DecompressionBombError
 
-from .spec import LINE_BIG_SPEC, LINE_STATIC_SPEC, LINEStickerSpec
+from .content import measure_cell_content
+from .spec import (
+    LINE_BIG_SPEC, LINE_STATIC_SPEC, LINEStickerSpec,
+    MIN_VISIBLE_RATIO, MAX_SAFE_COVERAGE, MAX_LIGHT_NEUTRAL_RATIO,
+)
 
 ImageSource = Image.Image | str | Path
 
@@ -823,6 +827,14 @@ def validate_line_zip(
                 errors.append(f"{name} is not PNG")
             if _is_fully_opaque(image):
                 errors.append(f"{name} has no transparent background; LINE requires transparent stickers")
+            if name in numbered and spec.sticker_size == LINE_STATIC_SPEC.sticker_size:
+                metrics = measure_cell_content(image)
+                if metrics["visible_pixels"] < image.width * image.height * MIN_VISIBLE_RATIO:
+                    errors.append(f"{name} is blank or has too little visible content")
+                if metrics["safe_area_coverage"] >= MAX_SAFE_COVERAGE:
+                    errors.append(f"{name} has a solid backdrop or fake transparency")
+                if metrics["light_neutral_ratio"] >= MAX_LIGHT_NEUTRAL_RATIO:
+                    errors.append(f"{name} is almost entirely light neutral content (possible fake transparency)")
 
     return errors
 

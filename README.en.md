@@ -96,6 +96,16 @@ Windows releases are built with PyInstaller. CI tests Python 3.11–3.14 and als
 
 See [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) for architecture, packaging, and contributor details.
 
+## 4×4 grids
+
+Add `--grid 4x4` to CLI `split` / `export`, or select `4x4` beside the GUI split button, to make 16 stickers at 370×320 from a 1480×1280 grid. The default remains 3×3 / 8 stickers. `export --grid 4x4` selects all 16 cells unless `--select` overrides it. `validate` checks static stickers for blank content, fake transparency and almost entirely white or light gray content.
+
+`examples/slice_line_stickers.py` is a compatibility entry point for the packaged `grid_tool`. It retains strict cell slicing, alpha, 10px margins, 1MB file checks and JSON reports, while sharing content thresholds with the main app. Install the dependencies first. See [the specification, thresholds and prompt template](docs/line-sticker-16-grid-prompt-spec.md) and [the AI skill template](docs/avatar-sticker-factory-skill.md). White characters can trigger false positives; inspect images manually. These checks do not guarantee platform approval.
+
+```powershell
+python examples\slice_line_stickers.py avatar_grid_1480x1280.png --out-dir outputs\stickers
+```
+
 ## Documentation
 
 - [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md) — normal usage, export modes, and troubleshooting.

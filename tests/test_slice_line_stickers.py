@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 tests/test_slice_line_stickers.py
-單元測試：examples/slice_line_stickers.py
+單元測試：sticker_forge.grid_tool
 覆蓋合規切割、頂/底/左/右四向邊距溢出反例、缺少 Alpha 通道、全透明空圖、全實心無去背、
 非標準尺寸、參數防禦驗證、主圖指定 index、缺套件報錯與非合規防打包。
 """
@@ -12,7 +12,6 @@ import json
 import os
 import random
 import shutil
-import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -27,9 +26,7 @@ except ImportError:
     ImageDraw = None  # type: ignore
     HAS_PIL = False
 
-sys.path.insert(0, str(Path(__file__).parents[1] / "examples"))
-
-from slice_line_stickers import (  # noqa: E402
+from sticker_forge.grid_tool import (  # noqa: E402
     LINE_MAX_FILE_BYTES,
     MarginViolation,
     check_cell_margins,
@@ -370,8 +367,8 @@ class TestSliceLineStickers(unittest.TestCase):
 
     def test_missing_pillow_dependency_graceful_exit(self) -> None:
         """驗證當 Pillow 缺失時清晰報錯並以 code 2 退出。"""
-        with patch("slice_line_stickers.PIL_AVAILABLE", False):
-            with patch("slice_line_stickers.Image", None):
+        with patch("sticker_forge.grid_tool.PIL_AVAILABLE", False):
+            with patch("sticker_forge.grid_tool.Image", None):
                 stderr_capture = io.StringIO()
                 with patch("sys.stderr", stderr_capture):
                     exit_code = main(["some_dummy_file.png"])
@@ -646,7 +643,7 @@ class TestSliceHeuristics(unittest.TestCase):
 
     def test_zip_over_size_limit_is_removed_and_reported(self) -> None:
         """ZIP 總容量上限 60MB 無法用小圖真實達成，所以把上限暫改小，驗證超限會刪檔並失敗。"""
-        import slice_line_stickers as mod
+        import sticker_forge.grid_tool as mod
         good = self._grid("zipsize")
         with patch.object(mod, "LINE_MAX_ZIP_BYTES", 1000):
             code, data, z = self._run(good, "--strict", zip_name="zs.zip")
@@ -694,7 +691,7 @@ class TestSliceHeuristics(unittest.TestCase):
 
     def test_main_and_tab_over_1mb_are_flagged(self) -> None:
         """main/tab 縮圖不可能真的超過 1MB，所以替換 getsize 模擬超大檔案，驗證檢查本身有作用。"""
-        import slice_line_stickers as mod
+        import sticker_forge.grid_tool as mod
         real = os.path.getsize
 
         def fake_for(target):

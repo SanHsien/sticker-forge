@@ -29,7 +29,7 @@ GUI（pywebview）與 CLI 共用 `src/sticker_forge/` 的 Python core；正式 W
 - `packaging/`：Windows PyInstaller build / smoke test。
 - `tests/`：Python core、webapi、workflow contract、packaging 回歸測試。
 - `tools/`：dependency freshness、Dependabot 分類、upstream 檢查（維護腳本，不放產品功能）。
-- `examples/`：範例素材產生器與獨立小工具（`slice_line_stickers.py`：16 宮格切圖與規格檢查，尚未整合進主程式，見 `ROADMAP.md`）。
+- `examples/`：範例素材產生器與工具入口（`slice_line_stickers.py` 是套件 `grid_tool` 的薄包裝；4×4 規格與內容啟發式檢查已由主程式共用）。
 - `docs/`：使用、開發、LINE 送審、Windows 驗收與決策文件。
 
 ## 開發原則

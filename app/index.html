@@ -78,7 +78,7 @@
         <h2>Grid</h2>
         <div class="grid-imports">
           <label class="file-button">
-            <span data-i18n="importGrid">匯入 3x3</span>
+            <span data-i18n="importGrid">匯入格線圖</span>
             <input id="grid-file" type="file" accept="image/*">
           </label>
           <label class="file-button ghost">
@@ -98,15 +98,18 @@
 
       <div class="stage" id="dropzone">
         <canvas id="source-canvas" width="360" height="360"></canvas>
-        <p class="drop-hint" data-i18n="dropHint">把 3x3 圖拖放到這裡，或用上方「匯入 3x3」</p>
+        <p class="drop-hint" data-i18n="dropHint">選擇格線後拖放圖片，或用上方「匯入格線圖」</p>
       </div>
 
       <div class="actions">
+        <label><span data-i18n="gridLayout">格線</span>
+          <select id="grid-layout"><option value="3x3">3x3</option><option value="4x4">4x4</option></select>
+        </label>
         <button id="split-grid" type="button" data-i18n="split">切圖</button>
         <button id="cleanup-all" type="button" data-i18n="cleanup">去背</button>
-        <button id="select-first-eight" type="button" data-i18n="selectFirstEight">選前 8 張</button>
+        <button id="select-first-eight" type="button" data-i18n="selectFirstEight">選取一組</button>
         <button id="clear-tiles" type="button" data-i18n="clearTiles">清空</button>
-        <button id="export-stickers" type="button" data-i18n="exportPng">匯出 9 張 PNG</button>
+        <button id="export-stickers" type="button" data-i18n="exportPng">匯出全部 PNG</button>
         <button id="export-emoji" type="button" data-i18n="exportEmoji">匯出 LINE emoji</button>
         <button id="export-message" type="button" data-i18n="exportMessage">匯出訊息貼圖</button>
         <button id="export-big" type="button" data-i18n="exportBig">匯出 Big Stickers</button>

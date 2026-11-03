@@ -9,6 +9,7 @@ JavaScript reimplementation.
 from __future__ import annotations
 
 import base64
+import re
 from dataclasses import replace
 from io import BytesIO
 from pathlib import Path
@@ -44,7 +45,13 @@ from .prompts import (
     normalize_locale,
     render_line_static_prompt,
 )
-from .spec import CHROMA_KEYS, CHROMA_TUNE_PROFILES, LINE_STATIC_SPEC, resolve_chroma_key
+from .spec import (
+    CHROMA_KEYS,
+    CHROMA_TUNE_PROFILES,
+    LINE_GRID_SPECS,
+    LINE_STATIC_SPEC,
+    resolve_chroma_key,
+)
 from .splitter import load_animated_frames
 from .splitter import split_grid_to_stickers
 
@@ -107,7 +114,34 @@ def _tune_option(options: dict):
 
 def _spec_for(options: dict) -> "LINE_STATIC_SPEC.__class__":
     padding = int(options.get("padding", LINE_STATIC_SPEC.sticker_padding))
-    return replace(LINE_STATIC_SPEC, sticker_padding=padding)
+    return replace(LINE_GRID_SPECS[options.get("grid", "3x3")], sticker_padding=padding)
+
+
+def _grid_error(options: dict, locale: str) -> dict | None:
+    """Return the bridge's error dict for an unknown ``grid`` option, else None."""
+    grid = options.get("grid", "3x3")
+    if isinstance(grid, str) and grid in LINE_GRID_SPECS:
+        return None
+    if normalize_locale(locale) == "zh-Hant":
+        return {"error": f"不支援的格數：{grid}（可用：{', '.join(LINE_GRID_SPECS)}）"}
+    return {"error": f"unknown grid: {grid} (expected one of {', '.join(LINE_GRID_SPECS)})"}
+
+
+def _export_error(message: str, locale: str) -> dict:
+    if normalize_locale(locale) == "zh-Hant":
+        match = re.fullmatch(
+            r"(sticker|pop-up animation|effect animation) (\d+) has (\d+) frames, expected (\d+)-(\d+)",
+            message,
+        )
+        if match:
+            kind, index, actual, minimum, maximum = match.groups()
+            label = {
+                "sticker": "動態貼圖",
+                "pop-up animation": "全螢幕貼圖動畫",
+                "effect animation": "特效貼圖動畫",
+            }[kind]
+            message = f"{label} {index} 有 {actual} 個影格，需要 {minimum}-{maximum} 個影格"
+    return {"error": message}
 
 
 class Api:
@@ -127,6 +161,14 @@ class Api:
             "actions": DEFAULT_ACTIONS[loc],
             "suggestions": SUGGESTIONS[loc],
             "presets": PROMPT_PRESETS[loc],
+            "gridSpecs": {
+                name: {
+                    "packSize": spec.sticker_count,
+                    "rows": spec.grid_rows,
+                    "columns": spec.grid_columns,
+                }
+                for name, spec in LINE_GRID_SPECS.items()
+            },
             "spec": {
                 "stickerW": LINE_STATIC_SPEC.sticker_size[0],
                 "stickerH": LINE_STATIC_SPEC.sticker_size[1],
@@ -173,8 +215,11 @@ class Api:
         )
 
     # --- image pipeline -----------------------------------------------------
-    def split(self, image_data_url: str, options: dict) -> list[str]:
+    def split(self, image_data_url: str, options: dict) -> list[str] | dict:
         options = options or {}
+        bad_grid = _grid_error(options, options.get("locale", self.locale))
+        if bad_grid:
+            return bad_grid
         image = _decode(image_data_url)
         resolve_chroma_key(options.get("keyName", "green"))  # reject an unusable key up front
         spec = _spec_for(options)
@@ -207,6 +252,9 @@ class Api:
 
     # --- export -------------------------------------------------------------
     def export_line(self, tile_data_urls: list[str], options: dict) -> dict:
+        bad_grid = _grid_error(options or {}, (options or {}).get("locale", self.locale))
+        if bad_grid:
+            return bad_grid
         path = self._ask_save_path("line-stickers.zip")
         if not path:
             return {"cancelled": True}
@@ -214,6 +262,9 @@ class Api:
         return {"saved": str(path)}
 
     def export_stickers(self, tile_data_urls: list[str], options: dict) -> dict:
+        bad_grid = _grid_error(options or {}, (options or {}).get("locale", self.locale))
+        if bad_grid:
+            return bad_grid
         path = self._ask_save_path("transparent-stickers.zip")
         if not path:
             return {"cancelled": True}
@@ -302,7 +353,7 @@ class Api:
                 durations=durations,
             )
         except ValueError as exc:
-            return {"error": str(exc)}
+            return _export_error(str(exc), options.get("locale", self.locale))
         return {"saved": str(path)}
 
     # --- pop-up / effect stickers (static stickers + screen APNGs) ----------
@@ -380,7 +431,7 @@ class Api:
             else:
                 return {"error": f"unknown screen sticker type: {kind}"}
         except ValueError as exc:
-            return {"error": str(exc)}
+            return _export_error(str(exc), options.get("locale", self.locale))
         return {"saved": str(path)}
 
     def export_message(self, tile_data_urls: list[str], options: dict) -> dict:

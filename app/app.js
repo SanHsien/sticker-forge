@@ -21,7 +21,8 @@ const UI = {
     background: "背景色",
     customKey: "自訂色…",
     customKeyInvalid: "自訂色要是 # 加 6 位十六進位數字，例如 #FF8000",
-    importGrid: "匯入 3x3",
+    importGrid: "匯入格線圖",
+    gridLayout: "格線",
     addGrid: "加入 grid",
     clearTiles: "清空",
     mainLabel: "主圖",
@@ -29,15 +30,15 @@ const UI = {
     moveUp: "上移",
     moveDown: "下移",
     needPackSize: (count) => `LINE 套組需 8／16／24／32／40 張，目前 ${count} 張`,
-    dropHint: "把 3x3 圖拖放到這裡，或用上方「匯入 3x3」",
+    dropHint: "選擇格線後拖放圖片，或用上方「匯入格線圖」",
     split: "切圖",
     cleanup: "去背",
     cleanupOne: "去背這張",
     resetOne: "還原",
     savePng: "存 PNG",
     zoomHint: "點擊放大檢視",
-    selectFirstEight: "選前 8 張",
-    exportPng: "匯出 9 張 PNG",
+    selectFirstEight: "選取一組",
+    exportPng: "匯出全部 PNG",
     exportZip: "匯出 ZIP",
     exportEmoji: "匯出 LINE emoji",
     needEmoji: (count) => `LINE emoji 需 8–40 張，目前 ${count} 張`,
@@ -90,10 +91,10 @@ const UI = {
     copied: "Prompt 已複製",
     imported: (name) => `已匯入 ${name}`,
     splitting: "切圖中…",
-    needGrid: "請先匯入 3x3 圖",
-    splitDone: "已切成 9 張 LINE 尺寸貼圖",
+    needGrid: "請先匯入格線圖",
+    splitDoneCount: (n) => `已切成 ${n} 張 LINE 尺寸貼圖`,
     selectedCount: (count) => `目前選 ${count} 張`,
-    firstEight: "已選前 8 張",
+    firstEight: (count) => `已選前 ${count} 張`,
     noTilesCleanup: "沒有可去背的貼圖",
     cleaning: "去背中…",
     cleanupDone: "已去背",
@@ -128,7 +129,8 @@ const UI = {
     background: "Background",
     customKey: "Custom…",
     customKeyInvalid: "A custom colour must be # followed by 6 hex digits, e.g. #FF8000",
-    importGrid: "Import 3x3",
+    importGrid: "Import grid",
+    gridLayout: "Grid layout",
     addGrid: "Add grid",
     clearTiles: "Clear",
     mainLabel: "Main",
@@ -136,15 +138,15 @@ const UI = {
     moveUp: "Move up",
     moveDown: "Move down",
     needPackSize: (count) => `LINE packs need 8/16/24/32/40 stickers; ${count} selected`,
-    dropHint: "Drag a 3x3 image here, or use Import 3x3 above",
+    dropHint: "Choose the grid layout, then drop an image here or use Import grid above",
     split: "Split",
     cleanup: "Clean up",
     cleanupOne: "Clean this",
     resetOne: "Reset",
     savePng: "Save PNG",
     zoomHint: "Click to zoom",
-    selectFirstEight: "Select first 8",
-    exportPng: "Export 9 PNG",
+    selectFirstEight: "Select one pack",
+    exportPng: "Export all PNG",
     exportZip: "Export ZIP",
     exportEmoji: "Export LINE emoji",
     needEmoji: (count) => `LINE emoji needs 8–40 images; ${count} selected`,
@@ -197,10 +199,10 @@ const UI = {
     copied: "Prompt copied",
     imported: (name) => `Imported ${name}`,
     splitting: "Splitting…",
-    needGrid: "Import a 3x3 image first",
-    splitDone: "Split into 9 LINE-size stickers",
+    needGrid: "Import a grid image first",
+    splitDoneCount: (n) => `Split into ${n} LINE-size stickers`,
     selectedCount: (count) => `${count} selected`,
-    firstEight: "Selected first 8",
+    firstEight: (count) => `Selected first ${count}`,
     noTilesCleanup: "No stickers to clean up",
     cleaning: "Cleaning up…",
     cleanupDone: "Background cleaned",
@@ -346,6 +348,12 @@ function setLocale(locale) {
   state.locale = UI[locale] ? locale : "zh-Hant";
   applyLocale(previousLocale);
   updatePreview();
+}
+
+function currentPackSize() {
+  const specs = boot().gridSpecs || {};
+  const spec = specs[$("grid-layout") ? $("grid-layout").value : "3x3"];
+  return spec && spec.packSize ? spec.packSize : PACK_SIZE;
 }
 
 function setupSlots() {
@@ -510,6 +518,8 @@ function resetAdvToPreset() {
 
 function options() {
   return {
+    locale: state.locale,
+    grid: $("grid-layout").value,
     keyName: chromaKeyValue(),
     tune: tuneValue(),
     outline: $("cleanup-outline").value,
@@ -553,18 +563,22 @@ async function splitGrid(append = false) {
   setStatus(ui().splitting);
   try {
     const urls = await bridge.split(state.sourceDataUrl, { ...options(), cleanup: false });
+    if (urls && urls.error) {
+      setStatus(urls.error, true);
+      return;
+    }
     const newTiles = urls.map((url) => ({ raw: url, url, included: false }));
     if (append) {
       state.tiles.push(...newTiles);
     } else {
       newTiles.forEach((tile, i) => {
-        tile.included = i < PACK_SIZE;
+        tile.included = i < currentPackSize();
       });
       state.tiles = newTiles;
     }
     renderTiles();
     updatePreview();
-    setStatus(ui().splitDone);
+    setStatus(ui().splitDoneCount(state.tiles.length));
   } catch (err) {
     setStatus(String(err), true);
   }
@@ -643,11 +657,11 @@ function includedTiles() {
 
 function selectFirstEight() {
   state.tiles.forEach((tile, index) => {
-    tile.included = index < PACK_SIZE;
+    tile.included = index < currentPackSize();
   });
   renderTiles();
   updatePreview();
-  setStatus(ui().firstEight);
+  setStatus(ui().firstEight(currentPackSize()));
 }
 
 async function cleanupAll() {
@@ -771,7 +785,7 @@ async function loadAnimatedFiles(files) {
     state.tiles = previews.map((url) => ({ raw: url, url, included: true }));
     renderTiles();
     updatePreview();
-    setStatus(ui().splitDone);
+    setStatus(ui().splitDoneCount(state.tiles.length));
   } catch (err) {
     setStatus(String(err), true);
   }
@@ -809,6 +823,7 @@ async function exportAnimated() {
     const mainIndex = Math.max(0, (parseInt($("main-index").value, 10) || 1) - 1);
     const tabIndex = Math.max(0, (parseInt($("tab-index").value, 10) || 1) - 1);
     const result = await bridge.export_animated(selected.map((t) => t.url), {
+      locale: state.locale,
       mainIndex,
       tabIndex,
       title: $("pack-title").value,
@@ -836,6 +851,7 @@ async function exportScreenSticker(kind) {
       selected.map((t) => t.url),
       state.screenAnimations,
       {
+        locale: state.locale,
         mainIndex,
         tabIndex,
         title: $("pack-title").value,
@@ -862,6 +878,7 @@ async function exportMessage() {
     const mainIndex = Math.max(0, (parseInt($("main-index").value, 10) || 1) - 1);
     const tabIndex = Math.max(0, (parseInt($("tab-index").value, 10) || 1) - 1);
     const result = await bridge.export_message(selected.map((t) => t.url), {
+      locale: state.locale,
       mainIndex,
       tabIndex,
       title: $("pack-title").value,
@@ -884,6 +901,7 @@ async function exportBig() {
     const mainIndex = Math.max(0, (parseInt($("main-index").value, 10) || 1) - 1);
     const tabIndex = Math.max(0, (parseInt($("tab-index").value, 10) || 1) - 1);
     const result = await bridge.export_big(selected.map((t) => t.url), {
+      locale: state.locale,
       mainIndex,
       tabIndex,
       title: $("pack-title").value,
