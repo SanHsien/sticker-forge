@@ -21,7 +21,7 @@ v0.23.0 的 Windows GUI 實機驗收（以 agent-desktop 操作原始碼版 GUI 
 
 | 項目 | 觸發條件 | 驗收方式 | 建議執行者 | 證據 |
 | --- | --- | --- | --- | --- |
-| 切 v1.0.0 | 維護者有時間在登入狀態下做 LINE Creators Market 七類型手動上傳抽驗，並完成 GUI 匯出矩陣（原生儲存對話框）與 WebView2／SmartScreen 記錄 | `docs/WINDOWS_VALIDATION.md` 該版驗收紀錄每項為 PASS，沒有 BLOCKED；七種 trial pack（`python examples\create_line_trial_packs.py`）皆已手動上傳且無退件；Release 資產齊備 | 維護者 | `REVIEW.md` 尚未通過 P1「LINE Creators Market」、P2「GUI 匯出矩陣」「WebView2」；`REVIEW.md` 發行判定 |
+| 切 v1.0.0 | 先有一套維護者認可、外觀可上架的正式貼圖（2026-11-03 維護者決定：程式產生的抽驗包太醜，不拿去上傳），再由維護者在登入狀態下用它做 LINE Creators Market 七類型手動上傳抽驗，並完成 GUI 匯出矩陣（原生儲存對話框）與 WebView2／SmartScreen 記錄 | `docs/WINDOWS_VALIDATION.md` 該版驗收紀錄每項為 PASS，沒有 BLOCKED；七種 trial pack（`python examples\create_line_trial_packs.py`）皆已手動上傳且無退件；Release 資產齊備 | 維護者 | `REVIEW.md` 尚未通過 P1「LINE Creators Market」、P2「GUI 匯出矩陣」「WebView2」；`REVIEW.md` 發行判定 |
 | 取得 Dependabot guarded merge 的端到端證據 | Dependabot 提出第一個符合政策的 minor／patch PR（查：`gh pr list --repo SanHsien/sticker-forge --author app/dependabot`） | 該 PR 實際出現 label、綁定 head SHA 的 `Dependabot policy` check、自動核准與 squash merge；把結果寫回 `REVIEW.md` 並刪除該 P2 段落 | Claude Sonnet | `REVIEW.md` P2「guarded merge 尚待第一個真實低風險 Dependabot PR」；`docs/DEVELOPMENT.md:96-100` |
 | 審查上游新項目並判斷採用與否 | `Upstream commit check` 週排程（週一）紅燈，代表上游有水位之後的新 commit、PR 或 issue | 依 `docs/DECISIONS.md` 格式新增一筆決定（採用／不採用及理由）；`tools/upstream_baseline.json` 水位推進；採用者先有紅燈測試，`python -m pytest` 綠 | Claude Opus | `tools/upstream_baseline.json`；`.github/workflows/upstream-check.yml:12`；`docs/DECISIONS.md:41,123` 的既有判斷方式 |
 | 把自訂幕色 prompt 的 avoid 文字改成依通道列出具體色名 | 實際生圖時發現模型誤用與幕色相近的色相 | 同一組自訂色在修改前後各生一次圖，附對照；prompt 相關測試綠；README／USER_GUIDE 若有該段文字同步 | Claude Sonnet | `b913dd6`；接續開發報告（2026-10-2x）「刻意不做／延後」第一條 |
