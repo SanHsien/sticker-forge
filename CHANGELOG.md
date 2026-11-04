@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+## v1.0.0
+
+第一個正式版。`docs/WINDOWS_VALIDATION.md` 第四節的 GUI 驗收清單在 `main` 上全部跑完（v1.0.0 驗收紀錄）；LINE Creators Market 手動上傳依 2026-11-03 維護者決定不擋正式版，改為等正式貼圖的獨立項目（`ROADMAP.md`）。
+
 ### 新增
 
 - **`--grid 4x4`（16 張、每張 370x320）**：CLI 的 `split`／`export` 與 GUI 的格數下拉都可選 4x4；預設仍是 3x3／8 張，不選就與改版前相同。GUI 選 4x4 時，「選取一組」按鈕與匯入後的預設勾選改用所選格數的張數（16），狀態列顯示「已選前 N 張」。未知的 `grid` 值回傳 `{"error": ...}`（繁中 GUI 顯示中文），不再噴 KeyError。

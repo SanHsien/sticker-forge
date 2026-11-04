@@ -428,6 +428,8 @@ Local toolkit for preparing LINE sticker packs: prompt templates, image cleanup,
 - 不宣稱 pop-up / effect 已通過 LINE 審核；仍需以非侵權素材做手動上傳抽驗。
 - `v1.0.0` 不在本輪切出。正式版門檻是主要 LINE 類型完成手動上傳抽驗、GUI smoke、Windows exe 發行檢查與文件一致性覆核。
 
+> 2026-11-03 更新：上面「正式版門檻」裡的 LINE 手動上傳抽驗已由維護者撤下，見文末「2026-11-03：LINE 實機上傳不再擋 v1.0.0」。
+
 ## 2026-07-12：LINE pop-up / effect GUI（v0.18.0）
 
 v0.17.0 已有 pop-up / effect 的核心與 CLI，但一般使用者不應被迫跑命令列。v0.18.0 把同一套 exporter 接進 pywebview GUI。
@@ -567,3 +569,14 @@ Python core，GUI 與 CLI 共用。
 - **不移植**：匯入偵測、補邊填量測底色、Worker 生圖 prompt——這些在上游是瀏覽器端與 Worker，
   本 fork 無對應層（本 fork 的 grid 匯入沒有色偵測，幕色由使用者指定）。
 
+## 2026-11-03：LINE 實機上傳不再擋 v1.0.0
+
+維護者決定：LINE Creators Market 實機上傳不影響程式結果，功能已由 GUI 驗收與本機 validator 覆蓋；程式產生的抽驗包外觀不適合拿去上架，上傳要等一套維護者認可的正式貼圖。
+
+決策：
+
+- `v1.0.0` 的門檻改為 `docs/WINDOWS_VALIDATION.md` 第四節 GUI 驗收清單在 `main` 上全部跑完，加上 Release 資產驗證。
+- LINE 七類型手動上傳改為 `ROADMAP.md` 的獨立項目，觸發條件是「先有正式貼圖」。
+- 先前各節「沒有平台端抽驗證據前，不切 `v1.0.0`」的邊界以本節為準；平台拒絕時的回寫流程（`REVIEW.md`／`CHANGELOG.md`／exporter 測試）不變。
+
+2026-11-04 依此切出 `v1.0.0`，驗收紀錄見 `docs/WINDOWS_VALIDATION.md`。

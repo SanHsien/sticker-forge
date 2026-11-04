@@ -16,7 +16,7 @@
 
 ## 手動上傳抽驗包
 
-正式切 `v1.0.0` 前，先用非侵權範例素材做一次 LINE Creators Market 上傳表單抽驗：
+要確認 LINE Creators Market 上傳表單是否接受各類型 ZIP 時，先用非侵權範例素材做一次抽驗（2026-11-03 起不再是切 `v1.0.0` 的門檻，見 `ROADMAP.md`）：
 
 ```powershell
 python examples\create_line_trial_packs.py

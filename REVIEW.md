@@ -51,6 +51,9 @@ local-first 邊界仍然成立：不架 hosted backend、不代管 AI API、不�
 | 上游更新只靠人工想到才看 | P2 | `9d0bd44`（`v0.21.0`）新增每週 `upstream-check` workflow 與 baseline。 |
 | 深色角色在 LINE 深色聊天主題下看不清；prompt 要求白色描邊不可靠 | P2 | `9d0bd44`（`v0.21.0`）新增本機描邊／陰影後製。 |
 | `make_chroma_tune()` 與漸層去溢色在出貨 exe 中無使用者路徑（死碼） | P2 | `006aee2`（`v0.22.0`）新增 GUI 進階去背面板。 |
+| 匯入損壞檔或改名成 .png 的非圖片時，GUI 狀態列直接顯示 `UnidentifiedImageError … <_io.BytesIO …>`（2026-11-04 v1.0.0 GUI 驗收時發現） | P2 | `b87f34f`（2026-11-04，`v1.0.0`）三個匯入入口改為依語系顯示可理解的錯誤。 |
+| 存檔目標沒有寫入權限或被鎖住時，GUI 直接顯示 `PermissionError: [Errno 13] …`（同上發現） | P2 | `b87f34f`（2026-11-04，`v1.0.0`）所有匯出與 PNG 存檔改為依語系說明原因與路徑。 |
+| 英文介面下貼圖文字／動作欄位的無障礙名稱仍是中文，放大預覽關閉鈕固定英文 `close`（同上發現） | P3 | `b87f34f`（2026-11-04，`v1.0.0`）改由 `data-i18n-aria` 隨語系切換。 |
 
 ## 尚未通過
 
@@ -66,18 +69,18 @@ commit 都不是 `origin/main` 的祖先，與 `origin/main` 無共同祖先（�
 此項已列為刻意不做（見 `ROADMAP.md`「刻意不做」補推舊 tag 項目），版本紀錄以
 `CHANGELOG.md` 為準，不再嘗試補推。不應對外宣稱這些版本「在 GitHub 有正式 Release」。
 
-### P1：LINE Creators Market 平台抽驗仍未完成
+### P2：LINE Creators Market 平台抽驗仍未完成（不擋 `v1.0.0`）
 
 本機 validator 不能代替 LINE 平台判定。靜態、Big、emoji、訊息、動態、pop-up、
 effect 都要以非侵權抽驗包（`python examples\create_line_trial_packs.py`）手動
-上傳；動態、pop-up、effect 還要確認 APNG 播放、循環與平台預覽。這是 `v1.0.0`
-的主要缺口。
+上傳；動態、pop-up、effect 還要確認 APNG 播放、循環與平台預覽。2026-11-03 維護者
+決定這項不再擋 `v1.0.0`，改等正式貼圖後執行（`ROADMAP.md`、`docs/DECISIONS.md`）。
 
-### P2：完整 GUI 匯出矩陣仍待真實檔案對話框驗證
+### ~~P2：完整 GUI 匯出矩陣仍待真實檔案對話框驗證~~（已解決）
 
-已驗啟動、語系、匯入、切圖、選取、預覽、去背、進階面板與錯誤顯示。原生儲存
-對話框的焦點在 Computer Use 下不穩定，因此 GUI 寫出 ZIP 尚未列為 PASS。依
-[`docs/WINDOWS_VALIDATION.md`](docs/WINDOWS_VALIDATION.md) 逐項補齊。
+2026-11-03（v0.23.0）與 2026-11-04（v1.0.0）以 agent-desktop 操作真實按鈕與原生
+存檔對話框，第四節矩陣全部跑完並寫出 ZIP 驗證；紀錄見
+[`docs/WINDOWS_VALIDATION.md`](docs/WINDOWS_VALIDATION.md)。驗收中發現的三個問題由 `b87f34f` 修復。
 
 ### P2：WebView2 與 Windows 安全提示是外部環境 gate
 
@@ -100,8 +103,8 @@ label、head-bound policy check、自動核准與 squash merge 必須等 Dependa
 
 - 下一個 patch／minor：本機驗證與打包已足夠，但需先解決上面的 Release／tag
   問題，確保發行歷史一致。
-- `v1.0.0`：需完成 LINE Creators Market 七種類型手動上傳抽驗、完整 GUI 匯出
-  矩陣，並確認 Release 資產齊備後才發布。
+- `v1.0.0`：完整 GUI 匯出矩陣（2026-11-04 跑完）與 Release 資產驗證通過後發布；
+  LINE Creators Market 七種類型手動上傳依 2026-11-03 維護者決定不擋正式版。
 
 ## 不做
 

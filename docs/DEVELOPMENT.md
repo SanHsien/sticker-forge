@@ -140,7 +140,7 @@ python tools\classify_dependabot_update.py --ecosystem pip --dependency-type dir
 
 ### v1.0.0 checklist
 
-下面兩項 LINE Creators Market 相關項目（2026-11-03 維護者決定：LINE 實機上傳不影響程式結果，改為不擋 `v1.0.0` 的獨立項目，見 `ROADMAP.md`）。
+下面兩項 LINE Creators Market 相關項目（2026-11-03 維護者決定：LINE 實機上傳不影響程式結果，改為不擋 `v1.0.0` 的獨立項目，見 `ROADMAP.md`）。其餘各項在 2026-11-04 切 `v1.0.0` 時完成，證據見 [`WINDOWS_VALIDATION.md`](WINDOWS_VALIDATION.md) 的 v1.0.0 驗收紀錄。
 
 - 先跑 `python examples\create_line_trial_packs.py`，確認本機產生靜態、Big、emoji、訊息、動態、pop-up、effect 抽驗 ZIP 且 validator 通過。
 - 用非侵權素材完成 LINE Creators Market 手動上傳抽驗，至少涵蓋靜態、Big、emoji、訊息、動態、pop-up、effect 的 ZIP 結構。
@@ -156,7 +156,7 @@ sticker-forge-v{VERSION}-windows-x64.zip
 sticker-forge-v{VERSION}-windows-x64.zip.sha256
 ```
 
-已發行：`v0.1.0`…`v0.23.0`。exe 圖示為 `packaging/icon.ico`。
+已發行：`v0.1.0`…`v0.23.0`、`v1.0.0`。exe 圖示為 `packaging/icon.ico`。
 
 ## Legacy 邊界
 

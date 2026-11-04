@@ -210,6 +210,31 @@ APNG 類型的平台接受證據不再擋 `v1.0.0`（2026-11-03 維護者決定�
 
 ## 驗收紀錄
 
+### v1.0.0 / tag `v1.0.0` / 2026-11-04
+
+GUI 由 AI 以 agent-desktop（無障礙 API；`<input type=file>` 用實體點擊，點擊前確認前景視窗正是 `sticker-forge` 且座標落在頁面內）操作。第四節矩陣先在 **source 版 GUI**（`main` `7662be3`）跑完；驗收中發現的三個問題由 `b87f34f` 修復後，以修正後的 source 版 GUI 重驗該三項，再以 build 產物（打包版 GUI）跑啟動與基本匯出。產物放 `%TEMP%` 子目錄，測試圖為 `examples\create_sample_assets.py` 的範例與另行產生的 4×4 範例、損壞 PNG、改名為 .png 的文字檔。
+
+| 項目 | 結果 | 證據或阻塞原因 |
+| --- | --- | --- |
+| pytest / node / diff | PASS | 281 passed；`node --check app\app.js` OK；`git diff --check` clean；`create_line_trial_packs.py` 七種 ZIP 皆 `OK` |
+| Windows build | PASS | `packaging\build-windows.ps1`：281 passed；GUI `--smoke` 0；CLI `--help` 0；另對 build 產物手動跑 GUI `--smoke` 0、CLI `--lang en --help` 0；`_internal\app`、`_internal\prompts` 存在；ZIP SHA-256 `b01d8de7bad5b4c6e23c54ee8896d549648d0042ccdfb89fdb19ecfd1fc98d05` |
+| Release SHA-256 / Expand-Archive | 待驗 | tag 與 Release 建立後依第三節下載驗證 |
+| 打包版 GUI 啟動與基本匯出 | PASS | 直接啟動 `sticker-forge.exe`：只有一個 `sticker-forge` 視窗、沒有 console 視窗或子程序；匯入範例 grid →切圖→去背→選取一組，匯出 ZIP／LINE emoji／Big Stickers，以打包版 CLI `validate`、`--emoji`、`--big` 皆 OK；關閉視窗後無 `sticker-forge.exe` 殘留 |
+| 繁中 GUI | PASS | v0.23.0 已驗；本輪打包版以繁中預設啟動，狀態文字正確（「已選前 8 張」「已儲存：…」） |
+| 英文 GUI | PASS | GUI 內英→中→英切換，標題、按鈕、欄位預設值與 prompt 同步切換；`--lang en` 啟動預設即英文。發現每張貼圖的文字／動作欄位無障礙名稱固定中文，`b87f34f` 修復後實測英文為 Text／Action、切回繁中為文字／動作 |
+| 版面（一般／最大化） | PASS | 兩種視窗大小截圖皆無水平捲軸、按鈕裁切或文字重疊 |
+| 靜態匯入→去背→ZIP | PASS | 英文 GUI 匯入範例 grid、去背、匯出並 `validate` OK；取消存檔對話框後狀態為「Cancelled」 |
+| 靜態 16／24／32／40 | PASS | 「Add grid」累積到 45 格，逐張勾選 16／24／32／40 張匯出，四個 ZIP `validate` 皆 OK |
+| 4×4 規格 | PASS | GUI 選 4x4 匯入 16 格範例圖：「Select one pack」選 16 張，匯出 16 張 370×320＋main＋tab，`validate` OK；CLI `export --grid 4x4` 匯出 16 張並 `validate` OK |
+| emoji / Big Stickers | PASS | 打包版 GUI 匯出，`validate --emoji`、`validate --big` OK |
+| 訊息貼圖 | PASS | 8 張與 16 張各匯出一次：370×320 貼圖＋main 240×240＋tab 96×74＋README；trial pack 的訊息 ZIP `OK` |
+| Signal / Telegram / WhatsApp / Discord | PASS | Signal `validate --signal` OK（512×512 PNG＋cover＋manifest）；Telegram 8 張 512×512 PNG；WhatsApp 8 張 512×512 WebP＋96×96 tray，單檔最大 8 KB；Discord 8 張 320×320 PNG |
+| 動態 / pop-up / effect | PASS | 8 個 GIF 匯出動態貼圖（8 張 320×270 APNG、6 格）；pop-up `validate --popup`、effect `validate --effect` OK。三類第一張 APNG 以 Chromium `ImageDecoder` 解出 animated、6 格、每格 160 ms，瀏覽器內相隔 0.3 秒的兩張截圖畫面位置不同（確實在播放） |
+| 去背強度（含 continuous）／進階面板 | PASS | continuous 去背後殘留綠像素 3 點；進階面板啟用自訂參數後，hard 0.25→0.6、erode 0→3 的輸出 alpha 統計各自不同；「重設為目前強度」把數值回到該強度預設 |
+| 白色描邊 none / simple / fancy | PASS | v0.23.0 已驗 none／simple；fancy（白邊＋陰影）比 none 的白色不透明像素 2591→24140、半透明深色（陰影）1344→5574，`validate` OK |
+| D 節失敗情境 | PASS | 未匯入素材按切圖、去背、各匯出鈕皆顯示錯誤且不開存檔對話框，ZIP／pop-up／effect 鈕停用；7 個 GIF 匯出動態被擋；7 個畫面動畫配 8 張靜態時 pop-up／effect 停用；損壞 PNG、改名 .png 的文字檔、無寫入權限（被鎖住的目標檔）都顯示錯誤且不閃退——原本是 Python 例外原文，`b87f34f` 修復後為依語系的說明；存到 `C:\Windows\System32` 由 Windows 對話框先擋下，答「否」後狀態為「Cancelled」；關閉視窗後無殘留 |
+| LINE 手動上傳 | BLOCKED | 等正式貼圖；2026-11-03 維護者決定不擋 `v1.0.0` |
+
 ### v0.23.0 / tag `v0.23.0` / 2026-11-03
 
 GUI 由 AI 以 agent-desktop（無障礙 API；`<input type=file>` 用實體點擊，點擊前確認前景視窗正是 `sticker-forge`）操作 **source 版 GUI**（`main` `663b0f4`）。產物放 `%TEMP%` 子目錄。

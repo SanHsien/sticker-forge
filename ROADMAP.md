@@ -5,7 +5,7 @@
 
 ## 現況
 
-`sticker-forge` 是 Windows-first、local-first 的聊天貼圖工具（Python core＋pywebview GUI＋CLI），是 `yazelin/line-sticker-studio` 的 MIT fork（`AGENTS.md:7,11`）。最近 release 是 v0.23.0（tag 指向 `839aed0`，2026-11-03 發佈，資產經下載驗證），`pyproject.toml:7` 也是 0.23.0。
+`sticker-forge` 是 Windows-first、local-first 的聊天貼圖工具（Python core＋pywebview GUI＋CLI），是 `yazelin/line-sticker-studio` 的 MIT fork（`AGENTS.md:7,11`）。`pyproject.toml:7` 是 1.0.0；v1.0.0 的 release commit 已在 `main`，tag 與 GitHub Release 待建並驗證。上一個 release 是 v0.23.0（tag 指向 `839aed0`，2026-11-03 發佈，資產經下載驗證）。
 健康：open PR 0、Dependabot 與 code scanning 告警 0，CI、CodeQL、Dependabot guarded merge、Dependency freshness、Upstream commit check 在 `main` 最近一次皆 success；issues 在 GitHub 上已停用，所以 open issue 數是「未查到」，不是 0（2026-10-29 `gh` 查詢）。
 v0.23.0 的 Windows GUI 實機驗收（以 agent-desktop 操作原始碼版 GUI 的按鈕與原生對話框）與 Release 資產驗證紀錄在 `docs/WINDOWS_VALIDATION.md`；LINE Creators Market 手動上傳仍未做，等正式貼圖，不擋版本。上游水位在 commit `1a1e903`、PR 81、issue 62（`tools/upstream_baseline.json`），2026-10-26 的 Upstream commit check 為 success，代表沒有未審項目。
 
