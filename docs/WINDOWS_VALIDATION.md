@@ -218,7 +218,7 @@ GUI 由 AI 以 agent-desktop（無障礙 API；`<input type=file>` 用實體點�
 | --- | --- | --- |
 | pytest / node / diff | PASS | 282 passed；`node --check app\app.js` OK；`git diff --check` clean；`create_line_trial_packs.py` 七種 ZIP 皆 `OK` |
 | Windows build | PASS | `packaging\build-windows.ps1`：282 passed；GUI `--smoke` 0；CLI `--help` 0；另對 build 產物手動跑 GUI `--smoke` 0、CLI `--lang en --help` 0；`_internal\app`、`_internal\prompts` 存在；ZIP SHA-256 `83bd6b6c2a88ad99591283a80624b945b59c1d08853cff93ec72a3e8224193e0` |
-| Release SHA-256 / Expand-Archive | 待驗 | tag 與 Release 建立後依第三節下載驗證 |
+| Release SHA-256 / Expand-Archive | PASS | 依第三節 `gh release download` 下載：SHA-256 `83bd6b6c…3e0` 與 `.sha256`、本機 build 相同；Expand-Archive 後 `_internal\app`、`_internal\prompts`、兩個 exe 都在；解壓後 CLI `--lang en --help` 0、GUI `--smoke` 0；以解壓後 CLI 匯出範例 grid 並 `validate` OK |
 | 打包版 GUI 啟動與基本匯出 | PASS | 直接啟動 `sticker-forge.exe`：只有一個 `sticker-forge` 視窗、沒有 console 視窗或子程序；匯入範例 grid →切圖→去背→選取一組，匯出 ZIP／LINE emoji／Big Stickers，以打包版 CLI `validate`、`--emoji`、`--big` 皆 OK；關閉視窗後無 `sticker-forge.exe` 殘留 |
 | 繁中 GUI | PASS | v0.23.0 已驗；本輪打包版以繁中預設啟動，狀態文字正確（「已選前 8 張」「已儲存：…」） |
 | 英文 GUI | PASS | GUI 內英→中→英切換，標題、按鈕、欄位預設值與 prompt 同步切換；`--lang en` 啟動預設即英文。發現每張貼圖的文字／動作欄位無障礙名稱固定中文，`b87f34f` 修復後實測英文為 Text／Action、切回繁中為文字／動作 |

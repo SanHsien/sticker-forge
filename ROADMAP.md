@@ -5,9 +5,9 @@
 
 ## 現況
 
-`sticker-forge` 是 Windows-first、local-first 的聊天貼圖工具（Python core＋pywebview GUI＋CLI），是 `yazelin/line-sticker-studio` 的 MIT fork（`AGENTS.md:7,11`）。`pyproject.toml:7` 是 1.0.0；v1.0.0 的 release commit 已在 `main`，tag 與 GitHub Release 待建並驗證。上一個 release 是 v0.23.0（tag 指向 `839aed0`，2026-11-03 發佈，資產經下載驗證）。
+`sticker-forge` 是 Windows-first、local-first 的聊天貼圖工具（Python core＋pywebview GUI＋CLI），是 `yazelin/line-sticker-studio` 的 MIT fork（`AGENTS.md:7,11`）。最近 release 是 v1.0.0（tag 指向 `fe56294`，2026-11-04 發佈，資產經下載驗證），`pyproject.toml:7` 也是 1.0.0。
 健康：open PR 0、Dependabot 與 code scanning 告警 0，CI、CodeQL、Dependabot guarded merge、Dependency freshness、Upstream commit check 在 `main` 最近一次皆 success；issues 在 GitHub 上已停用，所以 open issue 數是「未查到」，不是 0（2026-10-29 `gh` 查詢）。
-v0.23.0 的 Windows GUI 實機驗收（以 agent-desktop 操作原始碼版 GUI 的按鈕與原生對話框）與 Release 資產驗證紀錄在 `docs/WINDOWS_VALIDATION.md`；LINE Creators Market 手動上傳仍未做，等正式貼圖，不擋版本。上游水位在 commit `1a1e903`、PR 81、issue 62（`tools/upstream_baseline.json`），2026-10-26 的 Upstream commit check 為 success，代表沒有未審項目。
+v0.23.0 與 v1.0.0 的 Windows GUI 實機驗收（以 agent-desktop 操作 GUI 的按鈕與原生對話框）與 Release 資產驗證紀錄在 `docs/WINDOWS_VALIDATION.md`；LINE Creators Market 手動上傳仍未做，等正式貼圖，不擋版本。上游水位在 commit `1a1e903`、PR 81、issue 62（`tools/upstream_baseline.json`），2026-10-26 的 Upstream commit check 為 success，代表沒有未審項目。
 
 4×4／16 張規格已整合至 CLI／GUI，預設仍為 3×3／8 張；靜態 ZIP 驗證已共用空白與假透明內容啟發式。動態／pop-up／effect 影格數錯誤依 GUI 目前語系顯示。
 
@@ -21,7 +21,6 @@ v0.23.0 的 Windows GUI 實機驗收（以 agent-desktop 操作原始碼版 GUI 
 
 | 項目 | 觸發條件 | 驗收方式 | 建議執行者 | 證據 |
 | --- | --- | --- | --- | --- |
-| 切 v1.0.0 | `docs/WINDOWS_VALIDATION.md` 第四節 GUI 驗收清單在 `main` 上跑完（2026-11-03 v0.23.0 紀錄裡標 BLOCKED 或未驗的項目：英文 GUI、continuous／進階面板、fancy 描邊、靜態 16–40 張、訊息貼圖、Signal／Telegram／WhatsApp／Discord、動態類目視播放、D 節失敗情境，以及 v0.23.0 之後進 main 的 4×4 規格） | 該版驗收紀錄除「LINE 手動上傳」外皆 PASS；`pyproject.toml`＝tag＝Release；下載資產 SHA-256 與本機 build 相符 | 維運長（GUI 用 agent-desktop，實體點擊等維護者不在電腦前） | 2026-11-03 維護者決定：LINE 實機上傳不影響程式結果，不再擋 v1.0.0 |
 | LINE Creators Market 七類型手動上傳抽驗 | 先有一套維護者認可、外觀可上架的正式貼圖（2026-11-03 維護者決定：程式產生的抽驗包太醜，不拿去上傳） | 七類型以正式貼圖上傳為草稿且無退件，結果記入 `docs/WINDOWS_VALIDATION.md` | 維護者 | `docs/LINE_SUBMISSION.md`「手動上傳抽驗包」；`docs/WINDOWS_VALIDATION.md` 第五節 |
 | 取得 Dependabot guarded merge 的端到端證據 | Dependabot 提出第一個符合政策的 minor／patch PR（查：`gh pr list --repo SanHsien/sticker-forge --author app/dependabot`） | 該 PR 實際出現 label、綁定 head SHA 的 `Dependabot policy` check、自動核准與 squash merge；把結果寫回 `REVIEW.md` 並刪除該 P2 段落 | Claude Sonnet | `REVIEW.md` P2「guarded merge 尚待第一個真實低風險 Dependabot PR」；`docs/DEVELOPMENT.md:96-100` |
 | 審查上游新項目並判斷採用與否 | `Upstream commit check` 週排程（週一）紅燈，代表上游有水位之後的新 commit、PR 或 issue | 依 `docs/DECISIONS.md` 格式新增一筆決定（採用／不採用及理由）；`tools/upstream_baseline.json` 水位推進；採用者先有紅燈測試，`python -m pytest` 綠 | Claude Opus | `tools/upstream_baseline.json`；`.github/workflows/upstream-check.yml:12`；`docs/DECISIONS.md:41,123` 的既有判斷方式 |
