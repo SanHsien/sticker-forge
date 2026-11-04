@@ -9,6 +9,7 @@ JavaScript reimplementation.
 from __future__ import annotations
 
 import base64
+import functools
 import re
 from dataclasses import replace
 from io import BytesIO
@@ -144,6 +145,35 @@ def _export_error(message: str, locale: str) -> dict:
     return {"error": message}
 
 
+def _unreadable_error(locale: str) -> dict:
+    """A damaged file or a non-image renamed to .png must not surface as a raw PIL error."""
+    if normalize_locale(locale) == "zh-Hant":
+        return {"error": "無法讀取圖片：檔案已損壞，或不是 PNG／GIF／APNG 等支援的圖片格式"}
+    return {"error": "Cannot read the image: the file is damaged or is not a supported image (PNG, GIF, APNG)"}
+
+
+def _write_error(exc: OSError, locale: str) -> dict:
+    target = exc.filename or ""
+    reason = exc.strerror or str(exc)
+    if normalize_locale(locale) == "zh-Hant":
+        return {"error": f"無法寫入檔案（{reason}）：{target}。請改存到其他資料夾，或關閉正在使用這個檔案的程式。"}
+    return {"error": f"Cannot write the file ({reason}): {target}. Save to another folder, or close the program using it."}
+
+
+def _reports_write_errors(method):
+    """Turn a failed write (no permission, file locked, disk full) into the bridge's error dict."""
+
+    @functools.wraps(method)
+    def wrapper(self, *args, **kwargs):
+        try:
+            return method(self, *args, **kwargs)
+        except OSError as exc:
+            options = next((arg for arg in reversed(args) if isinstance(arg, dict)), None) or {}
+            return _write_error(exc, options.get("locale", self.locale))
+
+    return wrapper
+
+
 class Api:
     """Methods exposed to the HTML app via ``window.pywebview.api``."""
 
@@ -220,7 +250,10 @@ class Api:
         bad_grid = _grid_error(options, options.get("locale", self.locale))
         if bad_grid:
             return bad_grid
-        image = _decode(image_data_url)
+        try:
+            image = _decode(image_data_url)
+        except OSError:
+            return _unreadable_error(options.get("locale", self.locale))
         resolve_chroma_key(options.get("keyName", "green"))  # reject an unusable key up front
         spec = _spec_for(options)
         # A transparent border, not the import-time key: the GUI splits on import and the
@@ -251,6 +284,7 @@ class Api:
         ]
 
     # --- export -------------------------------------------------------------
+    @_reports_write_errors
     def export_line(self, tile_data_urls: list[str], options: dict) -> dict:
         bad_grid = _grid_error(options or {}, (options or {}).get("locale", self.locale))
         if bad_grid:
@@ -261,6 +295,7 @@ class Api:
         self._write_line_zip([_decode(url) for url in tile_data_urls], path, options or {})
         return {"saved": str(path)}
 
+    @_reports_write_errors
     def export_stickers(self, tile_data_urls: list[str], options: dict) -> dict:
         bad_grid = _grid_error(options or {}, (options or {}).get("locale", self.locale))
         if bad_grid:
@@ -271,6 +306,7 @@ class Api:
         self._write_stickers_zip([_decode(url) for url in tile_data_urls], path, options or {})
         return {"saved": str(path)}
 
+    @_reports_write_errors
     def export_big(self, tile_data_urls: list[str], options: dict) -> dict:
         path = self._ask_save_path("line-big-stickers.zip")
         if not path:
@@ -296,6 +332,7 @@ class Api:
             return {"error": str(exc)}
         return {"saved": str(path)}
 
+    @_reports_write_errors
     def export_platform(self, tile_data_urls: list[str], options: dict) -> dict:
         platform = (options or {}).get("platform", "telegram")
         if platform not in PLATFORM_SPECS:
@@ -313,18 +350,22 @@ class Api:
         return {"saved": str(path)}
 
     # --- animated stickers (one animated file per sticker) ------------------
-    def prepare_animated(self, data_urls: list[str], options: dict) -> list[str]:
+    def prepare_animated(self, data_urls: list[str], options: dict) -> list[str] | dict:
         """Load each animated file, clean per frame, resize, return APNG previews."""
         options = options or {}
         previews = []
         for url in data_urls:
-            frames, durations = _decode_animated(url)
+            try:
+                frames, durations = _decode_animated(url)
+            except OSError:
+                return _unreadable_error(options.get("locale", self.locale))
             if not options.get("keepBackground", False):
                 frames = self._cleanup_tiles(frames, options)
             fitted = _fit_frames_within(frames, LINE_ANIM_MAX_SIZE)
             previews.append(_encode_apng(fitted, [max(20, int(d)) for d in durations]))
         return previews
 
+    @_reports_write_errors
     def export_animated(self, apng_data_urls: list[str], options: dict) -> dict:
         options = options or {}
         path = self._ask_save_path("line-animated.zip")
@@ -357,17 +398,21 @@ class Api:
         return {"saved": str(path)}
 
     # --- pop-up / effect stickers (static stickers + screen APNGs) ----------
-    def prepare_screen_animations(self, data_urls: list[str], options: dict) -> list[str]:
+    def prepare_screen_animations(self, data_urls: list[str], options: dict) -> list[str] | dict:
         """Load screen animation files, clean per frame, fit to 480x480 APNG previews."""
         options = options or {}
         previews = []
         for url in data_urls:
-            frames, durations = _decode_animated(url)
+            try:
+                frames, durations = _decode_animated(url)
+            except OSError:
+                return _unreadable_error(options.get("locale", self.locale))
             if not options.get("keepBackground", False):
                 frames = self._cleanup_tiles(frames, options)
             previews.append(_encode_screen_apng(_fit_screen_frames(frames), [max(20, int(d)) for d in durations]))
         return previews
 
+    @_reports_write_errors
     def export_popup(self, tile_data_urls: list[str], apng_data_urls: list[str], options: dict) -> dict:
         options = options or {}
         path = self._ask_save_path("line-popup-stickers.zip")
@@ -375,6 +420,7 @@ class Api:
             return {"cancelled": True}
         return self._write_screen_zip("popup", tile_data_urls, apng_data_urls, path, options)
 
+    @_reports_write_errors
     def export_effect(self, tile_data_urls: list[str], apng_data_urls: list[str], options: dict) -> dict:
         options = options or {}
         path = self._ask_save_path("line-effect-stickers.zip")
@@ -434,6 +480,7 @@ class Api:
             return _export_error(str(exc), options.get("locale", self.locale))
         return {"saved": str(path)}
 
+    @_reports_write_errors
     def export_message(self, tile_data_urls: list[str], options: dict) -> dict:
         options = options or {}
         path = self._ask_save_path("line-message-stickers.zip")
@@ -459,6 +506,7 @@ class Api:
             return {"error": str(exc)}
         return {"saved": str(path)}
 
+    @_reports_write_errors
     def export_emoji(self, tile_data_urls: list[str], options: dict) -> dict:
         options = options or {}
         path = self._ask_save_path("line-emoji.zip")
@@ -480,6 +528,7 @@ class Api:
             return {"error": str(exc)}
         return {"saved": str(path)}
 
+    @_reports_write_errors
     def save_png(self, data_url: str, default_name: str = "sticker.png") -> dict:
         path = self._ask_save_path(default_name, ("PNG (*.png)",))
         if not path:

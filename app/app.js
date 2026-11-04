@@ -25,6 +25,9 @@ const UI = {
     gridLayout: "格線",
     addGrid: "加入 grid",
     clearTiles: "清空",
+    slotText: "文字",
+    slotAction: "動作",
+    closeZoom: "關閉",
     mainLabel: "主圖",
     tabLabel: "聊天標籤",
     moveUp: "上移",
@@ -133,6 +136,9 @@ const UI = {
     gridLayout: "Grid layout",
     addGrid: "Add grid",
     clearTiles: "Clear",
+    slotText: "Text",
+    slotAction: "Action",
+    closeZoom: "Close",
     mainLabel: "Main",
     tabLabel: "Tab",
     moveUp: "Move up",
@@ -263,6 +269,11 @@ function applyLocale(previousLocale = state.locale) {
   document.querySelectorAll("[data-i18n]").forEach((node) => {
     const key = node.dataset.i18n;
     if (typeof data[key] === "string") node.textContent = data[key];
+  });
+  // Inputs without visible text are named for screen readers and UI automation.
+  document.querySelectorAll("[data-i18n-aria]").forEach((node) => {
+    const key = node.dataset.i18nAria;
+    if (typeof data[key] === "string") node.setAttribute("aria-label", data[key]);
   });
   const swap = (id, nextValues, prevValues) => {
     const input = $(id);
@@ -776,10 +787,12 @@ async function loadAnimatedFiles(files) {
   try {
     const dataUrls = await Promise.all(list.map(readFileAsDataURL));
     const previews = await bridge.prepare_animated(dataUrls, {
+      locale: state.locale,
       keyName: chromaKeyValue(),
       tune: tuneValue(),
       outline: $("cleanup-outline").value,
     });
+    if (previews && previews.error) return setStatus(previews.error, true);
     state.mode = "animated";
     state.screenAnimations = [];
     state.tiles = previews.map((url) => ({ raw: url, url, included: true }));
@@ -800,11 +813,14 @@ async function loadScreenAnimationFiles(files) {
   setStatus(ui().preparingScreen);
   try {
     const dataUrls = await Promise.all(list.map(readFileAsDataURL));
-    state.screenAnimations = await bridge.prepare_screen_animations(dataUrls, {
+    const screens = await bridge.prepare_screen_animations(dataUrls, {
+      locale: state.locale,
       keyName: chromaKeyValue(),
       tune: tuneValue(),
       outline: $("cleanup-outline").value,
     });
+    if (screens && screens.error) return setStatus(screens.error, true);
+    state.screenAnimations = screens;
     updatePreview();
     setStatus(ui().screenAnimationImported(state.screenAnimations.length));
   } catch (err) {

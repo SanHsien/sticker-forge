@@ -316,3 +316,58 @@ def test_prepare_animated_keep_background_skips_cleanup_and_outline() -> None:
     )
 
     assert _white_pixels(kept) == 0
+
+
+def _bytes_data_url(raw: bytes) -> str:
+    return "data:image/png;base64," + base64.b64encode(raw).decode("ascii")
+
+
+def test_unreadable_image_import_reports_a_readable_error_not_a_pil_exception() -> None:
+    api = Api()
+    damaged = _bytes_data_url(b"\x89PNG\r\n\x1a\n" + b"\x00" * 64)
+    text_named_png = _bytes_data_url(b"this is a text file with a .png extension\n")
+
+    for url in (damaged, text_named_png):
+        for locale, expected in (("zh-Hant", "無法讀取圖片"), ("en", "Cannot read the image")):
+            results = [
+                api.split(url, {"locale": locale}),
+                api.prepare_animated([url], {"locale": locale}),
+                api.prepare_screen_animations([url], {"locale": locale}),
+            ]
+            for result in results:
+                assert isinstance(result, dict), result
+                assert result["error"].startswith(expected)
+                assert "UnidentifiedImageError" not in result["error"]
+                assert "BytesIO" not in result["error"]
+
+
+def test_failed_write_is_reported_in_the_gui_locale_instead_of_raising(tmp_path, monkeypatch) -> None:
+    api = Api()
+    # A directory where the file should go: the exporters create missing parent
+    # folders, but no platform lets a file be written over a directory.
+    target = tmp_path / "out.zip"
+    target.mkdir()
+    monkeypatch.setattr(api, "_ask_save_path", lambda *args, **kwargs: str(target))
+    tile = _encode(Image.new("RGBA", (370, 320), (10, 20, 30, 255)))
+    anim = _animated_data_url()
+    calls = {
+        "export_line": lambda o: api.export_line([tile] * 8, o),
+        "export_stickers": lambda o: api.export_stickers([tile] * 8, o),
+        "export_big": lambda o: api.export_big([tile] * 8, o),
+        "export_platform": lambda o: api.export_platform([tile] * 8, o),
+        "export_animated": lambda o: api.export_animated([anim] * 8, o),
+        "export_popup": lambda o: api.export_popup([tile] * 8, [anim] * 8, o),
+        "export_effect": lambda o: api.export_effect([tile] * 8, [anim] * 8, o),
+        "export_message": lambda o: api.export_message([tile] * 8, o),
+        "export_emoji": lambda o: api.export_emoji([tile] * 8, o),
+    }
+    for name, call in calls.items():
+        for locale, expected in (("zh-Hant", "無法寫入檔案"), ("en", "Cannot write the file")):
+            result = call({"locale": locale})
+            assert result.get("error", "").startswith(expected), (name, locale, result)
+            assert str(target) in result["error"], name
+    png_target = tmp_path / "sticker.png"
+    png_target.mkdir()
+    monkeypatch.setattr(api, "_ask_save_path", lambda *args, **kwargs: str(png_target))
+    assert api.save_png(tile)["error"].startswith("無法寫入檔案")
+    assert target.is_dir() and not any(target.iterdir())

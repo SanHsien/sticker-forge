@@ -99,3 +99,21 @@ def test_custom_chroma_hint_appears_once_the_value_cannot_become_a_colour() -> N
         assert still_typing.match(value), value
     for value in ["FF8000", "#-1FF00", "#GG", "#FF80000", " #FF"]:
         assert not still_typing.match(value), value
+
+
+def test_unlabelled_inputs_follow_the_ui_language_for_screen_readers() -> None:
+    app_js = (Path(__file__).parents[1] / "app" / "app.js").read_text(encoding="utf-8")
+    index_html = (Path(__file__).parents[1] / "app" / "index.html").read_text(encoding="utf-8")
+
+    # The per-sticker text/action inputs and the zoom close button have no visible
+    # label; their accessible names must switch with the UI language.
+    for key in ("slotText", "slotAction", "closeZoom"):
+        assert f'data-i18n-aria="{key}"' in index_html
+        assert app_js.count(f"{key}:") == 2, key
+    locale = app_js[app_js.index("function applyLocale("):]
+    locale = locale[: locale.index("\n}\n")]
+    assert 'document.querySelectorAll("[data-i18n-aria]")' in locale
+    assert 'node.setAttribute("aria-label", data[key]);' in locale
+    # The prepare endpoints answer an unreadable file with an error dict, not a list.
+    assert "if (previews && previews.error) return setStatus(previews.error, true);" in app_js
+    assert "if (screens && screens.error) return setStatus(screens.error, true);" in app_js

@@ -14,6 +14,12 @@
 - 動態貼圖、pop-up、effect 的影格數錯誤，在繁中 GUI 顯示為中文。
 - `examples/slice_line_stickers.py` 改為薄薄一層相容包裝，實作移到 `sticker_forge.grid_tool`。
 
+### 修正
+
+- **匯入損壞或不是圖片的檔案時，GUI 改顯示看得懂的錯誤**：原本狀態列直接顯示 `UnidentifiedImageError: cannot identify image file <_io.BytesIO object at …>`。匯入格線圖、動態貼圖、畫面動畫三個入口都改為依 GUI 語系顯示「無法讀取圖片：檔案已損壞，或不是支援的圖片格式」。
+- **存檔失敗（沒有寫入權限、檔案被其他程式鎖住）時，GUI 改顯示看得懂的錯誤**：原本顯示 `PermissionError: [Errno 13] …`；所有匯出按鈕與單張 PNG 存檔都改為依語系說明原因與檔案路徑，並建議改存其他資料夾或關閉佔用檔案的程式。
+- **英文介面下，每張貼圖的文字／動作欄位與放大預覽的關閉鈕，無障礙名稱改跟著語系切換**：原本固定是中文「文字」「動作」與英文「close」，螢幕閱讀器與 UI 自動化讀到的語言和畫面不一致。
+
 ## v0.23.0
 
 ### 新增
