@@ -371,3 +371,16 @@ def test_failed_write_is_reported_in_the_gui_locale_instead_of_raising(tmp_path,
     monkeypatch.setattr(api, "_ask_save_path", lambda *args, **kwargs: str(png_target))
     assert api.save_png(tile)["error"].startswith("無法寫入檔案")
     assert target.is_dir() and not any(target.iterdir())
+
+
+def test_undecodable_tile_during_export_is_not_reported_as_a_write_failure(tmp_path, monkeypatch) -> None:
+    api = Api()
+    target = tmp_path / "out.zip"
+    monkeypatch.setattr(api, "_ask_save_path", lambda *args, **kwargs: str(target))
+    tile = _encode(Image.new("RGBA", (370, 320), (10, 20, 30, 255)))
+    damaged = _bytes_data_url(b"\x89PNG\r\n\x1a\n" + b"\x00" * 64)
+
+    result = api.export_line([tile] * 7 + [damaged], {"locale": "en"})
+
+    assert result["error"].startswith("Cannot read the image")
+    assert not target.exists()

@@ -15,7 +15,7 @@ from dataclasses import replace
 from io import BytesIO
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 
 from .app_launcher import app_path
 from .cleanup import remove_chroma_background
@@ -169,7 +169,11 @@ def _reports_write_errors(method):
             return method(self, *args, **kwargs)
         except OSError as exc:
             options = next((arg for arg in reversed(args) if isinstance(arg, dict)), None) or {}
-            return _write_error(exc, options.get("locale", self.locale))
+            locale = options.get("locale", self.locale)
+            # PIL's decode failure is also an OSError; it is not a write problem.
+            if isinstance(exc, UnidentifiedImageError):
+                return _unreadable_error(locale)
+            return _write_error(exc, locale)
 
     return wrapper
 
