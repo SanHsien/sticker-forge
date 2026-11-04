@@ -212,12 +212,12 @@ APNG 類型的平台接受證據不再擋 `v1.0.0`（2026-11-03 維護者決定�
 
 ### v1.0.0 / tag `v1.0.0` / 2026-11-04
 
-GUI 由 AI 以 agent-desktop（無障礙 API；`<input type=file>` 用實體點擊，點擊前確認前景視窗正是 `sticker-forge` 且座標落在頁面內）操作。第四節矩陣先在 **source 版 GUI**（`main` `7662be3`）跑完；驗收中發現的三個問題由 `b87f34f` 修復後，以修正後的 source 版 GUI 重驗該三項，再以 build 產物（打包版 GUI）跑啟動與基本匯出。產物放 `%TEMP%` 子目錄，測試圖為 `examples\create_sample_assets.py` 的範例與另行產生的 4×4 範例、損壞 PNG、改名為 .png 的文字檔。
+GUI 由 AI 以 agent-desktop（無障礙 API；`<input type=file>` 用實體點擊，點擊前確認前景視窗正是 `sticker-forge` 且座標落在頁面內）操作。第四節矩陣先在 **source 版 GUI**（`main` `7662be3`）跑完；驗收中發現的三個問題由 `b87f34f` 修復後，以修正後的 source 版 GUI 重驗該三項；fresh 審查另指出匯出時 tile 解碼失敗會被誤報成寫入錯誤，由 `2bb9533` 修復。最後以含兩個修正的 build 產物（打包版 GUI）跑啟動與基本匯出。產物放 `%TEMP%` 子目錄，測試圖為 `examples\create_sample_assets.py` 的範例與另行產生的 4×4 範例、損壞 PNG、改名為 .png 的文字檔。
 
 | 項目 | 結果 | 證據或阻塞原因 |
 | --- | --- | --- |
-| pytest / node / diff | PASS | 281 passed；`node --check app\app.js` OK；`git diff --check` clean；`create_line_trial_packs.py` 七種 ZIP 皆 `OK` |
-| Windows build | PASS | `packaging\build-windows.ps1`：281 passed；GUI `--smoke` 0；CLI `--help` 0；另對 build 產物手動跑 GUI `--smoke` 0、CLI `--lang en --help` 0；`_internal\app`、`_internal\prompts` 存在；ZIP SHA-256 `b01d8de7bad5b4c6e23c54ee8896d549648d0042ccdfb89fdb19ecfd1fc98d05` |
+| pytest / node / diff | PASS | 282 passed；`node --check app\app.js` OK；`git diff --check` clean；`create_line_trial_packs.py` 七種 ZIP 皆 `OK` |
+| Windows build | PASS | `packaging\build-windows.ps1`：282 passed；GUI `--smoke` 0；CLI `--help` 0；另對 build 產物手動跑 GUI `--smoke` 0、CLI `--lang en --help` 0；`_internal\app`、`_internal\prompts` 存在；ZIP SHA-256 `83bd6b6c2a88ad99591283a80624b945b59c1d08853cff93ec72a3e8224193e0` |
 | Release SHA-256 / Expand-Archive | 待驗 | tag 與 Release 建立後依第三節下載驗證 |
 | 打包版 GUI 啟動與基本匯出 | PASS | 直接啟動 `sticker-forge.exe`：只有一個 `sticker-forge` 視窗、沒有 console 視窗或子程序；匯入範例 grid →切圖→去背→選取一組，匯出 ZIP／LINE emoji／Big Stickers，以打包版 CLI `validate`、`--emoji`、`--big` 皆 OK；關閉視窗後無 `sticker-forge.exe` 殘留 |
 | 繁中 GUI | PASS | v0.23.0 已驗；本輪打包版以繁中預設啟動，狀態文字正確（「已選前 8 張」「已儲存：…」） |
